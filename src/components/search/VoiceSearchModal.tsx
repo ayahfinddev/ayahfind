@@ -1,0 +1,248 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Mic, MicOff } from "lucide-react";
+import { WaveformVisualizer } from "@/components/ui/WaveformVisualizer";
+import { useVoiceSearch, type VoiceLang } from "@/hooks/useVoiceSearch";
+import { cn } from "@/lib/utils";
+
+const VOICE_LANG_OPTIONS: { id: VoiceLang; label: string }[] = [
+  { id: "en-US", label: "English" },
+  { id: "ar-SA", label: "Arabic" },
+];
+
+const overlayVariants = {
+  hidden: { opacity: 0, pointerEvents: "none" as const },
+  visible: { opacity: 1, pointerEvents: "auto" as const },
+};
+
+interface VoiceSearchModalProps {
+  open: boolean;
+  onClose: () => void;
+  onResult: (text: string) => void;
+  onExited?: () => void;
+}
+
+export function VoiceSearchModal({
+  open,
+  onClose,
+  onResult,
+  onExited,
+}: VoiceSearchModalProps) {
+  const [lang, setLang] = useState<VoiceLang>("en-US");
+  const [manualText, setManualText] = useState("");
+
+  const { listening, supported, error, status, displayText, start, stop, cancel } =
+    useVoiceSearch(
+      (text) => {
+        onResult(text);
+        onClose();
+      },
+      lang
+    );
+
+  useEffect(() => {
+    if (!open) return;
+    setManualText("");
+    const t = window.setTimeout(() => {
+      void start();
+    }, 400);
+    return () => {
+      window.clearTimeout(t);
+      cancel();
+    };
+  }, [open, lang, start, cancel]);
+
+  useEffect(() => {
+    if (!open) {
+      cancel();
+      setManualText("");
+    }
+  }, [open, cancel]);
+
+  const handleClose = () => {
+    cancel();
+    onClose();
+  };
+
+  const handleSearch = () => {
+    const text = displayText || manualText.trim();
+    if (listening) {
+      stop(true);
+      return;
+    }
+    if (text) {
+      onResult(text);
+      onClose();
+    }
+  };
+
+  const canSearch = Boolean(displayText || manualText.trim());
+
+  return (
+    <AnimatePresence onExitComplete={() => onExited?.()}>
+      {open && (
+        <motion.div
+          key="voice-search-modal"
+          role="dialog"
+          aria-modal="true"
+          variants={overlayVariants}
+          initial="hidden"
+          animate="visible"
+          exit="hidden"
+          transition={{ duration: 0.15 }}
+          className="fixed inset-0 z-40"
+        >
+          <motion.div
+            className="pointer-events-none absolute inset-0 bg-white/95 backdrop-blur-xl"
+            aria-hidden
+          />
+          <motion.div
+            initial={{ opacity: 0, y: 40, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 24, scale: 0.98, pointerEvents: "none" }}
+            transition={{ type: "spring", stiffness: 400, damping: 32 }}
+            className="pointer-events-auto fixed inset-x-4 top-[8%] z-50 mx-auto max-w-lg"
+          >
+            <motion.div className="islamic-grid relative overflow-hidden rounded-3xl border border-neutral-200 bg-white p-8 shadow-glow-lg">
+              <button
+                type="button"
+                onClick={handleClose}
+                className="absolute right-4 top-4 rounded-full p-2 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+
+              <p className="mb-2 text-center text-sm font-medium uppercase tracking-widest text-neutral-500">
+                {listening ? "Listening" : "Voice search"}
+              </p>
+              <h2 className="mb-4 text-center text-xl font-semibold text-neutral-900">
+                Recite or speak — mistakes are OK
+              </h2>
+
+              <div
+                className="relative mx-auto mb-6 flex w-full max-w-sm rounded-full border border-neutral-200 bg-neutral-100 p-1"
+                role="tablist"
+                aria-label="Recognition language"
+              >
+                {VOICE_LANG_OPTIONS.map((opt) => {
+                  const selected = lang === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={selected}
+                      onClick={() => {
+                        cancel();
+                        setLang(opt.id);
+                      }}
+                      className={cn(
+                        "relative z-0 flex min-h-[2.25rem] flex-1 items-center justify-center rounded-full px-3 py-2 text-xs font-semibold transition-colors duration-200 ease-out",
+                        selected
+                          ? "text-white"
+                          : "text-neutral-600 hover:text-neutral-800"
+                      )}
+                    >
+                      {selected && (
+                        <motion.span
+                          layoutId="voice-lang-pill"
+                          className="absolute inset-0 rounded-full bg-neutral-900 shadow-sm"
+                          transition={{ type: "spring", stiffness: 520, damping: 36 }}
+                          aria-hidden
+                        />
+                      )}
+                      <span className="relative z-10 text-center leading-none">
+                        {opt.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mb-6 flex justify-center">
+                <motion.button
+                  type="button"
+                  whileTap={{ scale: 0.94 }}
+                  onClick={() => (listening ? stop(true) : void start())}
+                  disabled={!supported}
+                  className="relative flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-accent-emerald to-neutral-800 shadow-glow disabled:opacity-40"
+                >
+                  {listening && (
+                    <motion.span
+                      className="absolute inset-0 rounded-full border-2 border-accent-emerald/50"
+                      animate={{ scale: [1, 1.35], opacity: [0.6, 0] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    />
+                  )}
+                  {listening ? (
+                    <MicOff className="h-10 w-10 text-canvas" />
+                  ) : (
+                    <Mic className="h-10 w-10 text-canvas" />
+                  )}
+                </motion.button>
+              </div>
+
+              <WaveformVisualizer active={listening} className="mb-4" />
+
+              {status && !error && (
+                <p className="mb-2 text-center text-xs text-neutral-500">{status}</p>
+              )}
+
+              <div className="min-h-[4.5rem] rounded-xl bg-neutral-50 p-4 text-center">
+                {error ? (
+                  <p className="text-sm text-red-800">{error}</p>
+                ) : (
+                  <p className="font-arabic text-lg text-neutral-700" dir="auto">
+                    {displayText ||
+                      (supported
+                        ? "Speak clearly into your microphone…"
+                        : "Use Chrome or Edge for voice search")}
+                  </p>
+                )}
+              </div>
+
+              <div className="mt-4">
+                <label className="mb-1 block text-xs text-neutral-500">
+                  Or type what you said (if voice fails)
+                </label>
+                <input
+                  type="text"
+                  value={manualText}
+                  onChange={(e) => setManualText(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && canSearch && handleSearch()}
+                  placeholder="e.g. fa inama al usri yusra"
+                  className="w-full rounded-xl border border-glass-border bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none focus:border-accent-emerald/40"
+                />
+              </div>
+
+              <p className="mt-3 text-center text-xs text-neutral-500">
+                Tap the mic to stop — we search automatically. Needs internet on Chrome.
+              </p>
+
+              <div className="mt-6 flex gap-3">
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="flex-1 rounded-xl border border-glass-border py-3 text-sm text-neutral-500"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSearch}
+                  disabled={!canSearch}
+                  className="flex-1 rounded-xl bg-accent-emerald py-3 text-sm font-semibold text-canvas disabled:opacity-40"
+                >
+                  Search
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}

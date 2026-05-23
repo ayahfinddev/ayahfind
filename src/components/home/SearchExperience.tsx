@@ -1,0 +1,248 @@
+"use client";
+
+import { useCallback, useState } from "react";
+import { motion } from "framer-motion";
+import { Brain, ChevronDown, ChevronUp, Loader2, SearchX } from "lucide-react";
+import { AISearchBar } from "@/components/search/AISearchBar";
+import { VoiceSearchModal } from "@/components/search/VoiceSearchModal";
+import { SemanticChips } from "@/components/search/SemanticChips";
+import { AyahResultCard } from "@/components/results/AyahResultCard";
+import { SkeletonCard } from "@/components/ui/SkeletonCard";
+import { useRouter } from "next/navigation";
+import { searchUnified } from "@/lib/api";
+import { resolveTopicSearch } from "@/lib/resolveTopicSearch";
+import type { SearchTopic } from "@/lib/searchTopics";
+import type { SearchCandidate, SearchMode } from "@/lib/types";
+
+export function SearchExperience() {
+  const [query, setQuery] = useState("");
+  const [mode, setMode] = useState<SearchMode>("quran");
+  const [results, setResults] = useState<SearchCandidate[]>([]);
+  const [weakMatches, setWeakMatches] = useState<SearchCandidate[]>([]);
+  const [noMatchMessage, setNoMatchMessage] = useState<string | null>(null);
+  const [weakOpen, setWeakOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [voiceOpen, setVoiceOpen] = useState(false);
+  const [aiHint, setAiHint] = useState<string | null>(null);
+  const [activeTopic, setActiveTopic] = useState<string | null>(null);
+  const router = useRouter();
+
+  const runSearch = useCallback(async (q: string) => {
+    const trimmed = q.trim();
+    if (!trimmed) return;
+    setQuery(trimmed);
+    setActiveTopic(null);
+    setLoading(true);
+    setError(null);
+    setNoMatchMessage(null);
+    setWeakMatches([]);
+    setWeakOpen(false);
+    try {
+      if (mode === "hadith") {
+        setResults([]);
+        setAiHint("Hadith semantic index coming soon — showing Quran matches for now.");
+      }
+      const data = await searchUnified(trimmed, 10);
+      setResults(data.results ?? []);
+      setWeakMatches(data.weak_matches ?? []);
+      setNoMatchMessage(
+        (data.results?.length ?? 0) === 0 && data.message ? data.message : null
+      );
+      setAiHint(data.intent_hint ?? data.normalized_query ?? null);
+      try {
+        const hist: string[] = JSON.parse(localStorage.getItem("ayahfind_history") || "[]");
+        const next = [trimmed, ...hist.filter((h) => h !== trimmed)].slice(0, 20);
+        localStorage.setItem("ayahfind_history", JSON.stringify(next));
+      } catch {
+        /* ignore */
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Search failed");
+      setResults([]);
+      setWeakMatches([]);
+      setNoMatchMessage(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [mode]);
+
+  const runTopic = useCallback(
+    async (topic: SearchTopic) => {
+      setActiveTopic(topic.label);
+      setQuery(topic.label);
+      setLoading(true);
+      setError(null);
+      setNoMatchMessage(null);
+      setWeakMatches([]);
+      setWeakOpen(false);
+      try {
+        const data = await resolveTopicSearch(topic);
+        setResults(data.results ?? []);
+        setWeakMatches(data.weak_matches ?? []);
+        if ((data.results?.length ?? 0) === 0) {
+          router.push(`/ayah/${topic.surah}/${topic.ayah}`);
+          return;
+        }
+        setNoMatchMessage(null);
+        setAiHint(
+          data.intent_hint
+            ? `Theme: ${data.intent_hint}`
+            : `Related to ${topic.label}`
+        );
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Search failed");
+        setResults([]);
+        router.push(`/ayah/${topic.surah}/${topic.ayah}`);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [router]
+  );
+
+  return (
+    <>
+      <header className="pb-4 pt-2">
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-neutral-400"
+        >
+          AyahFind AI
+        </motion.p>
+        <motion.h1
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-3xl font-bold tracking-tight text-neutral-950"
+        >
+          Search the Qur&apos;an &amp; Hadith{" "}
+          <span className="text-gradient">naturally</span>
+        </motion.h1>
+        <p className="mt-2 text-sm text-neutral-500">
+          Imperfect recitation, mixed languages, vague meanings — we still find what you meant.
+        </p>
+      </header>
+
+      <section className="space-y-1.5">
+        <AISearchBar
+          value={query}
+          onChange={setQuery}
+          onSubmit={() => runSearch(query)}
+          onVoiceOpen={() => setVoiceOpen(true)}
+          loading={loading}
+          mode={mode}
+          onModeChange={setMode}
+        />
+        <SemanticChips
+          onTopic={runTopic}
+          loading={loading}
+          activeLabel={activeTopic}
+        />
+      </section>
+
+      {loading && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="pointer-events-none relative z-0 mt-6 space-y-3"
+          aria-busy="true"
+        >
+          {[0, 1, 2].map((i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </motion.div>
+      )}
+
+      {error && (
+        <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          {error}
+        </p>
+      )}
+
+      {aiHint && !loading && results.length > 0 && (
+        <div className="mt-4 flex items-start gap-2 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-600">
+          <Brain className="mt-0.5 h-4 w-4 shrink-0 text-neutral-900" />
+          <span>AI reconstructed intent · {aiHint}</span>
+        </div>
+      )}
+
+      {!loading && noMatchMessage && results.length === 0 && (
+        <motion.section
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-6 rounded-2xl border border-neutral-300 bg-neutral-50 px-5 py-6 text-center"
+        >
+          <SearchX className="mx-auto mb-3 h-10 w-10 text-neutral-700" />
+          <h2 className="text-lg font-semibold text-neutral-900">
+            No confident match found
+          </h2>
+          <p className="mt-2 text-sm text-neutral-600">{noMatchMessage}</p>
+        </motion.section>
+      )}
+
+      {!loading && results.length > 0 && (
+        <section className="relative z-20 mt-6 space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-neutral-500">
+              {results.length} matches
+            </h2>
+            {loading && <Loader2 className="h-4 w-4 animate-spin text-neutral-900" />}
+          </div>
+          {results.map((r, i) => (
+            <AyahResultCard
+              key={`${r.surah}-${r.ayah}`}
+              result={r}
+              index={i}
+              highlightQuery={query}
+            />
+          ))}
+        </section>
+      )}
+
+      {!loading && weakMatches.length > 0 && (
+        <section className="mt-4">
+          <button
+            type="button"
+            onClick={() => setWeakOpen((o) => !o)}
+            className="flex w-full items-center justify-between rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-left text-sm text-neutral-500 hover:border-neutral-300"
+          >
+            <span>
+              Low confidence matches (below 55%)
+              {!weakOpen && ` · ${weakMatches.length} hidden`}
+            </span>
+            {weakOpen ? (
+              <ChevronUp className="h-4 w-4 shrink-0" />
+            ) : (
+              <ChevronDown className="h-4 w-4 shrink-0" />
+            )}
+          </button>
+          {weakOpen && (
+            <div className="mt-3 space-y-3 opacity-75">
+              {weakMatches.map((r, i) => (
+                <AyahResultCard
+                  key={`weak-${r.surah}-${r.ayah}`}
+                  result={r}
+                  index={i}
+                  variant="weak"
+                  highlightQuery={query}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      <VoiceSearchModal
+        open={voiceOpen}
+        onClose={() => setVoiceOpen(false)}
+        onResult={(text) => {
+          const q = text.trim();
+          if (!q) return;
+          setVoiceOpen(false);
+          void runSearch(q);
+        }}
+      />
+    </>
+  );
+}
