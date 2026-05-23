@@ -3,6 +3,7 @@ export interface SearchCandidate {
   ayah: number;
   confidence: number;
   text_ar?: string | null;
+  text_ar_display?: string | null;
   transliteration?: string | null;
   translation_en?: string | null;
   phonetic_score?: number | null;
@@ -23,6 +24,7 @@ export interface AyahDetail {
   surah: number;
   ayah: number;
   text_ar: string;
+  text_ar_display?: string | null;
   transliteration?: string | null;
   translation_en?: string | null;
   phonetic_primary?: string | null;

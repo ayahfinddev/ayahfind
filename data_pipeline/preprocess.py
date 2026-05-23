@@ -54,6 +54,13 @@ def preprocess(staged_path: Path, out_path: Path) -> Path:
         ayah = int(row.get("ayah_number", row.get("ayah", 0)))
         row["text_ar_normalized"] = normalize_arabic(text_ar)
         row["text_ar_search_normalized"] = arabic_for_search(text_ar, surah, ayah)
+        bism_norm = normalize_arabic("بسم الله الرحمن الرحيم")
+        ar_norm = row["text_ar_normalized"]
+        row["has_basmala_prefix"] = (
+            surah not in (1, 9)
+            and ayah == 1
+            and (ar_norm == bism_norm or ar_norm.startswith(bism_norm + " "))
+        )
         row["phonetic_primary"] = arabic_to_phonetic_primary(text_ar)
         row["phonetic_latin"] = latin_to_phonetic_latin(translit) if translit else latin_to_phonetic_latin(
             text_ar.translate(

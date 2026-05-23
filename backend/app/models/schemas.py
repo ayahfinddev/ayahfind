@@ -17,6 +17,7 @@ class SearchCandidate(BaseModel):
     ayah: int
     confidence: float
     text_ar: str | None = None
+    text_ar_display: str | None = None
     transliteration: str | None = None
     translation_en: str | None = None
     phonetic_score: float | None = None
@@ -38,6 +39,7 @@ class AyahDetail(BaseModel):
     surah: int
     ayah: int
     text_ar: str
+    text_ar_display: str | None = None
     transliteration: str | None
     translation_en: str | None
     phonetic_primary: str | None

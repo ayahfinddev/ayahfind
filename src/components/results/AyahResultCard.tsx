@@ -18,6 +18,7 @@ import { ConfidenceBadge } from "@/components/ui/ConfidenceBadge";
 import type { SearchCandidate } from "@/lib/types";
 import { useReciter } from "@/hooks/useReciter";
 import { highlightText } from "@/lib/highlight";
+import { displayArabicForResult } from "@/lib/quranDisplay";
 import { audioUrl, cn } from "@/lib/utils";
 
 interface AyahResultCardProps {
@@ -44,10 +45,16 @@ export function AyahResultCard({
   const togglePlay = () =>
     playback.toggleSingle(src, { surah: result.surah, ayah: result.ayah });
   const readerHref = `/ayah/${result.surah}/${result.ayah}`;
+  const arabicDisplay = displayArabicForResult(
+    result.surah,
+    result.ayah,
+    result.text_ar,
+    result.text_ar_display
+  );
 
   const copyVerse = async () => {
     const text = [
-      result.text_ar,
+      arabicDisplay,
       result.translation_en,
       `— Qur'an ${result.surah}:${result.ayah}`,
     ]
@@ -119,7 +126,7 @@ export function AyahResultCard({
           className="font-arabic pointer-events-none relative mt-4 text-right text-[1.35rem] leading-loose text-neutral-900"
           dir="rtl"
         >
-          {result.text_ar}
+          {arabicDisplay}
         </p>
 
         {result.translation_en && (

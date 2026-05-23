@@ -8,15 +8,23 @@ import logging
 import time
 from pathlib import Path
 
+from app.core.arabic_text import arabic_for_display
 from app.core.config import Settings, get_settings
 from app.core.phonetic import detect_script, encode_query_phonetic
 from app.core.ranking import ScoredCandidate, fuse_and_rank, fuse_arabic_lexical
 from app.models.schemas import SearchCandidate, SearchResponse
+from app.core.thematic_lexicon import match_themes
 from app.services.audio_search import AudioSearchEngine
 from app.services.lexical_search import LexicalSearchEngine
 from app.services.phonetic_search import PhoneticSearchEngine
 from app.services.quran_store import QuranStore
 from app.services.semantic_search import SemanticSearchEngine
+from app.services.thematic_search import (
+    anchor_scores,
+    keyword_candidate_ids,
+    score_rows_for_themes,
+    theme_intent_hint,
+)
 
 logger = logging.getLogger("ayahfind.search")
 
@@ -56,6 +64,9 @@ class SearchService:
 
         retrieve_k = self._settings.search_top_k_retrieve
         is_arabic = detect_script(q) == "arabic"
+        themes = match_themes(q) if not is_arabic else []
+        concept_query = bool(themes)
+        intent_hint = theme_intent_hint(q) if concept_query else "multi_signal_fusion"
 
         t1 = time.perf_counter()
         lexical_hits = self._lexical.search(q, top_k=retrieve_k)
@@ -67,7 +78,7 @@ class SearchService:
         phonetic_hits: list[tuple[int, float]] = []
         semantic_hits: list[tuple[int, float]] = []
 
-        if not is_arabic:
+        if not is_arabic and not concept_query:
             t2 = time.perf_counter()
             phonetic_hits = self._phonetic.search(q, top_k=retrieve_k)
             timings["phonetic_ms"] = round((time.perf_counter() - t2) * 1000, 1)
@@ -98,12 +109,34 @@ class SearchService:
             c.semantic_score = max(c.semantic_score, semantic)
             c.lexical_score = max(c.lexical_score, lexical)
 
-        for ayah_id, score in lexical_hits:
-            _upsert(ayah_id, lexical=score)
-        for ayah_id, score in phonetic_hits:
-            _upsert(ayah_id, phonetic=score)
-        for ayah_id, score in semantic_hits:
-            _upsert(ayah_id, semantic=score)
+        if concept_query and themes:
+            rows = LexicalSearchEngine._rows(self._settings)
+            rows_by_id = {int(row["id"]): row for row in rows}
+            theme_ids: set[int] = set()
+            for ref in anchor_scores(themes):
+                rec = self._store.get_by_ref(ref[0], ref[1])
+                if rec:
+                    theme_ids.add(rec.id)
+            for aid in keyword_candidate_ids(rows, themes):
+                theme_ids.add(aid)
+            for aid, _ in lexical_hits[:20]:
+                theme_ids.add(aid)
+
+            candidates.clear()
+            for ref, asc in anchor_scores(themes).items():
+                rec = self._store.get_by_ref(ref[0], ref[1])
+                if rec:
+                    _upsert(rec.id, lexical=asc)
+            for aid, th_score, _ in score_rows_for_themes(q, rows_by_id, list(theme_ids), themes):
+                if th_score >= 0.52:
+                    _upsert(aid, lexical=th_score)
+        else:
+            for ayah_id, score in lexical_hits:
+                _upsert(ayah_id, lexical=score)
+            for ayah_id, score in phonetic_hits:
+                _upsert(ayah_id, phonetic=score)
+            for ayah_id, score in semantic_hits:
+                _upsert(ayah_id, semantic=score)
 
         if surah_context:
             for c in candidates.values():
@@ -126,6 +159,9 @@ class SearchService:
                     ayah=cand.ayah,
                     confidence=round(confidence, 4),
                     text_ar=rec.text_ar,
+                    text_ar_display=arabic_for_display(
+                        rec.text_ar, rec.surah_number, rec.ayah_number
+                    ),
                     transliteration=rec.transliteration,
                     translation_en=rec.translation_en,
                     phonetic_score=round(cand.phonetic_score, 4),
@@ -138,7 +174,7 @@ class SearchService:
         resp = SearchResponse(
             query=q,
             normalized_query=self._intent_hint(q),
-            intent_hint="multi_signal_fusion",
+            intent_hint=intent_hint,
             results=results,
         )
         return resp, timings
@@ -175,6 +211,9 @@ class SearchService:
                     ayah=cand.ayah,
                     confidence=round(confidence, 4),
                     text_ar=rec.text_ar,
+                    text_ar_display=arabic_for_display(
+                        rec.text_ar, rec.surah_number, rec.ayah_number
+                    ),
                     transliteration=rec.transliteration,
                     translation_en=rec.translation_en,
                     phonetic_score=round(cand.phonetic_score, 4),

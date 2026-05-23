@@ -40,6 +40,8 @@ def test_dominant_transliteration_high_confidence(svc: SearchService):
     assert resp.results[0].ayah == 1
     assert resp.results[0].confidence >= 0.90
     assert len(resp.results) == 1
+    assert resp.results[0].text_ar_display
+    assert "بسم" not in (resp.results[0].text_ar_display or "")[:24]
 
 
 def test_repeated_phrase_keeps_multiple(svc: SearchService):
@@ -56,16 +58,24 @@ def test_transliteration_under_budget(svc: SearchService):
     assert resp.results
 
 
-@pytest.mark.skipif(
-    not (
-        __import__("pathlib").Path(__file__).resolve().parents[2]
-        / "vector_index"
-        / "semantic.faiss"
-    ).exists(),
-    reason="Semantic FAISS index not built — theme ranking needs vector search",
-)
 def test_theme_patience_anchor(svc: SearchService):
     resp = svc.unified_search("patience", top_k=5)
     assert resp.results
     refs = {(r.surah, r.ayah) for r in resp.results}
     assert (2, 153) in refs or (3, 200) in refs
+    assert resp.intent_hint and "Patience" in resp.intent_hint
+
+
+def test_theme_gratitude_anchor(svc: SearchService):
+    resp = svc.unified_search("gratitude", top_k=8)
+    assert resp.results
+    refs = {(r.surah, r.ayah) for r in resp.results[:8]}
+    assert (14, 7) in refs
+    assert resp.intent_hint and "Gratitude" in resp.intent_hint
+
+
+def test_theme_gratitude_not_punishment_top3(svc: SearchService):
+    resp = svc.unified_search("gratitude", top_k=5)
+    top3 = " ".join((r.translation_en or "").lower() for r in resp.results[:3])
+    assert "ungrateful" not in top3
+    assert "hell" not in top3

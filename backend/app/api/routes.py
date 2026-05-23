@@ -196,19 +196,26 @@ async def search_phonetic(body: SearchRequest) -> SearchResponse:
         candidates[ayah_id] = ScoredCandidate(
             surah=rec.surah_number, ayah=rec.ayah_number, ayah_id=ayah_id, phonetic_score=score
         )
+    from app.core.arabic_text import arabic_for_display
+
     ranked = fuse_and_rank(candidates, svc._settings, body.top_k)
-    results = [
-        SearchCandidate(
-            surah=c.surah,
-            ayah=c.ayah,
-            confidence=round(conf, 4),
-            text_ar=svc._store._by_id[c.ayah_id].text_ar,
-            translation_en=svc._store._by_id[c.ayah_id].translation_en,
-            phonetic_score=round(c.phonetic_score, 4),
-            audio_url=svc._store._by_id[c.ayah_id].audio_url,
+    results = []
+    for c, conf in ranked:
+        rec = svc._store._by_id[c.ayah_id]
+        results.append(
+            SearchCandidate(
+                surah=c.surah,
+                ayah=c.ayah,
+                confidence=round(conf, 4),
+                text_ar=rec.text_ar,
+                text_ar_display=arabic_for_display(
+                    rec.text_ar, rec.surah_number, rec.ayah_number
+                ),
+                translation_en=rec.translation_en,
+                phonetic_score=round(c.phonetic_score, 4),
+                audio_url=rec.audio_url,
+            )
         )
-        for c, conf in ranked
-    ]
     return SearchResponse(query=body.query, results=results)
 
 
@@ -218,10 +225,13 @@ async def get_ayah(surah: int, ayah: int) -> AyahDetail:
     rec = store.get_by_ref(surah, ayah)
     if not rec:
         raise HTTPException(status_code=404, detail="Ayah not found")
+    from app.core.arabic_text import arabic_for_display
+
     return AyahDetail(
         surah=rec.surah_number,
         ayah=rec.ayah_number,
         text_ar=rec.text_ar,
+        text_ar_display=arabic_for_display(rec.text_ar, rec.surah_number, rec.ayah_number),
         transliteration=rec.transliteration,
         translation_en=rec.translation_en,
         phonetic_primary=rec.phonetic_primary,
@@ -237,6 +247,8 @@ async def reader_surah(surah: int) -> ReaderSurahResponse:
     ayahs = store.get_surah_ayahs(surah)
     if not ayahs:
         raise HTTPException(status_code=404, detail="Surah not found")
+    from app.core.arabic_text import arabic_for_display
+
     return ReaderSurahResponse(
         surah=surah,
         name_en=meta.name_en if meta else "",
@@ -246,6 +258,7 @@ async def reader_surah(surah: int) -> ReaderSurahResponse:
                 surah=a.surah_number,
                 ayah=a.ayah_number,
                 text_ar=a.text_ar,
+                text_ar_display=arabic_for_display(a.text_ar, a.surah_number, a.ayah_number),
                 transliteration=a.transliteration,
                 translation_en=a.translation_en,
                 phonetic_primary=a.phonetic_primary,

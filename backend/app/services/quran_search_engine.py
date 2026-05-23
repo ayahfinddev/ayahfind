@@ -297,19 +297,25 @@ class QuranSearchEngine:
         if not query_norm:
             return 0.0, "empty", {}
 
-        baseline_score, baseline_reason = baseline_arabic_score(
-            query_norm, doc.text_ar_normalized
-        )
+        targets = [doc.text_ar_normalized]
+        if doc.text_ar_search_normalized and doc.text_ar_search_normalized != doc.text_ar_normalized:
+            targets.append(doc.text_ar_search_normalized)
+
+        baseline_score = 0.0
+        baseline_reason = "no_match"
+        for target in targets:
+            if not target:
+                continue
+            s, r = baseline_arabic_score(query_norm, target)
+            if s > baseline_score:
+                baseline_score, baseline_reason = s, r
+
         if not self._retrieval_augmentation:
             return baseline_score, baseline_reason, {"baseline": round(baseline_score, 4)}
 
         best_aug = 0.0
         best_aug_reason = baseline_reason
         best_aug_breakdown: dict = {}
-
-        targets = [doc.text_ar_normalized]
-        if doc.text_ar_search_normalized and doc.text_ar_search_normalized != doc.text_ar_normalized:
-            targets.append(doc.text_ar_search_normalized)
 
         for target in targets:
             if not target:

@@ -34,9 +34,9 @@ THEMES: tuple[Theme, ...] = (
         ("gratitude", "grateful", "thankful", "thanks", "shukr"),
         (
             "grateful", "gratitude", "thank", "thanks", "thankful", "shukr",
-            "blessing", "blessings", "favor", "increase",
+            "blessing", "blessings", "appreciate", "appreciation",
         ),
-        ((14, 7), (2, 152), (31, 12)),
+        ((14, 7), (2, 152), (31, 12), (55, 13)),
     ),
     Theme(
         "mercy",
@@ -44,9 +44,9 @@ THEMES: tuple[Theme, ...] = (
         ("mercy", "merciful", "compassion", "rahma", "rahim"),
         (
             "mercy", "merciful", "compassion", "compassionate", "kind", "kindness",
-            "forgive", "rahma", "rahim", "beneficent",
+            "rahma", "rahim", "beneficent", "clement",
         ),
-        ((1, 1), (7, 156)),
+        ((1, 1), (7, 156), (6, 12)),
     ),
     Theme(
         "forgiveness",
@@ -100,6 +100,21 @@ def _register() -> None:
             _ALIAS_TO_THEME[alias.lower()] = theme
 
 
+# Substrings that disqualify a verse for a positive theme (precision over recall).
+THEME_EXCLUSIONS: dict[str, tuple[str, ...]] = {
+    "gratitude": (
+        "ungrateful", "ingratitude", "hell", "hellfire", "jahannam",
+        "disbelievers", "disbeliever",
+    ),
+    "patience": ("impatient", "haste", "rushed"),
+    "mercy": ("merciless", "punish", "torment", "hell", "jahannam", "wrath"),
+    "forgiveness": ("unforgiving", "punish", "torment", "hell"),
+    "trust": ("betray", "deceive", "despair"),
+    "hardship_ease": (),
+    "charity": ("withhold", "stingy", "miser"),
+    "prayer": ("neglect", "abandon prayer"),
+}
+
 _register()
 
 
@@ -112,10 +127,6 @@ def match_themes(query: str) -> list[Theme]:
     for token in tokens:
         if token in _ALIAS_TO_THEME:
             found[_ALIAS_TO_THEME[token].id] = _ALIAS_TO_THEME[token]
-        for alias, theme in _ALIAS_TO_THEME.items():
-            if len(alias) >= 4 and len(token) >= 4:
-                if token.startswith(alias[:4]) or alias.startswith(token[:4]):
-                    found[theme.id] = theme
     if q in _ALIAS_TO_THEME:
         found[_ALIAS_TO_THEME[q].id] = _ALIAS_TO_THEME[q]
     return list(found.values())

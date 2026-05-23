@@ -111,6 +111,32 @@ def arabic_token_variants(token: str) -> set[str]:
     return variants
 
 
+# Uthmani basmala prefix (matches frontend quranDisplay.ts) for display stripping only.
+_BISMILLAH_DISPLAY_RE = re.compile(
+    r"^\u0628\u0650\u0633\u0652\u0645\u0650\s*"
+    r"(?:\u0671|\u0627)?\u0644\u0644\u0651?\u064e?\u0647\u0650\s*"
+    r"(?:\u0671|\u0627)?\u0644\u0631\u0651?\u064e?\u062d\u0652\u0645\u064e?\u0670?\u0646\u0650\s*"
+    r"(?:\u0671|\u0627)?\u0644\u0631\u0651?\u064e?\u062d\u0650\u064a\u0645\u0650\s*",
+    re.UNICODE,
+)
+
+
+def strip_bismillah_display(text_ar: str) -> str:
+    """Remove leading basmala from Uthmani ayah text (display only; does not affect search)."""
+    stripped = _BISMILLAH_DISPLAY_RE.sub("", text_ar).strip()
+    return stripped or text_ar
+
+
+def arabic_for_display(text_ar: str, surah: int, ayah: int) -> str:
+    """
+    Arabic text for UI cards and reader snippets.
+    Surah 1 and 9 unchanged; surah 2-8 and 10-114 ayah 1 strips prepended basmala.
+    """
+    if surah in (1, 9) or ayah != 1:
+        return text_ar
+    return strip_bismillah_display(text_ar)
+
+
 def arabic_for_search(text_ar: str, surah: int, ayah: int) -> str:
     """
     Normalized Arabic for retrieval matching.

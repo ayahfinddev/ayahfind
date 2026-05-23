@@ -154,6 +154,19 @@ class LexicalSearchEngine:
             return True
         return any(a in ar_norm for a in anchors)
 
+    @staticmethod
+    def _row_arabic_targets(row: dict) -> list[str]:
+        surah = int(row.get("surah_number", row.get("surah", 0)))
+        ayah = int(row.get("ayah_number", row.get("ayah", 0)))
+        text_ar = row.get("text_ar") or ""
+        ar_norm = row.get("text_ar_normalized") or normalize_arabic(text_ar)
+        ar_search = row.get("text_ar_search_normalized") or arabic_for_search(text_ar, surah, ayah)
+        targets: list[str] = []
+        for t in (ar_norm, ar_search):
+            if t and t not in targets:
+                targets.append(t)
+        return targets
+
     @classmethod
     def _search_arabic_baseline(
         cls, q_norm: str, rows: list[dict], top_k: int, anchors: set[str]
@@ -163,18 +176,16 @@ class LexicalSearchEngine:
         scanned = 0
 
         for row in rows:
-            raw = row.get("text_ar_normalized") or row.get("text_ar") or ""
-            if not raw:
+            targets = cls._row_arabic_targets(row)
+            if not targets:
                 continue
-            ar_norm = normalize_arabic(raw)
-            if not ar_norm:
-                continue
-            if not cls._row_passes_anchor(ar_norm, anchors):
+            if not any(cls._row_passes_anchor(t, anchors) for t in targets):
                 continue
             scanned += 1
-            score = baseline_lexical_arabic_score(q_norm, ar_norm)
+            score = max(baseline_lexical_arabic_score(q_norm, t) for t in targets)
+            shortest = min(len(t) for t in targets)
             if score >= 0.98:
-                exact.append((row["id"], score, len(ar_norm)))
+                exact.append((row["id"], score, shortest))
             elif score > 0:
                 fuzzy.append((row["id"], score))
 
@@ -241,10 +252,10 @@ class LexicalSearchEngine:
                 if (time.perf_counter() - t0) * 1000 > budget_ms:
                     path = "arabic_prefilter_budget"
                     break
-                ar_norm = row.get("text_ar_normalized") or normalize_arabic(row.get("text_ar") or "")
-                if not ar_norm or not self._row_passes_anchor(ar_norm, anchors):
+                targets = self._row_arabic_targets(row)
+                if not targets or not any(self._row_passes_anchor(t, anchors) for t in targets):
                     continue
-                pr = fuzz.partial_ratio(q_norm, ar_norm)
+                pr = max(fuzz.partial_ratio(q_norm, t) for t in targets)
                 if pr >= 52:
                     pref.append((row, pr))
             pref.sort(key=lambda x: x[1], reverse=True)
