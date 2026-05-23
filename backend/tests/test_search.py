@@ -104,6 +104,12 @@ def test_theme_gratitude(engine: QuranSearchEngine):
     assert any(h.surah == 14 and h.ayah == 7 for h in r.primary[:5])
 
 
+def test_56_75_voice_arabic_plural_stars(engine: QuranSearchEngine):
+    """STT often uses مواقع; Uthmani text has موقع (56:75)."""
+    r = engine.search("فلا اقسم بمواقع النجوم", top_k=8)
+    assert top_ref(r) == (56, 75)
+
+
 def test_theme_mercy_not_exact_phrase(engine: QuranSearchEngine):
     r = engine.search("mercy", top_k=3)
     assert len(r.primary) >= 1

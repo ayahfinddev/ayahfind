@@ -60,12 +60,9 @@ def strip_tashkeel(text: str) -> str:
 
 
 def normalize_arabic(text: str) -> str:
-    text = unicodedata.normalize("NFKC", text)
-    text = strip_tashkeel(text)
-    text = text.translate(_AR_NORMALIZE)
-    text = _NON_ARABIC.sub("", text)
-    # collapse whitespace
-    return " ".join(text.split())
+    from app.core.arabic_text import normalize_arabic as _norm
+
+    return _norm(text)
 
 
 def arabic_to_phonetic_primary(text: str) -> str:

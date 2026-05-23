@@ -9,6 +9,7 @@ class SearchRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=2000)
     top_k: int = Field(default=10, ge=1, le=50)
     surah_context: int | None = None  # boost same-surah candidates in session
+    debug: bool = False  # include timings_ms + lexical_trace in JSON (ops only)
 
 
 class SearchCandidate(BaseModel):

@@ -10,7 +10,12 @@ from dataclasses import dataclass, field
 
 from rapidfuzz import fuzz
 
-from app.core.arabic_text import normalize_arabic, prepare_transliteration_fields
+from app.core.arabic_text import arabic_for_search, normalize_arabic, prepare_transliteration_fields
+from app.core.retrieval_scoring import (
+    baseline_arabic_score,
+    combine_arabic_scores,
+    merge_baseline_and_augmented,
+)
 from app.core.transliteration import (
     content_tokens,
     detect_search_type,
@@ -75,6 +80,7 @@ class AyahDocument:
     surah_name_en: str
     text_ar: str
     text_ar_normalized: str
+    text_ar_search_normalized: str
     transliteration: str
     transliteration_normalized: str
     translation_en: str
@@ -143,11 +149,15 @@ class SearchResult:
 
 
 class QuranSearchEngine:
-    def __init__(self, ayahs: list[dict]) -> None:
+    def __init__(self, ayahs: list[dict], *, retrieval_augmentation: bool = True) -> None:
+        self._retrieval_augmentation = retrieval_augmentation
         self._docs: list[AyahDocument] = []
         for i, row in enumerate(ayahs, start=1):
             text_ar = row.get("text_ar") or ""
+            surah = int(row.get("surah", row.get("surah_number", 0)))
+            ayah = int(row.get("ayah", row.get("ayah_number", 0)))
             ar_norm = row.get("text_ar_normalized") or normalize_arabic(text_ar)
+            ar_search = row.get("text_ar_search_normalized") or arabic_for_search(text_ar, surah, ayah)
             trans = row.get("transliteration") or ""
             trans_norm = row.get("transliteration_normalized") or ""
             if trans and not trans_norm:
@@ -157,11 +167,12 @@ class QuranSearchEngine:
             self._docs.append(
                 AyahDocument(
                     id=row.get("id", i),
-                    surah=int(row.get("surah", row.get("surah_number", 0))),
-                    ayah=int(row.get("ayah", row.get("ayah_number", 0))),
+                    surah=surah,
+                    ayah=ayah,
                     surah_name_en=row.get("surah_name_en", row.get("name_en", "")),
                     text_ar=text_ar,
                     text_ar_normalized=ar_norm,
+                    text_ar_search_normalized=ar_search,
                     transliteration=trans,
                     transliteration_normalized=trans_norm,
                     translation_en=row.get("translation_en") or row.get("translation", "") or "",
@@ -220,11 +231,12 @@ class QuranSearchEngine:
         if concept_query:
             intent_hint = f"Meaning search · {theme_label_for_query(q) or q}"
 
-        candidates: list[tuple[float, AyahDocument, str, str]] = []
+        candidates: list[tuple[float, AyahDocument, str, str, dict]] = []
 
         for doc in self._docs:
+            breakdown: dict = {}
             if search_type == "arabic":
-                score, reason = self._score_arabic(q_ar_norm, doc)
+                score, reason, breakdown = self._score_arabic(q_ar_norm, doc)
                 mode = "arabic"
             elif search_type == "transliteration":
                 score, reason = self._score_transliteration(q, q_trans_norm, doc)
@@ -240,7 +252,7 @@ class QuranSearchEngine:
                     score, reason, mode = en_score, en_reason, "english"
 
             if score > 0.15:
-                candidates.append((score, doc, mode, reason))
+                candidates.append((score, doc, mode, reason, breakdown))
 
         if search_type == "transliteration":
             candidates.sort(
@@ -251,7 +263,11 @@ class QuranSearchEngine:
                 reverse=True,
             )
         else:
-            candidates.sort(key=lambda x: x[0], reverse=True)
+            # Tie-break toward legacy baseline score so augmentation cannot reorder winners.
+            candidates.sort(
+                key=lambda x: (x[0], (x[4] or {}).get("baseline", 0.0)),
+                reverse=True,
+            )
 
         dbg = None
         if debug:
@@ -266,8 +282,9 @@ class QuranSearchEngine:
                         "score": round(s, 4),
                         "mode": m,
                         "reason": r,
+                        "breakdown": bd if isinstance(bd, dict) else None,
                     }
-                    for s, d, m, r in candidates[:10]
+                    for s, d, m, r, bd in candidates[:10]
                 ],
             )
 
@@ -276,16 +293,39 @@ class QuranSearchEngine:
             intent_hint = f"Meaning search · {theme_label_for_query(q) or q}"
         return primary, weak, dbg, intent_hint, concept_query
 
-    @staticmethod
-    def _score_arabic(query_norm: str, doc: AyahDocument) -> tuple[float, str]:
+    def _score_arabic(self, query_norm: str, doc: AyahDocument) -> tuple[float, str, dict]:
         if not query_norm:
-            return 0.0, "empty"
-        if query_norm in doc.text_ar_normalized:
-            return 0.98, "arabic_phrase_contains"
-        ratio = fuzz.partial_ratio(query_norm, doc.text_ar_normalized) / 100.0
-        if ratio > 0.92:
-            return ratio * 0.97, "arabic_fuzzy"
-        return ratio * 0.7, "arabic_weak"
+            return 0.0, "empty", {}
+
+        baseline_score, baseline_reason = baseline_arabic_score(
+            query_norm, doc.text_ar_normalized
+        )
+        if not self._retrieval_augmentation:
+            return baseline_score, baseline_reason, {"baseline": round(baseline_score, 4)}
+
+        best_aug = 0.0
+        best_aug_reason = baseline_reason
+        best_aug_breakdown: dict = {}
+
+        targets = [doc.text_ar_normalized]
+        if doc.text_ar_search_normalized and doc.text_ar_search_normalized != doc.text_ar_normalized:
+            targets.append(doc.text_ar_search_normalized)
+
+        for target in targets:
+            if not target:
+                continue
+            base, reason = baseline_arabic_score(query_norm, target)
+            final, reason, breakdown = combine_arabic_scores(base, reason, query_norm, target)
+            if final > best_aug:
+                best_aug, best_aug_reason, best_aug_breakdown = final, reason, breakdown
+
+        return merge_baseline_and_augmented(
+            baseline_score,
+            baseline_reason,
+            best_aug,
+            best_aug_reason,
+            best_aug_breakdown,
+        )
 
     @staticmethod
     def _score_transliteration(
@@ -365,7 +405,7 @@ class QuranSearchEngine:
     @classmethod
     def _split_confidence_tiers(
         cls,
-        candidates: list[tuple[float, AyahDocument, str, str]],
+        candidates: list[tuple[float, AyahDocument, str, str, dict]],
         top_k: int,
         concept_query: bool = False,
     ) -> tuple[list[SearchHit], list[SearchHit]]:
@@ -377,21 +417,21 @@ class QuranSearchEngine:
         best = candidates[0][0]
         if best >= CONFIDENCE_HIGH:
             limit = min(3, top_k) if concept_query else 1
-            for s, d, m, r in candidates[:limit]:
+            for s, d, m, r, _ in candidates[:limit]:
                 if s < CONFIDENCE_HIGH:
                     break
                 primary.append(cls._hit_from(s, d, m, r))
                 if not concept_query:
                     break
         elif best >= CONFIDENCE_MEDIUM:
-            for s, d, m, r in candidates:
+            for s, d, m, r, _ in candidates:
                 if s < CONFIDENCE_MEDIUM:
                     break
                 if len(primary) >= min(3, top_k):
                     break
                 primary.append(cls._hit_from(s, d, m, r))
         seen = {(h.surah, h.ayah) for h in primary}
-        for s, d, m, r in candidates:
+        for s, d, m, r, _ in candidates:
             if s < CONFIDENCE_WEAK_MIN or s >= CONFIDENCE_MEDIUM:
                 continue
             if (d.surah, d.ayah) in seen:

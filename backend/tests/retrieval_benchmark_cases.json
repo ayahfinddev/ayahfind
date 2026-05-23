@@ -1,0 +1,133 @@
+{
+  "description": "Retrieval stability benchmark",
+  "cases": [
+    {
+      "id": "voice_56_75_waqiah",
+      "query": "فلا اقسم بمواقع النجوم",
+      "target": [
+        56,
+        75
+      ],
+      "top_k": 8,
+      "category": "voice_arabic_stt"
+    },
+    {
+      "id": "famous_2_257_ar",
+      "query": "الله ولي الذين امنوا",
+      "target": [
+        2,
+        257
+      ],
+      "top_k": 5,
+      "category": "famous_arabic"
+    },
+    {
+      "id": "famous_112_1_translit",
+      "query": "qul huwallahu ahad",
+      "target": [
+        112,
+        1
+      ],
+      "top_k": 5,
+      "category": "famous_transliteration"
+    },
+    {
+      "id": "famous_1_5_translit",
+      "query": "iyyaka nabudu wa iyyaka nastain",
+      "target": [
+        1,
+        5
+      ],
+      "top_k": 5,
+      "category": "famous_transliteration"
+    },
+    {
+      "id": "obscure_94_5_ar",
+      "query": "فإن مع العسر يسرا",
+      "target": [
+        94,
+        5
+      ],
+      "top_k": 8,
+      "category": "obscure_arabic"
+    },
+    {
+      "id": "partial_2_286_translit",
+      "query": "la yukallifu nafsan illa wusaha",
+      "target": [
+        2,
+        286
+      ],
+      "top_k": 8,
+      "category": "partial_transliteration"
+    },
+    {
+      "id": "spelling_75_36_garbled",
+      "query": "ayahsabul insanu ayyutraka suda",
+      "target": [
+        75,
+        36
+      ],
+      "top_k": 8,
+      "category": "spelling_transliteration"
+    },
+    {
+      "id": "no_harakat_17_32",
+      "query": "ولا تقربوا الزنا",
+      "target": [
+        17,
+        32
+      ],
+      "top_k": 8,
+      "category": "no_harakat"
+    },
+    {
+      "id": "alef_variant_2_201",
+      "query": "ربنا اتنا في الدنيا حسنة",
+      "target": [
+        2,
+        201
+      ],
+      "top_k": 8,
+      "category": "mixed_arabic"
+    },
+    {
+      "id": "english_zina",
+      "query": "do not approach zina",
+      "target": [
+        17,
+        32
+      ],
+      "top_k": 8,
+      "category": "english"
+    },
+    {
+      "id": "english_burden",
+      "query": "not burden a soul",
+      "target": [
+        2,
+        286
+      ],
+      "top_k": 8,
+      "category": "english"
+    },
+    {
+      "id": "basmala_phrase_multi",
+      "query": "بسم الله الرحمن الرحيم",
+      "target": null,
+      "min_results": 2,
+      "top_k": 10,
+      "category": "repeated_phrase"
+    },
+    {
+      "id": "arabic_partial_2_255",
+      "query": "ولي الذين امنوا يخرجهم",
+      "target": [
+        2,
+        257
+      ],
+      "top_k": 10,
+      "category": "partial_arabic"
+    }
+  ]
+}

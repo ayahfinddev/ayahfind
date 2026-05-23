@@ -193,6 +193,21 @@ def calibrate_and_filter(
     return [(picked[i][0], confs[i]) for i in range(len(picked))]
 
 
+def fuse_arabic_lexical(
+    candidates: dict[int, ScoredCandidate],
+    top_k: int,
+) -> list[tuple[ScoredCandidate, float]]:
+    """
+    Arabic-only search: lexical scores are already absolute — skip batch min-max
+    so partial/fuzzy ayah matches are not drowned out by shared prefixes.
+    """
+    if not candidates:
+        return []
+    scored = [(c, c.lexical_score) for c in candidates.values()]
+    scored.sort(key=lambda x: (x[1], x[0].lexical_score), reverse=True)
+    return calibrate_and_filter(scored, top_k)
+
+
 def fuse_and_rank(
     candidates: dict[int, ScoredCandidate],
     settings: Settings,

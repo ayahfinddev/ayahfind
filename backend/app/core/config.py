@@ -62,6 +62,11 @@ class Settings(BaseSettings):
     search_timeout_seconds: float = 25.0
     search_max_query_length: int = 500
 
+    # Arabic in-memory lexical (Render-safe limits; no full 6k combine scan).
+    arabic_lexical_prefilter_limit: int = 180
+    arabic_lexical_augment_cap: int = 40
+    arabic_lexical_ms_budget: float = 800.0
+
     cors_allow_origins: str = (
         "https://ayahfind.com,https://www.ayahfind.com,"
         "http://localhost:3000,http://127.0.0.1:3000"

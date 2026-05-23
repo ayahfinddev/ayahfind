@@ -9,8 +9,10 @@ from typing import Any
 
 from fastapi import Request
 
+from app.core.build_info import BUILD_ID, RETRIEVAL_VERSION
 from app.core.config import REPO_ROOT, get_settings
 from app.core.runtime_metrics import memory_status, uptime_seconds
+from app.services.retrieval_diagnostics import build_retrieval_diagnostics
 from app.services.search_service import SearchService
 
 
@@ -49,6 +51,8 @@ def build_health_payload(request: Request) -> dict[str, Any]:
         "status": "ok" if ready else "degraded",
         "backend_alive": True,
         "service": "ayahfind",
+        "build_id": BUILD_ID,
+        "retrieval_version": RETRIEVAL_VERSION,
         "ayah_count": ayah_count or 0,
         "dataset_loaded": bool(ayah_count and ayah_count > 0),
         "corpus_ready": corpus_ok,
@@ -93,6 +97,10 @@ def build_debug_search_payload(
     try:
         svc = SearchService(settings)
         resp, timings = svc.unified_search_timed(query, top_k=top_k)
+        out["retrieval"] = build_retrieval_diagnostics(query, settings, top_k=top_k)
+        out["lexical_trace"] = getattr(svc._lexical, "last_trace", {})
+        out["retrieval_version"] = RETRIEVAL_VERSION
+        out["build_id"] = BUILD_ID
         out["normalized_query"] = resp.normalized_query
         out["results_count"] = len(resp.results)
         out["timings_ms"] = timings

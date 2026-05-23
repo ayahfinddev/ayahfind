@@ -13,6 +13,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "backend"))
 
+from app.core.arabic_text import arabic_for_search  # noqa: E402
 from app.core.phonetic import (  # noqa: E402
     arabic_to_phonetic_primary,
     latin_to_phonetic_latin,
@@ -49,7 +50,10 @@ def preprocess(staged_path: Path, out_path: Path) -> Path:
     for row in data["ayahs"]:
         text_ar = row["text_ar"]
         translit = row.get("transliteration", "")
+        surah = int(row.get("surah_number", row.get("surah", 0)))
+        ayah = int(row.get("ayah_number", row.get("ayah", 0)))
         row["text_ar_normalized"] = normalize_arabic(text_ar)
+        row["text_ar_search_normalized"] = arabic_for_search(text_ar, surah, ayah)
         row["phonetic_primary"] = arabic_to_phonetic_primary(text_ar)
         row["phonetic_latin"] = latin_to_phonetic_latin(translit) if translit else latin_to_phonetic_latin(
             text_ar.translate(

@@ -25,5 +25,9 @@ services:
         value: https://ayahfind.onrender.com
       - key: SEARCH_TIMEOUT_SECONDS
         value: "25"
+      - key: ARABIC_LEXICAL_MS_BUDGET
+        value: "800"
+      - key: ARABIC_LEXICAL_PREFILTER_LIMIT
+        value: "180"
       - key: PYTHONUNBUFFERED
         value: "1"

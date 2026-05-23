@@ -91,6 +91,16 @@ async def search_unified(body: SearchRequest, request: Request):
             timeout=settings.search_timeout_seconds,
         )
         duration_ms = round((time.perf_counter() - t0) * 1000, 1)
+        if getattr(body, "debug", False):
+            from fastapi.responses import JSONResponse
+            from app.core.build_info import BUILD_ID, RETRIEVAL_VERSION
+
+            payload = resp.model_dump() if hasattr(resp, "model_dump") else resp.dict()
+            payload["timings_ms"] = timings
+            payload["retrieval_version"] = RETRIEVAL_VERSION
+            payload["build_id"] = BUILD_ID
+            payload["lexical_trace"] = timings.get("lexical_path")
+            return JSONResponse(content=payload)
         normalized = resp.normalized_query or ""
 
         if not resp.results:

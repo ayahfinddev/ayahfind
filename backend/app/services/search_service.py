@@ -10,7 +10,7 @@ from pathlib import Path
 
 from app.core.config import Settings, get_settings
 from app.core.phonetic import detect_script, encode_query_phonetic
-from app.core.ranking import ScoredCandidate, fuse_and_rank
+from app.core.ranking import ScoredCandidate, fuse_and_rank, fuse_arabic_lexical
 from app.models.schemas import SearchCandidate, SearchResponse
 from app.services.audio_search import AudioSearchEngine
 from app.services.lexical_search import LexicalSearchEngine
@@ -60,6 +60,9 @@ class SearchService:
         t1 = time.perf_counter()
         lexical_hits = self._lexical.search(q, top_k=retrieve_k)
         timings["lexical_ms"] = round((time.perf_counter() - t1) * 1000, 1)
+        timings["lexical_path"] = self._lexical.last_trace.get("path", "")
+        timings["lexical_rows_scanned"] = self._lexical.last_trace.get("rows_scanned", 0)
+        timings["lexical_rows_augmented"] = self._lexical.last_trace.get("rows_augmented", 0)
 
         phonetic_hits: list[tuple[int, float]] = []
         semantic_hits: list[tuple[int, float]] = []
@@ -108,7 +111,10 @@ class SearchService:
                     c.popularity += 0.2
 
         t4 = time.perf_counter()
-        ranked = fuse_and_rank(candidates, self._settings, top_k)
+        if is_arabic and candidates:
+            ranked = fuse_arabic_lexical(candidates, top_k)
+        else:
+            ranked = fuse_and_rank(candidates, self._settings, top_k)
         timings["rank_ms"] = round((time.perf_counter() - t4) * 1000, 1)
 
         results: list[SearchCandidate] = []
