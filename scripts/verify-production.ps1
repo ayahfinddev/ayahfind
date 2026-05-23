@@ -29,9 +29,9 @@ try {
     if ($health.retrieval_version) {
         Write-Host "retrieval_version=$($health.retrieval_version) build_id=$($health.build_id)"
     } else {
-        Write-Host "WARN: retrieval_version missing — deploy may be stale" -ForegroundColor Yellow
+        Write-Host "WARN: retrieval_version missing - deploy may be stale" -ForegroundColor Yellow
     }
-    Write-Host "OK: API healthy ($($health.ayah_count) ayahs)" -ForegroundColor Green
+    Write-Host "OK: API healthy - $($health.ayah_count) ayahs" -ForegroundColor Green
 } catch {
     Write-Host "FAIL: $($_.Exception.Message)" -ForegroundColor Red
     exit 1
@@ -62,7 +62,7 @@ try {
     $ar = Invoke-RestMethod -Uri $searchUrl -Method Post -Body ([System.Text.Encoding]::UTF8.GetBytes($arabicBody)) -ContentType "application/json; charset=utf-8" -TimeoutSec 120
     $sw.Stop()
     if (@($ar.results).Count -lt 1) {
-        Write-Host "FAIL: arabic 56:75 query returned no results (${sw.ElapsedMilliseconds}ms)" -ForegroundColor Red
+        Write-Host ("FAIL: arabic 56:75 query returned no results (" + $sw.ElapsedMilliseconds + "ms)") -ForegroundColor Red
         exit 1
     }
     $t = $ar.results[0]
@@ -71,9 +71,9 @@ try {
         exit 1
     }
     if ($sw.ElapsedMilliseconds -gt 3000) {
-        Write-Host "WARN: arabic search slow (${sw.ElapsedMilliseconds}ms)" -ForegroundColor Yellow
+        Write-Host ("WARN: arabic search slow (" + $sw.ElapsedMilliseconds + "ms)") -ForegroundColor Yellow
     }
-    Write-Host "OK: arabic 56:75 in ${sw.ElapsedMilliseconds}ms conf=$($t.confidence)" -ForegroundColor Green
+    Write-Host ("OK: arabic 56:75 in " + $sw.ElapsedMilliseconds + "ms conf=" + $t.confidence) -ForegroundColor Green
 } catch {
     Write-Host "FAIL: arabic search $($_.Exception.Message)" -ForegroundColor Red
     exit 1
