@@ -22,7 +22,7 @@ services:
       - key: CORS_ALLOW_ORIGINS
         value: https://ayahfind.com,https://www.ayahfind.com,http://localhost:3000,http://127.0.0.1:3000
       - key: PUBLIC_API_URL
-        value: https://ayahfind-api.onrender.com
+        value: https://ayahfind.onrender.com
       - key: SEARCH_TIMEOUT_SECONDS
         value: "25"
       - key: PYTHONUNBUFFERED
