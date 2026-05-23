@@ -1,0 +1,29 @@
+﻿# Render Blueprint — AyahFind API (24/7, no Cloudflare tunnel)
+# Connect repo in Render Dashboard → New → Blueprint → select this file.
+# After deploy, set Vercel API_UPSTREAM_URL to the service URL (see docs/DEPLOY.md).
+
+services:
+  - type: web
+    name: ayahfind-api
+    runtime: docker
+    dockerfilePath: ./docker/Dockerfile.api
+    dockerContext: .
+    plan: free
+    region: oregon
+    autoDeploy: true
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: AYAHFIND_ROOT
+        value: /app
+      - key: USE_DATABASE
+        value: "false"
+      - key: OPENSEARCH_ENABLED
+        value: "false"
+      - key: CORS_ALLOW_ORIGINS
+        value: https://ayahfind.com,https://www.ayahfind.com,http://localhost:3000,http://127.0.0.1:3000
+      - key: PUBLIC_API_URL
+        value: https://ayahfind-api.onrender.com
+      - key: SEARCH_TIMEOUT_SECONDS
+        value: "25"
+      - key: PYTHONUNBUFFERED
+        value: "1"

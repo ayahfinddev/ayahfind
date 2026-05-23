@@ -1,0 +1,12 @@
+{
+  "surahs": [
+    {"number": 94, "name_ar": "Ash-Sharh", "name_en": "Ash-Sharh", "revelation_type": "meccan", "ayah_count": 8},
+    {"number": 2, "name_ar": "Al-Baqarah", "name_en": "Al-Baqarah", "revelation_type": "medinan", "ayah_count": 286}
+  ],
+  "ayahs": [
+    {"surah": 94, "ayah": 5, "text_ar": "Fa inna ma al usri yusra", "transliteration": "Fa inna ma al usri yusra", "translation_en": "For indeed, with hardship will be ease."},
+    {"surah": 94, "ayah": 6, "text_ar": "Inna ma al usri yusra", "transliteration": "Inna ma al usri yusra", "translation_en": "Indeed, with hardship will be ease."},
+    {"surah": 2, "ayah": 286, "text_ar": "La yukallifu Allahu nafsan illa wusaha", "transliteration": "La yukallifu Allahu nafsan illa wusaha", "translation_en": "Allah does not burden a soul beyond what it can bear."},
+    {"surah": 2, "ayah": 187, "text_ar": "Wa la taqrabuz zina", "transliteration": "Wa la taqrabuz zina", "translation_en": "And do not approach unlawful sexual intercourse."}
+  ]
+}
