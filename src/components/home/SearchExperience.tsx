@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { motion } from "framer-motion";
 import { Brain, ChevronDown, ChevronUp, Loader2, SearchX } from "lucide-react";
+import { ContinueReadingCard } from "@/components/home/ContinueReadingCard";
 import { AISearchBar } from "@/components/search/AISearchBar";
 import { VoiceSearchModal } from "@/components/search/VoiceSearchModal";
 import { SemanticChips } from "@/components/search/SemanticChips";
@@ -123,6 +124,8 @@ export function SearchExperience() {
           Imperfect recitation, mixed languages, vague meanings — we still find what you meant.
         </p>
       </header>
+
+      <ContinueReadingCard />
 
       <section className="space-y-1.5">
         <AISearchBar

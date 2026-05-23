@@ -22,6 +22,7 @@ from app.services.semantic_search import SemanticSearchEngine
 from app.services.thematic_search import (
     anchor_scores,
     keyword_candidate_ids,
+    passes_theme_exclusions,
     score_rows_for_themes,
     theme_intent_hint,
 )
@@ -167,6 +168,21 @@ class SearchService:
                     phonetic_score=round(cand.phonetic_score, 4),
                     semantic_score=round(cand.semantic_score, 4),
                     audio_url=rec.audio_url,
+                )
+            )
+
+        if concept_query and themes:
+            anchor_refs = set(anchor_scores(themes).keys())
+            filtered: list[SearchCandidate] = []
+            for r in results:
+                trans = (r.translation_en or "").lower()
+                if (r.surah, r.ayah) in anchor_refs or passes_theme_exclusions(trans, themes):
+                    filtered.append(r)
+            results = filtered[:top_k]
+            results.sort(
+                key=lambda r: (
+                    0 if (r.surah, r.ayah) in anchor_refs else 1,
+                    -r.confidence,
                 )
             )
 

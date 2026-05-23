@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
+  ListTree,
   Pause,
   Settings,
   SkipBack,
@@ -31,6 +32,7 @@ interface ReaderTopBarProps {
   isPlaying?: boolean;
   canPrev: boolean;
   canNext: boolean;
+  onOpenNavigator?: () => void;
 }
 
 export function ReaderTopBar({
@@ -48,6 +50,7 @@ export function ReaderTopBar({
   isPlaying,
   canPrev,
   canNext,
+  onOpenNavigator,
 }: ReaderTopBarProps) {
   return (
     <header className="sticky top-0 z-40 -mx-5 border-b border-neutral-200 bg-white/95 px-5 backdrop-blur-xl md:-mx-8 md:px-8">
@@ -67,6 +70,17 @@ export function ReaderTopBar({
           )}
         </div>
         <div className="flex shrink-0 items-center gap-0.5">
+          {onOpenNavigator && (
+            <button
+              type="button"
+              onClick={onOpenNavigator}
+              className="af-icon-btn"
+              aria-label="Open Quran navigator"
+              title="Navigate (N)"
+            >
+              <ListTree className="h-5 w-5" />
+            </button>
+          )}
           <button
             type="button"
             disabled={!canPrev}

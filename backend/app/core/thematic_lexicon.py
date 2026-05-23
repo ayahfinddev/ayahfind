@@ -104,7 +104,8 @@ def _register() -> None:
 THEME_EXCLUSIONS: dict[str, tuple[str, ...]] = {
     "gratitude": (
         "ungrateful", "ingratitude", "hell", "hellfire", "jahannam",
-        "disbelievers", "disbeliever",
+        "disbelievers", "disbeliever", "punishment", "punish", "torment",
+        "fire", "blaze", "chastise", "wrath", "wretched",
     ),
     "patience": ("impatient", "haste", "rushed"),
     "mercy": ("merciless", "punish", "torment", "hell", "jahannam", "wrath"),

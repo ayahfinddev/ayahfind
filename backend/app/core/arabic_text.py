@@ -39,6 +39,19 @@ def _bismillah_normalized() -> str:
         _BISMILLAH_NORM = normalize_arabic("بسم الله الرحمن الرحيم")
     return _BISMILLAH_NORM
 
+
+def query_matches_basmala(q_norm: str) -> bool:
+    """True when the normalized query is the basmala phrase (or nearly all of it)."""
+    if not q_norm:
+        return False
+    bism = _bismillah_normalized()
+    if q_norm == bism:
+        return True
+    if not q_norm.startswith(bism):
+        return False
+    rest = q_norm[len(bism) :].strip()
+    return len(rest) <= 2
+
 # Arabic letter -> Latin (readable transliteration)
 _LATIN_MAP = {
     "\u0621": "",

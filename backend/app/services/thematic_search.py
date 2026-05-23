@@ -184,10 +184,11 @@ def score_rows_for_themes(
             continue
         s = int(row.get("surah_number", row.get("surah", 0)))
         a = int(row.get("ayah_number", row.get("ayah", 0)))
+        trans = row.get("translation_en") or ""
         doc = ThemeDoc(
             surah=s,
             ayah=a,
-            translation_en=row.get("translation_en") or "",
+            translation_en=trans,
             transliteration=row.get("transliteration") or "",
             transliteration_normalized=row.get("transliteration_normalized") or "",
         )
@@ -195,8 +196,11 @@ def score_rows_for_themes(
         if ref in anchor_map:
             scored.append((aid, anchor_map[ref], f"thematic_anchor|{themes[0].id}"))
             continue
+        if not passes_theme_exclusions(trans.lower(), themes):
+            continue
         th_score, reason, _ = score_thematic_row(query, doc, themes)
         if th_score >= 0.52:
             scored.append((aid, th_score, reason))
 
+    scored.sort(key=lambda x: x[1], reverse=True)
     return scored

@@ -96,6 +96,10 @@ a {
   animation: reader-flash 2.2s ease-out forwards;
 }
 
+.quran-nav-toggle {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
 @keyframes reader-flash {
   0% {
     box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.28);

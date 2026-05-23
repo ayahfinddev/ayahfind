@@ -10,7 +10,12 @@ from typing import Any
 
 from rapidfuzz import fuzz
 
-from app.core.arabic_text import arabic_for_search, arabic_token_variants, normalize_arabic
+from app.core.arabic_text import (
+    arabic_for_search,
+    arabic_token_variants,
+    normalize_arabic,
+    query_matches_basmala,
+)
 from app.core.config import Settings, get_settings
 from app.core.phonetic import detect_script
 from app.core.retrieval_scoring import (
@@ -155,16 +160,19 @@ class LexicalSearchEngine:
         return any(a in ar_norm for a in anchors)
 
     @staticmethod
-    def _row_arabic_targets(row: dict) -> list[str]:
+    def _row_arabic_targets(row: dict, q_norm: str | None = None) -> list[str]:
         surah = int(row.get("surah_number", row.get("surah", 0)))
         ayah = int(row.get("ayah_number", row.get("ayah", 0)))
         text_ar = row.get("text_ar") or ""
         ar_norm = row.get("text_ar_normalized") or normalize_arabic(text_ar)
         ar_search = row.get("text_ar_search_normalized") or arabic_for_search(text_ar, surah, ayah)
+        basmala_query = query_matches_basmala(q_norm) if q_norm else False
         targets: list[str] = []
-        for t in (ar_norm, ar_search):
-            if t and t not in targets:
-                targets.append(t)
+        if ar_search:
+            targets.append(ar_search)
+        if ar_norm and ar_norm not in targets:
+            if basmala_query or not ar_search:
+                targets.append(ar_norm)
         return targets
 
     @classmethod
@@ -176,7 +184,7 @@ class LexicalSearchEngine:
         scanned = 0
 
         for row in rows:
-            targets = cls._row_arabic_targets(row)
+            targets = cls._row_arabic_targets(row, q_norm)
             if not targets:
                 continue
             if not any(cls._row_passes_anchor(t, anchors) for t in targets):
@@ -252,7 +260,7 @@ class LexicalSearchEngine:
                 if (time.perf_counter() - t0) * 1000 > budget_ms:
                     path = "arabic_prefilter_budget"
                     break
-                targets = self._row_arabic_targets(row)
+                targets = self._row_arabic_targets(row, q_norm)
                 if not targets or not any(self._row_passes_anchor(t, anchors) for t in targets):
                     continue
                 pr = max(fuzz.partial_ratio(q_norm, t) for t in targets)

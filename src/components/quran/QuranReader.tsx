@@ -1,17 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ListTree } from "lucide-react";
 import { BismillahHeader } from "@/components/quran/BismillahHeader";
+import { QuranNavigator, QuranNavigatorToggle } from "@/components/quran/QuranNavigator";
 import { ReaderTopBar } from "@/components/quran/ReaderTopBar";
+import { useReadingProgress } from "@/hooks/useReadingProgress";
 import { VerseCard } from "@/components/quran/VerseCard";
 import { useAudioPlayback } from "@/contexts/AudioPlaybackContext";
 import { useBookmarks } from "@/hooks/useBookmarks";
 import { useReadingMode } from "@/hooks/useReadingMode";
 import { useReciter } from "@/hooks/useReciter";
 import { buildSurahAudioQueue } from "@/lib/readerAudio";
+import { getSurahEntry } from "@/lib/quranNavigation";
 import { prepareReaderAyahs, showsBismillahHeader } from "@/lib/quranDisplay";
 import type { AyahDetail } from "@/lib/types";
 
@@ -35,6 +39,8 @@ export function QuranReader({
   const { isSaved, toggle } = useBookmarks();
   const { reciterId } = useReciter();
   const playback = useAudioPlayback();
+  const { saveProgress } = useReadingProgress();
+  const [navOpen, setNavOpen] = useState(false);
 
   const displayAyahs = useMemo(() => prepareReaderAyahs(surah, ayahs), [surah, ayahs]);
   const audioQueue = useMemo(
@@ -90,19 +96,41 @@ export function QuranReader({
   }, [playback.activeAyah, playback.mode, surah]);
 
   const goAyah = useCallback(
-    (ayah: number) => {
-      setFocusAyah(ayah);
-      setHighlightAyah(ayah);
-      router.replace(`/ayah/${surah}/${ayah}`, { scroll: false });
+    (nextAyah: number, nextSurah?: number) => {
+      const s = nextSurah ?? surah;
+      setFocusAyah(nextAyah);
+      setHighlightAyah(nextAyah);
+      saveProgress(s, nextAyah, getSurahEntry(s)?.en ?? surahNameEn);
+      if (s !== surah) {
+        router.push(`/ayah/${s}/${nextAyah}`);
+        return;
+      }
+      router.replace(`/ayah/${s}/${nextAyah}`, { scroll: false });
       window.setTimeout(() => {
-        document.getElementById(`ayah-${ayah}`)?.scrollIntoView({
+        document.getElementById(`ayah-${nextAyah}`)?.scrollIntoView({
           behavior: "smooth",
           block: "center",
         });
       }, 50);
     },
-    [router, surah]
+    [router, surah, surahNameEn, saveProgress]
   );
+
+  useEffect(() => {
+    saveProgress(surah, focusAyah, surahNameEn);
+  }, [surah, focusAyah, surahNameEn, saveProgress]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() !== "n" || e.metaKey || e.ctrlKey || e.altKey) return;
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      e.preventDefault();
+      setNavOpen((o) => !o);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
 
   const startQueueFromFocus = useCallback(() => {
     const idx = queueFromFocus.findIndex((q) => q.ayah === focusAyah);
@@ -148,8 +176,32 @@ export function QuranReader({
     [prevSurah, nextSurah]
   );
 
+  const [navMounted, setNavMounted] = useState(false);
+  useEffect(() => setNavMounted(true), []);
+
   return (
-    <div className="reader-root -mt-2 min-h-[50vh] pb-12">
+    <div className="reader-root relative -mt-2 min-h-[50vh] pb-12">
+      <QuranNavigatorToggle open={navOpen} onClick={() => setNavOpen((o) => !o)} />
+      {navMounted &&
+        createPortal(
+          <button
+            type="button"
+            onClick={() => setNavOpen(true)}
+            aria-label="Open Quran navigator"
+            data-testid="quran-nav-fab"
+            className="fixed bottom-6 right-5 z-[100] flex h-12 w-12 items-center justify-center rounded-full border border-neutral-300 bg-white text-neutral-700 shadow-lg transition-colors hover:border-accent-teal/50 hover:text-teal-900 md:hidden"
+          >
+            <ListTree className="h-5 w-5" />
+          </button>,
+          document.body
+        )}
+      <QuranNavigator
+        open={navOpen}
+        onClose={() => setNavOpen(false)}
+        surah={surah}
+        ayah={focusAyah}
+        onNavigate={(s, a) => goAyah(a, s)}
+      />
       <ReaderTopBar
         surah={surah}
         ayah={focusAyah}
@@ -165,6 +217,7 @@ export function QuranReader({
         isPlaying={playback.playing && playback.mode === "queue"}
         canPrev={!!prevAyah}
         canNext={!!nextAyah}
+        onOpenNavigator={() => setNavOpen(true)}
       />
 
       <div className="reader-body pt-5 md:pt-6">

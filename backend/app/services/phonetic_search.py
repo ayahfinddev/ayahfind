@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from rapidfuzz import fuzz
 
-from app.core.phonetic import encode_query_phonetic
+from app.core.arabic_text import arabic_for_search, arabic_to_latin_transliteration
+from app.core.phonetic import arabic_to_phonetic_primary, encode_query_phonetic, latin_to_phonetic_latin
+from app.core.transliteration import normalize_transliteration
 from app.services.quran_store import QuranStore
 
 
@@ -20,6 +22,23 @@ class PhoneticSearchEngine:
             p_score = self._match_score(primary_q, ayah.phonetic_primary)
             l_score = self._match_score(latin_q, ayah.phonetic_latin)
             combined = max(p_score, l_score)
+            search_ar = arabic_for_search(ayah.text_ar, ayah.surah_number, ayah.ayah_number)
+            if search_ar and len(search_ar) >= 8:
+                alt_primary = arabic_to_phonetic_primary(search_ar)
+                alt_latin = latin_to_phonetic_latin(arabic_to_latin_transliteration(search_ar))
+                combined = max(
+                    combined,
+                    self._match_score(primary_q, alt_primary),
+                )
+                if len(alt_latin) >= 8:
+                    combined = max(combined, self._match_score(latin_q, alt_latin))
+                if not ayah.transliteration:
+                    alt_trans = normalize_transliteration(
+                        arabic_to_latin_transliteration(search_ar)
+                    )
+                    if len(alt_trans) >= 10:
+                        partial = fuzz.partial_ratio(query.lower(), alt_trans) / 100.0
+                        combined = max(combined, partial * 0.85)
             if ayah.transliteration:
                 partial = fuzz.partial_ratio(query.lower(), ayah.transliteration.lower()) / 100.0
                 combined = max(combined, partial * 0.85)
