@@ -106,6 +106,7 @@ THEME_EXCLUSIONS: dict[str, tuple[str, ...]] = {
         "ungrateful", "ingratitude", "hell", "hellfire", "jahannam",
         "disbelievers", "disbeliever", "punishment", "punish", "torment",
         "fire", "blaze", "chastise", "wrath", "wretched",
+        "damned", "blazing", "flames", "scourge", "chastisement",
     ),
     "patience": ("impatient", "haste", "rushed"),
     "mercy": ("merciless", "punish", "torment", "hell", "jahannam", "wrath"),

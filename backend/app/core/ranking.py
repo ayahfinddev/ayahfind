@@ -208,6 +208,26 @@ def fuse_arabic_lexical(
     return calibrate_and_filter(scored, top_k)
 
 
+def fuse_english_lexical(
+    candidates: dict[int, ScoredCandidate],
+    top_k: int,
+) -> list[tuple[ScoredCandidate, float]]:
+    """
+    English prose search: lexical scores are absolute; optional semantic is additive.
+    Avoids phonetic batch min-max drowning distinctive translation matches.
+    """
+    if not candidates:
+        return []
+    scored: list[tuple[ScoredCandidate, float]] = []
+    for c in candidates.values():
+        if c.lexical_score <= 0 and c.semantic_score <= 0:
+            continue
+        raw = c.lexical_score + 0.22 * c.semantic_score + 0.05 * c.popularity
+        scored.append((c, raw))
+    scored.sort(key=lambda x: (x[1], x[0].lexical_score), reverse=True)
+    return calibrate_and_filter(scored, top_k)
+
+
 def fuse_and_rank(
     candidates: dict[int, ScoredCandidate],
     settings: Settings,

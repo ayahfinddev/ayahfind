@@ -5,13 +5,20 @@ Unified search - phonetic + semantic + lexical (OpenSearch) + optional audio.
 from __future__ import annotations
 
 import logging
+import re
 import time
 from pathlib import Path
 
 from app.core.arabic_text import arabic_for_display
 from app.core.config import Settings, get_settings
 from app.core.phonetic import detect_script, encode_query_phonetic
-from app.core.ranking import ScoredCandidate, fuse_and_rank, fuse_arabic_lexical
+from app.core.ranking import (
+    ScoredCandidate,
+    fuse_and_rank,
+    fuse_arabic_lexical,
+    fuse_english_lexical,
+)
+from app.core.transliteration import detect_search_type
 from app.models.schemas import SearchCandidate, SearchResponse
 from app.core.thematic_lexicon import match_themes
 from app.services.audio_search import AudioSearchEngine
@@ -65,9 +72,12 @@ class SearchService:
 
         retrieve_k = self._settings.search_top_k_retrieve
         is_arabic = detect_script(q) == "arabic"
+        is_english_prose = not is_arabic and detect_search_type(q) == "english"
         themes = match_themes(q) if not is_arabic else []
         concept_query = bool(themes)
         intent_hint = theme_intent_hint(q) if concept_query else "multi_signal_fusion"
+        if is_english_prose and not concept_query:
+            intent_hint = "english_lexical"
 
         t1 = time.perf_counter()
         lexical_hits = self._lexical.search(q, top_k=retrieve_k)
@@ -75,17 +85,34 @@ class SearchService:
         timings["lexical_path"] = self._lexical.last_trace.get("path", "")
         timings["lexical_rows_scanned"] = self._lexical.last_trace.get("rows_scanned", 0)
         timings["lexical_rows_augmented"] = self._lexical.last_trace.get("rows_augmented", 0)
+        if is_english_prose:
+            timings["english_normalized_query"] = self._lexical.last_trace.get("normalized_query", "")
+            timings["english_content_tokens"] = self._lexical.last_trace.get("content_tokens", [])
+            timings["english_token_weights"] = self._lexical.last_trace.get("token_weights", {})
+            timings["english_top_breakdown"] = self._lexical.last_trace.get("top_breakdown", [])
 
         phonetic_hits: list[tuple[int, float]] = []
         semantic_hits: list[tuple[int, float]] = []
 
-        if not is_arabic and not concept_query:
+        if not is_arabic and not concept_query and not is_english_prose:
             t2 = time.perf_counter()
             phonetic_hits = self._phonetic.search(q, top_k=retrieve_k)
             timings["phonetic_ms"] = round((time.perf_counter() - t2) * 1000, 1)
             t3 = time.perf_counter()
             semantic_hits = self._semantic.search(q, top_k=retrieve_k)
             timings["semantic_ms"] = round((time.perf_counter() - t3) * 1000, 1)
+        elif is_english_prose and not concept_query:
+            t3 = time.perf_counter()
+            semantic_hits = self._semantic.search(q, top_k=retrieve_k)
+            timings["semantic_ms"] = round((time.perf_counter() - t3) * 1000, 1)
+            timings["phonetic_skipped"] = 1.0
+            logger.debug(
+                "english_search q=%r normalized=%r tokens=%s top=%s",
+                q,
+                self._lexical.last_trace.get("normalized_query"),
+                self._lexical.last_trace.get("content_tokens"),
+                self._lexical.last_trace.get("top_breakdown"),
+            )
 
         candidates: dict[int, ScoredCandidate] = {}
 
@@ -147,6 +174,8 @@ class SearchService:
         t4 = time.perf_counter()
         if is_arabic and candidates:
             ranked = fuse_arabic_lexical(candidates, top_k)
+        elif is_english_prose and candidates and not concept_query:
+            ranked = fuse_english_lexical(candidates, top_k)
         else:
             ranked = fuse_and_rank(candidates, self._settings, top_k)
         timings["rank_ms"] = round((time.perf_counter() - t4) * 1000, 1)
@@ -179,12 +208,20 @@ class SearchService:
                 if (r.surah, r.ayah) in anchor_refs or passes_theme_exclusions(trans, themes):
                     filtered.append(r)
             results = filtered[:top_k]
-            results.sort(
-                key=lambda r: (
-                    0 if (r.surah, r.ayah) in anchor_refs else 1,
-                    -r.confidence,
-                )
-            )
+            def _theme_rank(r: SearchCandidate) -> tuple:
+                trans = (r.translation_en or "").lower()
+                is_anchor = (r.surah, r.ayah) in anchor_refs
+                # Anchors first; then verses that pass exclusions; demote any edge-case leakage.
+                excluded = 0 if is_anchor or passes_theme_exclusions(trans, themes) else 1
+                grateful_boost = 0
+                if not is_anchor and any(
+                    t.id == "gratitude" for t in themes
+                ):
+                    if re.search(r"\b(grateful|gratitude|thankful|thanks)\b", trans):
+                        grateful_boost = -1
+                return (excluded, grateful_boost, 0 if is_anchor else 1, -r.confidence)
+
+            results.sort(key=_theme_rank)
 
         timings["total_ms"] = round((time.perf_counter() - t0) * 1000, 1)
         resp = SearchResponse(

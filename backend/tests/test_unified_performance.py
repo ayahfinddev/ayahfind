@@ -79,3 +79,17 @@ def test_theme_gratitude_not_punishment_top3(svc: SearchService):
     top3 = " ".join((r.translation_en or "").lower() for r in resp.results[:3])
     assert "ungrateful" not in top3
     assert "hell" not in top3
+
+
+def test_english_paraphrase_9_93_not_lightning(svc: SearchService):
+    q = "blame is only on those who seek exemption from you although"
+    t0 = time.perf_counter()
+    resp, timings = svc.unified_search_timed(q, top_k=5)
+    elapsed = time.perf_counter() - t0
+    assert elapsed < 2.5, f"English paraphrase search too slow: {elapsed:.2f}s"
+    assert resp.results
+    assert resp.results[0].surah == 9
+    assert resp.results[0].ayah == 93
+    assert resp.intent_hint == "english_lexical"
+    assert timings.get("phonetic_skipped") == 1.0
+    assert (2, 20) not in {(r.surah, r.ayah) for r in resp.results[:3]}

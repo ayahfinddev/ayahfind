@@ -17,6 +17,13 @@ from app.core.arabic_text import (
     query_matches_basmala,
 )
 from app.core.config import Settings, get_settings
+from app.core.english_lexical_scoring import (
+    build_english_idf,
+    cheap_english_overlap,
+    english_content_tokens,
+    normalize_english,
+    score_english_translation,
+)
 from app.core.phonetic import detect_script
 from app.core.retrieval_scoring import (
     baseline_arabic_score,
@@ -31,6 +38,7 @@ _ARABIC_TOKEN_RE = __import__("re").compile(r"[\u0600-\u06FF]+")
 
 class LexicalSearchEngine:
     _cached_rows: list[dict] | None = None
+    _cached_en_idf: dict[str, float] | None = None
     last_trace: dict[str, Any]
 
     def __init__(self, settings: Settings | None = None) -> None:
@@ -92,7 +100,8 @@ class LexicalSearchEngine:
 
         hits = self._search_fallback_latin(query, rows, top_k)
         self.last_trace = {
-            "path": "latin_fallback",
+            **self.last_trace,
+            "path": self.last_trace.get("path", "english_weighted"),
             "rows_scanned": len(rows),
             "rows_augmented": 0,
             "duration_ms": round((time.perf_counter() - t0) * 1000, 1),
@@ -120,28 +129,88 @@ class LexicalSearchEngine:
             hits.append((aid, min(1.0, score)))
         return hits
 
+    @classmethod
+    def _english_idf(cls, rows: list[dict]) -> dict[str, float]:
+        if cls._cached_en_idf is not None:
+            return cls._cached_en_idf
+        cls._cached_en_idf = build_english_idf(rows)
+        return cls._cached_en_idf
+
     def _search_fallback_latin(self, query: str, rows: list[dict], top_k: int) -> list[tuple[int, float]]:
-        scores: list[tuple[int, float]] = []
-        q = query.lower()
+        idf_map = self._english_idf(rows)
+        q_norm = normalize_english(query)
+        content = english_content_tokens(q_norm)
+        token_weights = {w: round(idf_map.get(w, 2.0), 3) for w in content[:16]}
+
+        scored: list[tuple[int, float, dict]] = []
+        q_lower = query.lower()
+        prefilter: list[tuple[int, float]] = []
         for row in rows:
+            trans = row.get("translation_en") or ""
+            if not trans or not content:
+                continue
+            overlap = cheap_english_overlap(content, trans)
+            if overlap >= 0.18:
+                prefilter.append((row["id"], overlap))
+        prefilter.sort(key=lambda x: x[1], reverse=True)
+        candidate_ids = {aid for aid, _ in prefilter[:160]}
+        if not candidate_ids and content:
+            for row in rows:
+                trans = row.get("translation_en") or ""
+                if trans and cheap_english_overlap(content, trans) > 0:
+                    candidate_ids.add(row["id"])
+                    if len(candidate_ids) >= 80:
+                        break
+
+        for row in rows:
+            if row["id"] not in candidate_ids:
+                continue
             best = 0.0
-            for field in (
-                "translation_en",
-                "transliteration",
-                "phonetic_latin",
-                "text_ar",
-            ):
+            breakdown: dict = {}
+            trans = row.get("translation_en") or ""
+            if trans:
+                en_score, en_bd = score_english_translation(query, trans, idf_map)
+                if en_score > best:
+                    best = en_score
+                    breakdown = en_bd
+
+            for field in ("transliteration", "phonetic_latin"):
                 text = row.get(field) or ""
                 if not text:
                     continue
-                if q in text.lower():
-                    best = max(best, 0.95)
+                tl = text.lower()
+                if q_lower in tl:
+                    best = max(best, 0.72)
                 else:
-                    best = max(best, fuzz.partial_ratio(q, text.lower()) / 100.0)
-            if best > 0.4:
-                scores.append((row["id"], best))
-        scores.sort(key=lambda x: x[1], reverse=True)
-        return scores[:top_k]
+                    partial = fuzz.partial_ratio(q_lower, tl) / 100.0
+                    best = max(best, partial * 0.45)
+
+            if best > 0.35:
+                scored.append((row["id"], best, breakdown))
+
+        scored.sort(key=lambda x: (x[1], x[2].get("weighted_cov", 0), x[2].get("content_partial", 0)), reverse=True)
+        top_breakdown = []
+        by_id = {row["id"]: row for row in rows}
+        for aid, sc, bd in scored[:5]:
+            row = by_id.get(aid, {})
+            top_breakdown.append(
+                {
+                    "surah": row.get("surah_number"),
+                    "ayah": row.get("ayah_number"),
+                    "score": round(sc, 4),
+                    **bd,
+                }
+            )
+
+        self.last_trace = {
+            "path": "english_weighted",
+            "normalized_query": q_norm,
+            "content_tokens": content,
+            "token_weights": token_weights,
+            "prefilter_candidates": len(candidate_ids),
+            "top_breakdown": top_breakdown,
+        }
+        return [(aid, sc) for aid, sc, _ in scored[:top_k]]
 
     @staticmethod
     def _query_anchor_tokens(q_norm: str) -> set[str]:
