@@ -6,7 +6,8 @@ import { ChevronLeft, ChevronRight, Play, Volume2 } from "lucide-react";
 import { useAudioPlayer } from "@/hooks/useAudioPlayer";
 import { useReciter } from "@/hooks/useReciter";
 import type { AyahDetail } from "@/lib/types";
-import { audioUrl, cn } from "@/lib/utils";
+import { buildAyahAudioSources } from "@/lib/reciters";
+import { cn } from "@/lib/utils";
 
 interface SurahReaderProps {
   surah: number;
@@ -25,8 +26,13 @@ function AyahBlock({
   active: boolean;
 }) {
   const { reciterId } = useReciter();
-  const src = ayah.audio_url ?? audioUrl(surah, ayah.ayah, reciterId);
-  const { playing, toggle } = useAudioPlayer(src);
+  const { src, fallbackSrc } = buildAyahAudioSources(
+    surah,
+    ayah.ayah,
+    reciterId,
+    ayah.audio_url
+  );
+  const { playing, toggle } = useAudioPlayer(src, fallbackSrc);
 
   return (
     <article

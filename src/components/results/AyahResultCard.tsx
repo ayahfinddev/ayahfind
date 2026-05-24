@@ -19,7 +19,8 @@ import type { SearchCandidate } from "@/lib/types";
 import { useReciter } from "@/hooks/useReciter";
 import { highlightText } from "@/lib/highlight";
 import { displayArabicForResult } from "@/lib/quranDisplay";
-import { audioUrl, cn } from "@/lib/utils";
+import { buildAyahAudioSources } from "@/lib/reciters";
+import { cn } from "@/lib/utils";
 
 interface AyahResultCardProps {
   result: SearchCandidate;
@@ -38,12 +39,16 @@ export function AyahResultCard({
   const { reciterId } = useReciter();
   const { isSaved, toggle } = useBookmarks();
   const saved = isSaved(result.surah, result.ayah);
-  const src =
-    result.audio_url ?? audioUrl(result.surah, result.ayah, reciterId);
+  const { src, fallbackSrc } = buildAyahAudioSources(
+    result.surah,
+    result.ayah,
+    reciterId,
+    result.audio_url
+  );
   const playback = useAudioPlayback();
   const playing = playback.isActiveVerse(result.surah, result.ayah);
   const togglePlay = () =>
-    playback.toggleSingle(src, { surah: result.surah, ayah: result.ayah });
+    playback.toggleSingle(src, { surah: result.surah, ayah: result.ayah }, fallbackSrc);
   const readerHref = `/ayah/${result.surah}/${result.ayah}`;
   const arabicDisplay = displayArabicForResult(
     result.surah,

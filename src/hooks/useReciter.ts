@@ -2,34 +2,24 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
-  DEFAULT_RECITER_ID,
-  RECITERS,
   RECITER_STORAGE_KEY,
-  type ReciterId,
   getReciterById,
+  isEnabledReciterId,
+  readStoredReciterId,
+  type ReciterId,
 } from "@/lib/reciters";
 
-function isReciterId(value: string): value is ReciterId {
-  return RECITERS.some((r) => r.id === value);
-}
-
 export function useReciter() {
-  const [reciterId, setReciterIdState] = useState<ReciterId>(DEFAULT_RECITER_ID);
+  const [reciterId, setReciterIdState] = useState<ReciterId>(() => readStoredReciterId());
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(RECITER_STORAGE_KEY);
-      if (stored && isReciterId(stored)) {
-        setReciterIdState(stored);
-      }
-    } catch {
-      /* ignore */
-    }
+    setReciterIdState(readStoredReciterId());
     setReady(true);
   }, []);
 
   const setReciterId = useCallback((id: ReciterId) => {
+    if (!isEnabledReciterId(id)) return;
     setReciterIdState(id);
     try {
       localStorage.setItem(RECITER_STORAGE_KEY, id);
@@ -42,7 +32,7 @@ export function useReciter() {
   useEffect(() => {
     const onChange = (e: Event) => {
       const id = (e as CustomEvent<ReciterId>).detail;
-      if (id) setReciterIdState(id);
+      if (id && isEnabledReciterId(id)) setReciterIdState(id);
     };
     window.addEventListener("ayahfind-reciter-change", onChange);
     return () => window.removeEventListener("ayahfind-reciter-change", onChange);

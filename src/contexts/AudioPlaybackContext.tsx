@@ -9,6 +9,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useReciter } from "@/hooks/useReciter";
+import { buildAyahAudioSources } from "@/lib/reciters";
 
 export interface AyahRef {
   surah: number;
@@ -17,6 +19,7 @@ export interface AyahRef {
 
 export interface QueueItem extends AyahRef {
   src: string;
+  fallbackSrc?: string;
 }
 
 type PlaybackMode = "idle" | "single" | "queue";
@@ -25,9 +28,9 @@ interface AudioPlaybackContextValue {
   playing: boolean;
   mode: PlaybackMode;
   activeAyah: AyahRef | null;
-  playSingle: (src: string, ref?: AyahRef) => void;
+  playSingle: (src: string, ref?: AyahRef, fallbackSrc?: string) => void;
   playQueue: (items: QueueItem[], startIndex: number) => void;
-  toggleSingle: (src: string, ref?: AyahRef) => void;
+  toggleSingle: (src: string, ref?: AyahRef, fallbackSrc?: string) => void;
   toggleQueue: (items: QueueItem[], startIndex: number) => void;
   pause: () => void;
   stop: () => void;
@@ -38,11 +41,37 @@ interface AudioPlaybackContextValue {
 
 const AudioPlaybackContext = createContext<AudioPlaybackContextValue | null>(null);
 
+function attachPlaybackHandlers(
+  audio: HTMLAudioElement,
+  primarySrc: string,
+  fallbackSrc: string | undefined,
+  onEnded: () => void,
+  onFailed: () => void,
+  onPlaying: () => void
+) {
+  let triedFallback = false;
+  audio.onended = onEnded;
+  audio.onerror = () => {
+    if (!triedFallback && fallbackSrc && audio.src !== fallbackSrc) {
+      triedFallback = true;
+      if (process.env.NODE_ENV === "development") {
+        console.debug("[AyahFind audio] fallback", { from: primarySrc, to: fallbackSrc });
+      }
+      audio.src = fallbackSrc;
+      void audio.play().then(onPlaying).catch(onFailed);
+      return;
+    }
+    onFailed();
+  };
+}
+
 export function AudioPlaybackProvider({ children }: { children: ReactNode }) {
+  const { reciterId } = useReciter();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const queueRef = useRef<QueueItem[]>([]);
   const queueIndexRef = useRef(0);
   const modeRef = useRef<PlaybackMode>("idle");
+  const prevReciterRef = useRef(reciterId);
 
   const [playing, setPlaying] = useState(false);
   const [mode, setMode] = useState<PlaybackMode>("idle");
@@ -80,12 +109,16 @@ export function AudioPlaybackProvider({ children }: { children: ReactNode }) {
         audio = new Audio();
         audioRef.current = audio;
       }
-      audio.onended = () => {
-        playAtQueueIndex(index + 1);
-      };
-      audio.onerror = () => {
-        playAtQueueIndex(index + 1);
-      };
+
+      attachPlaybackHandlers(
+        audio,
+        item.src,
+        item.fallbackSrc,
+        () => playAtQueueIndex(index + 1),
+        () => playAtQueueIndex(index + 1),
+        () => setPlaying(true)
+      );
+
       audio.src = item.src;
       void audio.play().then(() => setPlaying(true)).catch(() => stop());
     },
@@ -106,7 +139,7 @@ export function AudioPlaybackProvider({ children }: { children: ReactNode }) {
   );
 
   const playSingle = useCallback(
-    (src: string, ref?: AyahRef) => {
+    (src: string, ref?: AyahRef, fallbackSrc?: string) => {
       stop();
       modeRef.current = "single";
       setMode("single");
@@ -114,8 +147,9 @@ export function AudioPlaybackProvider({ children }: { children: ReactNode }) {
 
       const audio = new Audio(src);
       audioRef.current = audio;
-      audio.onended = () => stop();
-      audio.onerror = () => stop();
+      attachPlaybackHandlers(audio, src, fallbackSrc, () => stop(), () => stop(), () =>
+        setPlaying(true)
+      );
       void audio.play().then(() => setPlaying(true)).catch(() => stop());
     },
     [stop]
@@ -127,7 +161,7 @@ export function AudioPlaybackProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const toggleSingle = useCallback(
-    (src: string, ref?: AyahRef) => {
+    (src: string, ref?: AyahRef, fallbackSrc?: string) => {
       const same =
         modeRef.current === "single" &&
         ref &&
@@ -137,7 +171,7 @@ export function AudioPlaybackProvider({ children }: { children: ReactNode }) {
         stop();
         return;
       }
-      playSingle(src, ref);
+      playSingle(src, ref, fallbackSrc);
     },
     [activeAyah, playSingle, playing, stop]
   );
@@ -182,6 +216,39 @@ export function AudioPlaybackProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => () => stop(), [stop]);
+
+  useEffect(() => {
+    if (prevReciterRef.current === reciterId) return;
+    prevReciterRef.current = reciterId;
+
+    const wasPlaying = playing;
+    const prevMode = modeRef.current;
+    const prevAyah = activeAyah;
+    const prevQueueIndex = queueIndexRef.current;
+    const prevQueue = queueRef.current.map((item) => ({ ...item }));
+
+    stop();
+
+    if (!wasPlaying || !prevAyah) return;
+
+    if (prevMode === "single") {
+      const { src, fallbackSrc } = buildAyahAudioSources(
+        prevAyah.surah,
+        prevAyah.ayah,
+        reciterId
+      );
+      playSingle(src, prevAyah, fallbackSrc);
+      return;
+    }
+
+    if (prevMode === "queue" && prevQueue.length) {
+      const nextQueue = prevQueue.map((item) => {
+        const sources = buildAyahAudioSources(item.surah, item.ayah, reciterId);
+        return { ...item, ...sources };
+      });
+      playQueue(nextQueue, prevQueueIndex);
+    }
+  }, [reciterId, playing, activeAyah, stop, playSingle, playQueue]);
 
   return (
     <AudioPlaybackContext.Provider

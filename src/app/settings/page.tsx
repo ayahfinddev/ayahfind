@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { useReciter } from "@/hooks/useReciter";
-import { RECITERS, type ReciterId } from "@/lib/reciters";
+import { ENABLED_RECITERS, type ReciterId } from "@/lib/reciters";
 import { cn } from "@/lib/utils";
 
 export default function SettingsPage() {
@@ -22,8 +22,8 @@ export default function SettingsPage() {
           <p className="mb-3 text-xs text-neutral-500">
             Used for Listen on search results and ayah pages.
           </p>
-          <ul className="space-y-2" role="listbox" aria-label="Choose reciter">
-            {RECITERS.map((r) => (
+          <ul className="max-h-[min(24rem,60vh)] space-y-2 overflow-y-auto" role="listbox" aria-label="Choose reciter">
+            {ENABLED_RECITERS.map((r) => (
               <li key={r.id}>
                 <button
                   type="button"
@@ -37,7 +37,10 @@ export default function SettingsPage() {
                       : "border-glass-border text-neutral-600 hover:border-neutral-300"
                   )}
                 >
-                  <span>{r.name}</span>
+                  <span>
+                    {r.name}
+                    <span className="ml-2 text-xs font-normal text-neutral-400">{r.bitrate}</span>
+                  </span>
                   {reciterId === r.id && <Check className="h-4 w-4 shrink-0" />}
                 </button>
               </li>

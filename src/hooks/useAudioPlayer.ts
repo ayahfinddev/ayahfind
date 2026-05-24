@@ -2,8 +2,34 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+function playWithFallback(
+  primarySrc: string,
+  fallbackSrc: string | undefined,
+  audioRef: React.MutableRefObject<HTMLAudioElement | null>,
+  onStop: () => void,
+  onPlaying: () => void
+) {
+  let triedFallback = false;
+  const audio = new Audio(primarySrc);
+  audioRef.current = audio;
+
+  const handleError = () => {
+    if (!triedFallback && fallbackSrc && audio.src !== fallbackSrc) {
+      triedFallback = true;
+      audio.src = fallbackSrc;
+      void audio.play().then(onPlaying).catch(onStop);
+      return;
+    }
+    onStop();
+  };
+
+  audio.onended = onStop;
+  audio.onerror = handleError;
+  void audio.play().then(onPlaying).catch(onStop);
+}
+
 /** Single audio instance per card — toggle play/stop on repeated clicks. */
-export function useAudioPlayer(src: string) {
+export function useAudioPlayer(src: string, fallbackSrc?: string) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playing, setPlaying] = useState(false);
 
@@ -21,7 +47,7 @@ export function useAudioPlayer(src: string) {
 
   useEffect(() => {
     stop();
-  }, [src, stop]);
+  }, [src, fallbackSrc, stop]);
 
   useEffect(() => () => stop(), [stop]);
 
@@ -31,12 +57,8 @@ export function useAudioPlayer(src: string) {
       return;
     }
     stop();
-    const a = new Audio(src);
-    audioRef.current = a;
-    a.onended = () => stop();
-    a.onerror = () => stop();
-    void a.play().then(() => setPlaying(true)).catch(() => stop());
-  }, [playing, src, stop]);
+    playWithFallback(src, fallbackSrc, audioRef, stop, () => setPlaying(true));
+  }, [playing, src, fallbackSrc, stop]);
 
   return { playing, toggle, stop };
 }

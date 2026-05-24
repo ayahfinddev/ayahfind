@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { BookMarked } from "lucide-react";
 import { useReadingProgress } from "@/hooks/useReadingProgress";
+import { useReciter } from "@/hooks/useReciter";
 import { getJuzForRef } from "@/lib/quranNavigation";
 
 export function ContinueReadingCard() {
   const { progress } = useReadingProgress();
+  const { reciter } = useReciter();
 
   if (!progress) return null;
 
@@ -28,7 +30,9 @@ export function ContinueReadingCard() {
         <span className="block truncate text-sm font-semibold text-neutral-900">
           {progress.nameEn} · {progress.surah}:{progress.ayah}
         </span>
-        <span className="text-xs text-neutral-500">Juz {juz}</span>
+        <span className="text-xs text-neutral-500">
+          Juz {juz} · {reciter.name}
+        </span>
       </span>
       <span className="shrink-0 text-xs font-medium text-teal-800">Resume</span>
     </Link>
