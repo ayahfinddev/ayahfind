@@ -1,11 +1,17 @@
 export type ReciterId =
   | "alafasy"
   | "yasser-dossari"
+  | "maher-al-muaiqly"
+  | "saud-al-shuraim"
+  | "abdul-rahman-al-sudais"
   | "muhammad-ayyub"
   | "saleh-al-luhaidan"
   | "abdullah-kamel"
   | "hani-ar-rifai"
-  | "abdullah-al-juhany";
+  | "abdullah-al-juhany"
+  | "bandar-baleela"
+  | "waleed-al-shamsan"
+  | "ahmad-ibn-talib-hameed";
 
 export type ReciterAvailability = "verified" | "unverified" | "unavailable";
 
@@ -43,6 +49,36 @@ export const RECITER_REGISTRY: Reciter[] = [
     enabled: true,
     availability: "verified",
     coverageNote: "EveryAyah verse-by-verse, full Quran",
+  },
+  {
+    id: "maher-al-muaiqly",
+    name: "Maher Al-Muaiqly",
+    everyAyahFolder: "MaherAlMuaiqly128kbps",
+    bitrate: "128kbps",
+    sortOrder: 22,
+    enabled: true,
+    availability: "verified",
+    coverageNote: "EveryAyah MaherAlMuaiqly128kbps; 37-ayah spot-check PASS",
+  },
+  {
+    id: "saud-al-shuraim",
+    name: "Saud Al-Shuraim",
+    everyAyahFolder: "Saood_ash-Shuraym_128kbps",
+    bitrate: "128kbps",
+    sortOrder: 23,
+    enabled: true,
+    availability: "verified",
+    coverageNote: "EveryAyah Saood_ash-Shuraym_128kbps; 37-ayah spot-check PASS",
+  },
+  {
+    id: "abdul-rahman-al-sudais",
+    name: "Abdul Rahman Al-Sudais",
+    everyAyahFolder: "Abdurrahmaan_As-Sudais_192kbps",
+    bitrate: "192kbps",
+    sortOrder: 24,
+    enabled: true,
+    availability: "verified",
+    coverageNote: "EveryAyah Abdurrahmaan_As-Sudais_192kbps; 37-ayah spot-check PASS",
   },
   {
     id: "muhammad-ayyub",
@@ -93,6 +129,37 @@ export const RECITER_REGISTRY: Reciter[] = [
     enabled: false,
     availability: "unavailable",
     coverageNote: "Surah-level audio exists elsewhere but not EveryAyah per-ayah — keep disabled until verified",
+  },
+  {
+    id: "bandar-baleela",
+    name: "Bandar Baleela",
+    everyAyahFolder: "",
+    bitrate: "128kbps",
+    sortOrder: 80,
+    enabled: false,
+    availability: "unavailable",
+    coverageNote:
+      "No verse-by-verse folder on everyayah.com (surah-level / other CDNs only) — keep disabled",
+  },
+  {
+    id: "waleed-al-shamsan",
+    name: "Waleed Al-Shamsan",
+    everyAyahFolder: "",
+    bitrate: "128kbps",
+    sortOrder: 81,
+    enabled: false,
+    availability: "unavailable",
+    coverageNote: "Not listed on everyayah.com — keep disabled until a verified per-ayah CDN path exists",
+  },
+  {
+    id: "ahmad-ibn-talib-hameed",
+    name: "Ahmad ibn Talib Hameed",
+    everyAyahFolder: "",
+    bitrate: "128kbps",
+    sortOrder: 82,
+    enabled: false,
+    availability: "unavailable",
+    coverageNote: "Not listed on everyayah.com — keep disabled until a verified per-ayah CDN path exists",
   },
 ];
 
