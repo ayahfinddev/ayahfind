@@ -4,10 +4,12 @@ import Link from "next/link";
 import { Check } from "lucide-react";
 import { useReciter } from "@/hooks/useReciter";
 import { ENABLED_RECITERS, type ReciterId } from "@/lib/reciters";
+import { getApiSettingsDisplay } from "@/lib/apiConfig";
 import { cn } from "@/lib/utils";
 
 export default function SettingsPage() {
   const { reciterId, setReciterId } = useReciter();
+  const apiDisplay = getApiSettingsDisplay();
 
   return (
     <div className="px-5 pt-8 pb-8">
@@ -53,10 +55,15 @@ export default function SettingsPage() {
           <p className="text-sm text-neutral-500">Light</p>
         </div>
 
-        <div className="glass-panel px-4 py-4">
-          <p className="font-medium text-neutral-700">API</p>
-          <p className="text-sm text-neutral-500">localhost:8000</p>
-        </div>
+        {apiDisplay.show && (
+          <div className="glass-panel px-4 py-4">
+            <p className="font-medium text-neutral-700">API</p>
+            <p className="text-sm text-neutral-500">{apiDisplay.label}</p>
+            {apiDisplay.hint && (
+              <p className="mt-1 text-xs text-neutral-400">{apiDisplay.hint}</p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,16 +1,10 @@
 import { NextResponse } from "next/server";
+import { getServerUpstreamBase } from "@/lib/apiConfig";
 
 export const maxDuration = 30;
 
-function upstreamBase(): string {
-  const fromEnv = process.env.API_UPSTREAM_URL?.replace(/\/$/, "");
-  if (fromEnv) return fromEnv;
-  if (process.env.NODE_ENV === "development") return "http://127.0.0.1:8000";
-  return "";
-}
-
 export async function GET() {
-  const base = upstreamBase();
+  const base = getServerUpstreamBase();
   if (!base) {
     return NextResponse.json({
       status: "degraded",

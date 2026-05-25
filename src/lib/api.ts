@@ -1,6 +1,7 @@
 import type { ReaderResponse, SearchResponse } from "./types";
+import { getClientApiBase } from "./apiConfig";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
+const API_BASE = getClientApiBase();
 
 export async function searchUnified(
   query: string,
