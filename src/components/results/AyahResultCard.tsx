@@ -97,19 +97,19 @@ export function AyahResultCard({
       className={cn(
         "group relative rounded-2xl border p-5 shadow-card backdrop-blur-md transition-transform hover:-translate-y-0.5",
         isWeak
-          ? "border-neutral-200 bg-neutral-50 opacity-90"
-          : "border-glass-border bg-white"
+          ? "border-border-strong bg-canvas-elevated opacity-90"
+          : "border-glass-border bg-canvas-elevated"
       )}
     >
       <motion.div
         aria-hidden
-        className="pointer-events-none absolute inset-0 z-0 rounded-2xl bg-gradient-to-br from-accent-teal/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100"
+        className="pointer-events-none absolute inset-0 z-0 rounded-2xl bg-gradient-to-br from-accent-surface to-transparent opacity-0 transition-opacity group-hover:opacity-100"
       />
 
       <div className="relative z-20 flex flex-col">
         <div className="relative flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-neutral-500">
+            <p className="text-xs font-medium uppercase tracking-wider text-ink-muted">
               Surah {result.surah} · Ayah {result.ayah}
             </p>
             <ConfidenceBadge
@@ -120,7 +120,7 @@ export function AyahResultCard({
           </div>
           <Link
             href={readerHref}
-            className="relative z-20 rounded-lg p-2 text-neutral-500 hover:bg-neutral-100 hover:text-accent-teal-dim"
+            className="relative z-20 rounded-lg p-2 text-ink-muted hover:bg-canvas-card hover:text-accent-dim"
             aria-label="Open in reader"
           >
             <ChevronRight className="h-5 w-5" />
@@ -128,14 +128,14 @@ export function AyahResultCard({
         </div>
 
         <p
-          className="font-arabic pointer-events-none relative mt-4 text-right text-[1.35rem] leading-loose text-neutral-900"
+          className="font-arabic pointer-events-none relative mt-4 text-right text-[1.35rem] leading-loose text-ink"
           dir="rtl"
         >
           {arabicDisplay}
         </p>
 
         {result.translation_en && (
-          <p className="pointer-events-none mt-3 text-sm leading-relaxed text-neutral-700">
+          <p className="pointer-events-none mt-3 text-sm leading-relaxed text-ink-muted">
             {highlightText(result.translation_en, highlightQuery)}
           </p>
         )}
@@ -143,14 +143,14 @@ export function AyahResultCard({
         <div className="relative z-20 mt-4 flex flex-wrap items-center gap-2 border-t border-glass-border pt-4">
           <Link
             href={readerHref}
-            className="relative z-20 flex cursor-pointer items-center gap-2 rounded-xl bg-accent-teal px-3 py-2 text-sm font-medium text-white shadow-[0_0_16px_rgba(20,184,166,0.2)] hover:bg-accent-teal-dim"
+            className="relative z-20 flex cursor-pointer items-center gap-2 rounded-xl bg-accent px-3 py-2 text-sm font-medium text-canvas shadow-[0_0_16px_var(--accent-surface)] hover:brightness-110"
           >
             <BookOpen className="h-4 w-4" />
             Continue reading
           </Link>
           <Link
             href={readerHref}
-            className="relative z-20 flex cursor-pointer items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-800 hover:border-neutral-900"
+            className="relative z-20 flex cursor-pointer items-center gap-2 rounded-xl border border-border-strong bg-canvas px-3 py-2 text-sm font-medium text-ink hover:border-accent-border"
           >
             <ExternalLink className="h-4 w-4" />
             Open in reader
@@ -161,8 +161,8 @@ export function AyahResultCard({
             className={cn(
               "relative z-20 flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
               playing
-                ? "bg-neutral-900 text-white"
-                : "bg-neutral-100 text-neutral-600 hover:text-neutral-900"
+                ? "bg-ink text-canvas"
+                : "bg-canvas-card text-ink-muted hover:text-ink"
             )}
           >
             {playing ? <Volume2 className="h-4 w-4" /> : <Play className="h-4 w-4" />}
@@ -173,7 +173,7 @@ export function AyahResultCard({
             onClick={() => toggle(result.surah, result.ayah)}
             className={cn(
               "relative z-20 cursor-pointer rounded-xl p-2 transition-colors",
-              saved ? "text-accent-teal" : "text-neutral-500 hover:bg-neutral-100"
+              saved ? "text-accent" : "text-ink-subtle hover:bg-canvas-card"
             )}
             aria-label="Save"
           >
@@ -182,7 +182,7 @@ export function AyahResultCard({
           <button
             type="button"
             onClick={copyVerse}
-            className="relative z-20 cursor-pointer rounded-xl p-2 text-neutral-500 hover:bg-neutral-100"
+            className="relative z-20 cursor-pointer rounded-xl p-2 text-ink-subtle hover:bg-canvas-card"
             aria-label="Copy"
           >
             <Copy className="h-4 w-4" />
@@ -190,7 +190,7 @@ export function AyahResultCard({
           <button
             type="button"
             onClick={shareVerse}
-            className="relative z-20 cursor-pointer rounded-xl p-2 text-neutral-500 hover:bg-neutral-100"
+            className="relative z-20 cursor-pointer rounded-xl p-2 text-ink-subtle hover:bg-canvas-card"
             aria-label="Share"
           >
             <Share2 className="h-4 w-4" />

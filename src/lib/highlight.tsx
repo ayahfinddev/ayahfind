@@ -35,7 +35,7 @@ export function highlightText(text: string, query: string) {
     return (
       <mark
         key={i}
-        className="rounded bg-neutral-200 px-0.5 font-semibold text-neutral-900"
+        className="rounded bg-accent-surface px-0.5 font-semibold text-ink"
       >
         {part}
       </mark>

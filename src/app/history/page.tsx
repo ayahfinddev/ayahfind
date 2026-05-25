@@ -16,18 +16,18 @@ export default function HistoryPage() {
   }, []);
 
   return (
-    <div className="px-5 pt-8">
-      <h1 className="text-2xl font-bold text-neutral-900">History</h1>
-      <p className="mt-1 text-sm text-neutral-500">Recent searches</p>
+    <div className="px-1 pt-8 sm:px-5">
+      <h1 className="text-2xl font-bold text-ink">History</h1>
+      <p className="mt-1 text-sm text-ink-muted">Recent searches</p>
       {items.length === 0 ? (
-        <div className="mt-12 flex flex-col items-center text-neutral-500">
+        <div className="mt-12 flex flex-col items-center text-ink-subtle">
           <Clock className="mb-3 h-10 w-10 opacity-40" />
           <p className="text-sm">Your search history will appear here.</p>
         </div>
       ) : (
         <ul className="mt-6 space-y-2">
           {items.map((q) => (
-            <li key={q} className="glass-panel px-4 py-3 text-sm text-neutral-600">
+            <li key={q} className="glass-panel px-4 py-3 text-sm text-ink-muted">
               {q}
             </li>
           ))}

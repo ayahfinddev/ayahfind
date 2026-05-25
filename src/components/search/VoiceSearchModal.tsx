@@ -95,7 +95,7 @@ export function VoiceSearchModal({
           className="fixed inset-0 z-40"
         >
           <motion.div
-            className="pointer-events-none absolute inset-0 bg-white/95 backdrop-blur-xl"
+            className="pointer-events-none absolute inset-0 bg-glass-fill backdrop-blur-xl"
             aria-hidden
           />
           <motion.div
@@ -105,25 +105,25 @@ export function VoiceSearchModal({
             transition={{ type: "spring", stiffness: 400, damping: 32 }}
             className="pointer-events-auto fixed inset-x-4 top-[8%] z-50 mx-auto max-w-lg"
           >
-            <motion.div className="islamic-grid relative overflow-hidden rounded-3xl border border-neutral-200 bg-white p-8 shadow-glow-lg">
+            <motion.div className="islamic-grid relative overflow-hidden rounded-3xl border border-glass-border bg-canvas p-8 shadow-glow-lg">
               <button
                 type="button"
                 onClick={handleClose}
-                className="absolute right-4 top-4 rounded-full p-2 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
+                className="absolute right-4 top-4 rounded-full p-2 text-ink-muted hover:bg-canvas-elevated hover:text-ink"
                 aria-label="Close"
               >
                 <X className="h-5 w-5" />
               </button>
 
-              <p className="mb-2 text-center text-sm font-medium uppercase tracking-widest text-neutral-500">
+              <p className="mb-2 text-center text-sm font-medium uppercase tracking-widest text-ink-muted">
                 {listening ? "Listening" : "Voice search"}
               </p>
-              <h2 className="mb-4 text-center text-xl font-semibold text-neutral-900">
+              <h2 className="mb-4 text-center text-xl font-semibold text-ink">
                 Recite or speak — mistakes are OK
               </h2>
 
               <div
-                className="relative mx-auto mb-6 flex w-full max-w-sm rounded-full border border-neutral-200 bg-neutral-100 p-1"
+                className="relative mx-auto mb-6 flex w-full max-w-sm rounded-full border border-border-strong bg-canvas-card p-1"
                 role="tablist"
                 aria-label="Recognition language"
               >
@@ -142,14 +142,14 @@ export function VoiceSearchModal({
                       className={cn(
                         "relative z-0 flex min-h-[2.25rem] flex-1 items-center justify-center rounded-full px-3 py-2 text-xs font-semibold transition-colors duration-200 ease-out",
                         selected
-                          ? "text-white"
-                          : "text-neutral-600 hover:text-neutral-800"
+                          ? "text-canvas"
+                          : "text-ink-muted hover:text-ink"
                       )}
                     >
                       {selected && (
                         <motion.span
                           layoutId="voice-lang-pill"
-                          className="absolute inset-0 rounded-full bg-neutral-900 shadow-sm"
+                          className="absolute inset-0 rounded-full bg-ink shadow-sm"
                           transition={{ type: "spring", stiffness: 520, damping: 36 }}
                           aria-hidden
                         />
@@ -188,14 +188,14 @@ export function VoiceSearchModal({
               <WaveformVisualizer active={listening} className="mb-4" />
 
               {status && !error && (
-                <p className="mb-2 text-center text-xs text-neutral-500">{status}</p>
+                <p className="mb-2 text-center text-xs text-ink-muted">{status}</p>
               )}
 
-              <div className="min-h-[4.5rem] rounded-xl bg-neutral-50 p-4 text-center">
+              <div className="min-h-[4.5rem] rounded-xl bg-canvas-elevated p-4 text-center">
                 {error ? (
-                  <p className="text-sm text-red-800">{error}</p>
+                  <p className="text-sm text-red-400">{error}</p>
                 ) : (
-                  <p className="font-arabic text-lg text-neutral-700" dir="auto">
+                  <p className="font-arabic text-lg text-ink-muted" dir="auto">
                     {displayText ||
                       (supported
                         ? "Speak clearly into your microphone…"
@@ -205,7 +205,7 @@ export function VoiceSearchModal({
               </div>
 
               <div className="mt-4">
-                <label className="mb-1 block text-xs text-neutral-500">
+                <label className="mb-1 block text-xs text-ink-muted">
                   Or type what you said (if voice fails)
                 </label>
                 <input
@@ -214,11 +214,11 @@ export function VoiceSearchModal({
                   onChange={(e) => setManualText(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && canSearch && handleSearch()}
                   placeholder="e.g. fa inama al usri yusra"
-                  className="w-full rounded-xl border border-glass-border bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none focus:border-accent-emerald/40"
+                  className="w-full rounded-xl border border-glass-border bg-canvas-elevated px-4 py-3 text-sm text-ink outline-none focus:border-accent-border"
                 />
               </div>
 
-              <p className="mt-3 text-center text-xs text-neutral-500">
+              <p className="mt-3 text-center text-xs text-ink-subtle">
                 Tap the mic to stop — we search automatically. Needs internet on Chrome.
               </p>
 
@@ -226,7 +226,7 @@ export function VoiceSearchModal({
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="flex-1 rounded-xl border border-glass-border py-3 text-sm text-neutral-500"
+                  className="flex-1 rounded-xl border border-glass-border py-3 text-sm text-ink-muted"
                 >
                   Cancel
                 </button>

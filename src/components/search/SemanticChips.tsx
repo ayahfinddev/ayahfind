@@ -13,7 +13,7 @@ interface SemanticChipsProps {
 export function SemanticChips({ onTopic, loading, activeLabel }: SemanticChipsProps) {
   return (
     <div className="-mt-0.5 space-y-1.5">
-      <span className="block text-xs font-medium text-neutral-500">Try asking</span>
+      <span className="block text-xs font-medium text-ink-muted">Try asking</span>
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 hide-scrollbar sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
         {SEARCH_TOPICS.map((topic, i) => (
           <motion.button

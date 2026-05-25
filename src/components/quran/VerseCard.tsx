@@ -70,16 +70,16 @@ export function VerseCard(props: VerseCardProps) {
       id={`ayah-${ayah.ayah}`}
       className={cn(
         "scroll-mt-28 overflow-visible px-5 py-7 transition-colors md:px-8 md:py-9",
-        !isLast && "border-b border-neutral-100",
+        !isLast && "border-b border-glass-border",
         highlighted && "reader-highlight",
-        active ? "bg-accent-teal/[0.04]" : "bg-white hover:bg-neutral-50/80"
+        active ? "bg-accent-surface" : "bg-canvas hover:bg-canvas-elevated"
       )}
     >
       <div className="flex items-start justify-between gap-3">
         <button
           type="button"
           onClick={() => onSelectAyah(ayah.ayah)}
-          className="text-xs font-semibold uppercase tracking-wider text-neutral-600 hover:text-accent-teal-dim"
+          className="text-xs font-semibold uppercase tracking-wider text-ink-muted hover:text-accent-dim"
         >
           {surah}:{ayah.ayah}
         </button>
@@ -90,8 +90,8 @@ export function VerseCard(props: VerseCardProps) {
             className={cn(
               "flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-medium transition-colors",
               playing
-                ? "bg-neutral-900 text-white"
-                : "bg-neutral-100 text-neutral-800 hover:bg-neutral-200"
+                ? "bg-ink text-canvas"
+                : "bg-canvas-elevated text-ink hover:bg-canvas-card"
             )}
           >
             {playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
@@ -100,7 +100,7 @@ export function VerseCard(props: VerseCardProps) {
           <button
             type="button"
             onClick={onToggleSave}
-            className={cn("af-icon-btn", saved && "text-accent-teal")}
+            className={cn("af-icon-btn", saved && "!text-accent")}
             aria-label="Bookmark"
           >
             <Bookmark className={cn("h-4 w-4", saved && "fill-current")} />
@@ -117,7 +117,7 @@ export function VerseCard(props: VerseCardProps) {
       {showArabic && (
         <p
           className={cn(
-            "font-arabic break-words text-neutral-900",
+            "font-arabic break-words text-ink",
             mode === "arabic"
               ? "mt-3 text-center text-[1.75rem] leading-[2.35] md:text-[2rem] md:leading-[2.5]"
               : "mt-5 text-right text-[1.5rem] leading-[2.25] md:text-[1.65rem] md:leading-[2.35]"
@@ -132,7 +132,7 @@ export function VerseCard(props: VerseCardProps) {
       {showTranslation && ayah.translation_en && (
         <p
           className={cn(
-            "break-words leading-relaxed text-neutral-700",
+            "break-words leading-relaxed text-ink-muted",
             mode === "verse" || mode === "both"
               ? "mt-4 text-sm md:text-[0.9375rem]"
               : "mt-3 text-base md:text-lg"

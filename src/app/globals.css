@@ -27,21 +27,21 @@
 }
 
 [data-theme="dark"] {
-  --canvas: #0f1117;
-  --elevated: #1a1d27;
-  --card: #21252f;
-  --ink: #f4f4f5;
-  --muted: #a1a1aa;
-  --subtle: #71717a;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.15);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-fill: rgba(15, 17, 23, 0.92);
-  --accent: #2dd4bf;
-  --accent-dim: #14b8a6;
-  --accent-surface: rgba(45, 212, 191, 0.1);
-  --accent-border: rgba(45, 212, 191, 0.25);
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.2), 0 8px 24px rgba(0, 0, 0, 0.3);
+  --canvas: #10131a;
+  --elevated: #181c25;
+  --card: #1f2430;
+  --ink: #eaedf2;
+  --muted: #9ca3b0;
+  --subtle: #6b7280;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-strong: rgba(255, 255, 255, 0.13);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-fill: rgba(16, 19, 26, 0.88);
+  --accent: #5eead4;
+  --accent-dim: #2dd4bf;
+  --accent-surface: rgba(94, 234, 212, 0.07);
+  --accent-border: rgba(94, 234, 212, 0.2);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
 html {
@@ -94,15 +94,32 @@ a {
   }
 
   .af-segment-inactive {
-    @apply border border-neutral-400 bg-white text-neutral-950 shadow-sm hover:border-neutral-500 hover:bg-neutral-50 active:scale-[0.97];
+    border: 1px solid var(--border-strong);
+    background: var(--canvas);
+    color: var(--ink);
+    @apply shadow-sm active:scale-[0.97];
+  }
+
+  .af-segment-inactive:hover {
+    border-color: var(--accent-border);
+    background: var(--elevated);
   }
 
   .af-segment-active {
-    @apply border border-accent-teal bg-accent-teal/[0.14] text-teal-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_0_0_1px_rgba(20,184,166,0.35)];
+    border: 1px solid var(--accent-border);
+    background: var(--accent-surface);
+    color: var(--accent-dim);
+    @apply shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_0_0_1px_var(--accent-border)];
   }
 
   .af-icon-btn {
-    @apply rounded-xl p-2 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900;
+    @apply rounded-xl p-2 transition-colors;
+    color: var(--muted);
+  }
+
+  .af-icon-btn:hover {
+    background: var(--elevated);
+    color: var(--ink);
   }
 }
 

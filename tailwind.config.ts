@@ -62,7 +62,7 @@ const config: Config = {
       boxShadow: {
         glow: "0 0 0 1px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.06)",
         "glow-lg": "0 0 0 1px rgba(0, 0, 0, 0.08), 0 16px 40px rgba(0, 0, 0, 0.08)",
-        card: "0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06)",
+        card: "var(--shadow-card)",
       },
       animation: {
         "pulse-glow": "pulse-glow 2.5s ease-in-out infinite",

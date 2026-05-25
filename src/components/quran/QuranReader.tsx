@@ -153,7 +153,7 @@ export function QuranReader({
         {prevSurah ? (
           <Link
             href={`/ayah/${prevSurah}/1`}
-            className="flex items-center gap-1 rounded-xl border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-900 hover:text-neutral-900"
+            className="flex items-center gap-1 rounded-xl border border-border-strong bg-canvas-elevated px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:border-accent-border hover:text-ink"
           >
             <ChevronLeft className="h-4 w-4" />
             Surah {prevSurah}
@@ -164,7 +164,7 @@ export function QuranReader({
         {nextSurah ? (
           <Link
             href={`/ayah/${nextSurah}/1`}
-            className="flex items-center gap-1 rounded-xl border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-900 hover:text-neutral-900"
+            className="flex items-center gap-1 rounded-xl border border-border-strong bg-canvas-elevated px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:border-accent-border hover:text-ink"
           >
             Surah {nextSurah}
             <ChevronRight className="h-4 w-4" />
@@ -191,7 +191,7 @@ export function QuranReader({
             aria-label="Open Quran navigator"
             data-testid="quran-nav-fab"
             className={cn(
-              "fixed right-5 z-[100] flex h-10 w-10 items-center justify-center rounded-full border border-neutral-200 bg-white/95 text-neutral-600 shadow-md backdrop-blur-sm transition-all hover:border-accent-teal/50 hover:text-teal-900 md:hidden",
+              "fixed right-5 z-[100] flex h-10 w-10 items-center justify-center rounded-full border border-glass-border bg-glass-fill text-ink-muted shadow-md backdrop-blur-sm transition-all hover:border-accent-border hover:text-accent-dim md:hidden",
               playback.mode !== "idle" ? "bottom-[calc(7.5rem+env(safe-area-inset-bottom))]" : "bottom-[calc(5.5rem+env(safe-area-inset-bottom))]"
             )}
           >
@@ -227,13 +227,13 @@ export function QuranReader({
 
       <div className="reader-body pt-5 md:pt-6">
         {surahNav}
-        <p className="mb-6 text-center text-sm text-neutral-500">
+        <p className="mb-6 text-center text-sm text-ink-muted">
           {displayAyahs.length} ayahs - continuous recitation from the selected verse
         </p>
 
         {showsBismillahHeader(surah) && <BismillahHeader />}
 
-        <div className="reader-verses overflow-visible rounded-2xl border border-glass-border bg-white shadow-card">
+        <div className="reader-verses overflow-visible rounded-2xl border border-glass-border bg-canvas shadow-card">
           {displayAyahs.map((a, i) => {
             const qIdx = audioQueue.findIndex((q) => q.ayah === a.ayah);
             return (

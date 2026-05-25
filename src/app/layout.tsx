@@ -22,7 +22,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="font-sans text-body text-neutral-900 antialiased">
+      <body className="font-sans text-body antialiased">
         <Providers>
           <AppShell>{children}</AppShell>
         </Providers>

@@ -58,18 +58,18 @@ export function ReaderTopBar({
 }: ReaderTopBarProps) {
   const showInlinePlayback = !audioActive;
   return (
-    <header className="sticky top-safe z-40 -mx-5 border-b border-neutral-200 bg-white/95 px-5 backdrop-blur-xl md:-mx-8 md:px-8">
+    <header className="sticky top-safe z-40 -mx-5 border-b border-glass-border bg-glass-fill px-5 backdrop-blur-xl md:-mx-8 md:px-8">
       <div className="flex items-center gap-2 py-3">
         <Link href="/" className="af-icon-btn shrink-0" aria-label="Back to search">
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-neutral-900">{nameEn}</p>
-          <p className="truncate text-xs text-neutral-500">
+          <p className="truncate text-sm font-semibold text-ink">{nameEn}</p>
+          <p className="truncate text-xs text-ink-muted">
             {formatReaderMeta(surah, ayah, nameEn)}
           </p>
           {nameAr && (
-            <p className="font-arabic truncate text-xs text-neutral-500" dir="rtl">
+            <p className="font-arabic truncate text-xs text-ink-muted" dir="rtl">
               {nameAr}
             </p>
           )}
@@ -147,7 +147,7 @@ export function ReaderTopBar({
       </div>
       <div className="flex flex-col gap-2 border-t border-glass-border py-2.5 sm:flex-row sm:items-center sm:justify-between">
         <ReadingModeToggle mode={mode} onChange={onModeChange} />
-        <span className="text-xs text-neutral-500">Sahih International</span>
+        <span className="text-xs text-ink-muted">Sahih International</span>
       </div>
     </header>
   );

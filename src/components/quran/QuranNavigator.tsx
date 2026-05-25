@@ -57,10 +57,10 @@ export function QuranNavigatorToggle({
         TOGGLE_LEFT,
         "top-1/2 -translate-y-1/2",
         "flex h-16 w-10 flex-col items-center justify-center gap-0.5",
-        "rounded-r-xl border border-l-0 border-neutral-300",
-        "bg-white text-neutral-700 shadow-lg",
-        "transition-all hover:border-accent-teal/50 hover:bg-accent-teal/5 hover:text-teal-900",
-        open && "border-accent-teal bg-accent-teal/10 text-teal-900"
+        "rounded-r-xl border border-l-0 border-border-strong",
+        "bg-canvas text-ink-muted shadow-lg",
+        "transition-all hover:border-accent-border hover:bg-accent-surface hover:text-accent-dim",
+        open && "border-accent-border bg-accent-surface text-accent-dim"
       )}
     >
       <ChevronRight
@@ -129,16 +129,16 @@ export function QuranNavigator({
   const currentPage = getPageForRef(surah, ayah);
   const panelContent = (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="shrink-0 flex items-center justify-between border-b border-neutral-200 px-4 py-3">
+      <div className="shrink-0 flex items-center justify-between border-b border-glass-border px-4 py-3">
         <div className="flex items-center gap-2">
-          <BookOpen className="h-5 w-5 text-accent-teal-dim" />
-          <h2 className="text-sm font-semibold text-neutral-900">Navigate Quran</h2>
+          <BookOpen className="h-5 w-5 text-accent-dim" />
+          <h2 className="text-sm font-semibold text-ink">Navigate Quran</h2>
         </div>
         <button type="button" onClick={onClose} className="af-icon-btn" aria-label="Close">
           <X className="h-5 w-5" />
         </button>
       </div>
-      <div className="flex shrink-0 gap-1 border-b border-neutral-100 px-3 py-2">
+      <div className="flex shrink-0 gap-1 border-b border-glass-border px-3 py-2">
         {(
           [
             ["surah", "Surah", List],
@@ -153,8 +153,8 @@ export function QuranNavigator({
             className={cn(
               "flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-semibold",
               tab === id
-                ? "bg-accent-teal/15 text-teal-900"
-                : "text-neutral-500 hover:bg-neutral-50"
+                ? "bg-accent-surface text-accent-dim"
+                : "text-ink-muted hover:bg-canvas-elevated"
             )}
           >
             <Icon className="h-3.5 w-3.5" />
@@ -170,10 +170,10 @@ export function QuranNavigator({
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               placeholder="Search surah…"
-              className="mb-3 w-full rounded-xl border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-accent-teal/50 focus:ring-2 focus:ring-accent-teal/20"
+              className="mb-3 w-full rounded-xl border border-border-strong bg-canvas px-3 py-2 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-border focus:ring-2 focus:ring-accent-surface"
             />
-            <div className="mb-3 flex items-center gap-2 rounded-xl bg-neutral-50 px-3 py-2">
-              <label htmlFor="ayah-jump" className="shrink-0 text-xs text-neutral-500">
+            <div className="mb-3 flex items-center gap-2 rounded-xl bg-canvas-elevated px-3 py-2">
+              <label htmlFor="ayah-jump" className="shrink-0 text-xs text-ink-muted">
                 Ayah in {surah}:
               </label>
               <input
@@ -183,12 +183,12 @@ export function QuranNavigator({
                 value={jumpAyah}
                 onChange={(e) => setJumpAyah(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && jumpToAyah()}
-                className="w-16 rounded-lg border border-neutral-200 px-2 py-1 text-sm"
+                className="w-16 rounded-lg border border-border-strong bg-canvas px-2 py-1 text-sm text-ink"
               />
               <button
                 type="button"
                 onClick={jumpToAyah}
-                className="rounded-lg bg-neutral-900 px-2.5 py-1 text-xs font-medium text-white"
+                className="rounded-lg bg-ink px-2.5 py-1 text-xs font-medium text-canvas"
               >
                 Go
               </button>
@@ -205,13 +205,13 @@ export function QuranNavigator({
                       className={cn(
                         "flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm transition-colors",
                         active
-                          ? "bg-accent-teal/15 font-semibold text-teal-900"
-                          : "hover:bg-neutral-50"
+                          ? "bg-accent-surface font-semibold text-accent-dim"
+                          : "text-ink hover:bg-canvas-elevated"
                       )}
                     >
-                      <span className="w-7 shrink-0 text-xs text-neutral-400">{s.n}</span>
+                      <span className="w-7 shrink-0 text-xs text-ink-subtle">{s.n}</span>
                       <span className="min-w-0 flex-1 truncate">{s.en}</span>
-                      <span className="font-arabic shrink-0 text-xs text-neutral-500" dir="rtl">
+                      <span className="font-arabic shrink-0 text-xs text-ink-muted" dir="rtl">
                         {s.ar}
                       </span>
                     </button>
@@ -235,8 +235,8 @@ export function QuranNavigator({
                     className={cn(
                       "w-full rounded-xl border py-3 text-center text-sm font-semibold transition-colors",
                       active
-                        ? "border-accent-teal bg-accent-teal/15 text-teal-900"
-                        : "border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50"
+                        ? "border-accent-border bg-accent-surface text-accent-dim"
+                        : "border-border-strong text-ink hover:border-accent-border hover:bg-canvas-elevated"
                     )}
                   >
                     {juz}
@@ -260,8 +260,8 @@ export function QuranNavigator({
                     className={cn(
                       "w-full rounded-lg border py-2 text-center text-xs font-semibold transition-colors",
                       active
-                        ? "border-accent-teal bg-accent-teal/15 text-teal-900"
-                        : "border-neutral-200 hover:bg-neutral-50"
+                        ? "border-accent-border bg-accent-surface text-accent-dim"
+                        : "border-border-strong text-ink hover:bg-canvas-elevated"
                     )}
                   >
                     {page}
@@ -272,7 +272,7 @@ export function QuranNavigator({
           </ul>
         )}
       </div>
-      <p className="shrink-0 border-t border-neutral-100 px-4 py-2.5 text-center text-[11px] text-neutral-400">
+      <p className="shrink-0 border-t border-glass-border px-4 py-2.5 text-center text-[11px] text-ink-subtle">
         {surah}:{ayah} · Juz {currentJuz} · Page {currentPage}
       </p>
     </div>
@@ -318,7 +318,7 @@ export function QuranNavigator({
               "quran-nav-panel fixed z-[120] hidden w-[min(calc(100vw-5.5rem),340px)] flex-col",
               PANEL_LEFT,
               "overflow-hidden rounded-r-2xl",
-              "border border-l-0 border-neutral-200 bg-white shadow-2xl md:flex",
+              "border border-l-0 border-glass-border bg-canvas shadow-2xl md:flex",
               "md:top-3 md:bottom-3 md:w-[340px]"
             )}
           >
@@ -341,9 +341,9 @@ export function QuranNavigator({
               initial={{ y: "100%" }}
               animate={{ y: 0, transition: navPanelEnter }}
               exit={{ y: "100%", transition: navMobileExit }}
-              className="quran-nav-panel pointer-events-auto flex max-h-[min(82dvh,82svh,680px)] flex-col rounded-t-2xl border border-b-0 border-neutral-200 bg-white pb-safe shadow-2xl"
+              className="quran-nav-panel pointer-events-auto flex max-h-[min(82dvh,82svh,680px)] flex-col rounded-t-2xl border border-b-0 border-glass-border bg-canvas pb-safe shadow-2xl"
             >
-              <div className="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-neutral-300" />
+              <div className="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-border-strong" />
               {panelContent}
             </motion.aside>
           </motion.div>

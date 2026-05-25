@@ -73,7 +73,7 @@ export function AISearchBar({
                 animate={{ opacity: 0.62, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
                 transition={{ duration: 0.25 }}
-                className="pointer-events-none absolute inset-y-0 left-0 flex items-center text-base leading-5 text-neutral-500"
+                className="pointer-events-none absolute inset-y-0 left-0 flex items-center text-base leading-5 text-ink-subtle"
               >
                 {placeholders[placeholderIdx]}
               </motion.span>
@@ -99,8 +99,8 @@ export function AISearchBar({
           className={cn(
             "flex h-11 items-center gap-2 rounded-xl px-4 font-medium transition-all",
             value.trim()
-              ? "bg-accent-teal text-white shadow-[0_0_20px_rgba(20,184,166,0.25)]"
-              : "bg-neutral-100 text-neutral-500"
+              ? "bg-accent text-canvas shadow-[0_0_20px_var(--accent-surface)]"
+              : "bg-canvas-card text-ink-subtle"
           )}
         >
           <Search className="h-4 w-4" />

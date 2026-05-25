@@ -131,7 +131,7 @@ export function SearchExperience() {
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-neutral-400"
+          className="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-ink-subtle"
         >
           AyahFind AI
         </motion.p>
@@ -181,14 +181,14 @@ export function SearchExperience() {
       )}
 
       {error && (
-        <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <p className="mt-4 rounded-xl border border-red-300/40 bg-red-500/10 px-4 py-3 text-sm text-red-400 dark:border-red-400/20 dark:text-red-300">
           {error}
         </p>
       )}
 
       {aiHint && !loading && results.length > 0 && (
-        <div className="mt-4 flex items-start gap-2 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-600">
-          <Brain className="mt-0.5 h-4 w-4 shrink-0 text-neutral-900" />
+        <div className="mt-4 flex items-start gap-2 rounded-xl border border-glass-border bg-canvas-elevated px-4 py-3 text-sm text-ink-muted">
+          <Brain className="mt-0.5 h-4 w-4 shrink-0 text-ink" />
           <span>AI reconstructed intent · {aiHint}</span>
         </div>
       )}
@@ -197,23 +197,23 @@ export function SearchExperience() {
         <motion.section
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-6 rounded-2xl border border-neutral-300 bg-neutral-50 px-5 py-6 text-center"
+          className="mt-6 rounded-2xl border border-border-strong bg-canvas-elevated px-5 py-6 text-center"
         >
-          <SearchX className="mx-auto mb-3 h-10 w-10 text-neutral-700" />
-          <h2 className="text-lg font-semibold text-neutral-900">
+          <SearchX className="mx-auto mb-3 h-10 w-10 text-ink-muted" />
+          <h2 className="text-lg font-semibold text-ink">
             No confident match found
           </h2>
-          <p className="mt-2 text-sm text-neutral-600">{noMatchMessage}</p>
+          <p className="mt-2 text-sm text-ink-muted">{noMatchMessage}</p>
         </motion.section>
       )}
 
       {!loading && results.length > 0 && (
         <section className="relative z-20 mt-6 space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-neutral-500">
+            <h2 className="text-sm font-semibold text-ink-muted">
               {results.length} matches
             </h2>
-            {loading && <Loader2 className="h-4 w-4 animate-spin text-neutral-900" />}
+            {loading && <Loader2 className="h-4 w-4 animate-spin text-ink" />}
           </div>
           {results.map((r, i) => (
             <AyahResultCard
@@ -231,7 +231,7 @@ export function SearchExperience() {
           <button
             type="button"
             onClick={() => setWeakOpen((o) => !o)}
-            className="flex w-full items-center justify-between rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-left text-sm text-neutral-500 hover:border-neutral-300"
+            className="flex w-full items-center justify-between rounded-xl border border-glass-border bg-canvas-elevated px-4 py-3 text-left text-sm text-ink-muted hover:border-border-strong"
           >
             <span>
               Low confidence matches (below 55%)

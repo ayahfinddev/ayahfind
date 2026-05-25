@@ -80,22 +80,22 @@ export function ReaderReciterSelect({ dropdownDirection = "down" }: ReaderRecite
           className={cn(
             "flex max-w-[7.5rem] items-center gap-1 rounded-xl border px-2 py-1.5 text-left text-xs font-medium transition-colors sm:max-w-[9.5rem]",
             open
-              ? "border-accent-teal/40 bg-accent-teal/10 text-teal-900"
-              : "border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50"
+              ? "border-accent-border bg-accent-surface text-accent-dim"
+              : "border-border-strong bg-canvas text-ink-muted hover:border-accent-border hover:bg-canvas-elevated"
           )}
           aria-haspopup="listbox"
           aria-expanded={open}
           aria-controls={listId}
           title={`Reciter: ${reciter.name}`}
         >
-          <UserRound className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
+          <UserRound className="h-3.5 w-3.5 shrink-0 text-ink-subtle" aria-hidden />
           <span className="min-w-0 truncate">
             <span className="hidden sm:inline">{reciter.name}</span>
             <span className="sm:hidden">{shortReciterLabel(reciter.name)}</span>
           </span>
           <ChevronDown
             className={cn(
-              "h-3.5 w-3.5 shrink-0 text-neutral-400 transition-transform",
+              "h-3.5 w-3.5 shrink-0 text-ink-subtle transition-transform",
               open && "rotate-180"
             )}
             aria-hidden
@@ -108,7 +108,7 @@ export function ReaderReciterSelect({ dropdownDirection = "down" }: ReaderRecite
             role="listbox"
             aria-label="Choose reciter"
             className={cn(
-              "absolute right-0 z-50 max-h-[min(16rem,50vh)] w-[min(16rem,calc(100vw-2.5rem))] overflow-y-auto rounded-xl border border-glass-border bg-white py-1 shadow-lg",
+              "absolute right-0 z-50 max-h-[min(16rem,50vh)] w-[min(16rem,calc(100vw-2.5rem))] overflow-y-auto rounded-xl border border-glass-border bg-canvas py-1 shadow-lg",
               dropdownDirection === "up" ? "bottom-full mb-1" : "top-full mt-1"
             )}
           >
@@ -122,14 +122,14 @@ export function ReaderReciterSelect({ dropdownDirection = "down" }: ReaderRecite
                   className={cn(
                     "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm transition-colors",
                     reciterId === r.id
-                      ? "bg-accent-teal/10 text-teal-900"
-                      : "text-neutral-700 hover:bg-neutral-50"
+                      ? "bg-accent-surface text-accent-dim"
+                      : "text-ink hover:bg-canvas-elevated"
                   )}
                 >
                   <span className="min-w-0 flex-1 truncate">{r.name}</span>
-                  <span className="shrink-0 text-[10px] text-neutral-400">{r.bitrate}</span>
+                  <span className="shrink-0 text-[10px] text-ink-subtle">{r.bitrate}</span>
                   {reciterId === r.id && (
-                    <Check className="h-3.5 w-3.5 shrink-0 text-accent-teal" aria-hidden />
+                    <Check className="h-3.5 w-3.5 shrink-0 text-accent" aria-hidden />
                   )}
                 </button>
               </li>
@@ -143,7 +143,7 @@ export function ReaderReciterSelect({ dropdownDirection = "down" }: ReaderRecite
           role="status"
           aria-live="polite"
           className={cn(
-            "pointer-events-none fixed left-1/2 z-[90] max-w-[min(20rem,calc(100vw-2rem))] -translate-x-1/2 rounded-full border border-neutral-200 bg-white/95 px-4 py-2 text-center text-xs font-medium text-neutral-800 shadow-md backdrop-blur-sm",
+            "pointer-events-none fixed left-1/2 z-[90] max-w-[min(20rem,calc(100vw-2rem))] -translate-x-1/2 rounded-full border border-glass-border bg-glass-fill px-4 py-2 text-center text-xs font-medium text-ink shadow-md backdrop-blur-sm",
             dropdownDirection === "up"
               ? "bottom-[calc(4rem+var(--safe-bottom,0px))]"
               : "bottom-[calc(4.5rem+var(--safe-bottom,0px))]"

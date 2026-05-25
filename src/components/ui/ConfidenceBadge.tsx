@@ -27,12 +27,12 @@ export function ConfidenceBadge({
         "inline-flex items-center gap-1 rounded-full font-medium",
         size === "sm" ? "px-2 py-0.5 text-xs" : "px-2.5 py-1 text-sm",
         tier === "weak"
-          ? "bg-neutral-100 text-neutral-500 ring-1 ring-neutral-200"
+          ? "bg-canvas-card text-ink-subtle ring-1 ring-border-strong"
           : high
-            ? "bg-neutral-900 text-white ring-1 ring-neutral-900"
+            ? "bg-ink text-canvas ring-1 ring-ink"
             : medium
-              ? "bg-neutral-100 text-neutral-800 ring-1 ring-neutral-300"
-              : "bg-neutral-50 text-neutral-600 ring-1 ring-neutral-200",
+              ? "bg-canvas-card text-ink ring-1 ring-border-strong"
+              : "bg-canvas-elevated text-ink-muted ring-1 ring-border",
         className
       )}
     >
