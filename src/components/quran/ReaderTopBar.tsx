@@ -12,6 +12,7 @@ import {
   SkipForward,
   Volume2,
 } from "lucide-react";
+import { ReaderReciterSelect } from "@/components/quran/ReaderReciterSelect";
 import { ReadingModeToggle } from "@/components/quran/ReadingModeToggle";
 import type { ReadingMode } from "@/hooks/useReadingMode";
 import { formatReaderMeta } from "@/lib/surahMeta";
@@ -109,6 +110,7 @@ export function ReaderTopBar({
               <SkipBack className="h-4 w-4" />
             </button>
           )}
+          {onListenSurah && <ReaderReciterSelect />}
           {onListenSurah && (
             <button
               type="button"
