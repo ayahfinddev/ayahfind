@@ -13,7 +13,11 @@ function shortReciterLabel(name: string): string {
   return first.length >= 3 ? first : name;
 }
 
-export function ReaderReciterSelect() {
+interface ReaderReciterSelectProps {
+  dropdownDirection?: "down" | "up";
+}
+
+export function ReaderReciterSelect({ dropdownDirection = "down" }: ReaderReciterSelectProps) {
   const { reciterId, reciter, setReciterId } = useReciter();
   const [open, setOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -103,7 +107,10 @@ export function ReaderReciterSelect() {
             id={listId}
             role="listbox"
             aria-label="Choose reciter"
-            className="absolute right-0 top-full z-50 mt-1 max-h-[min(16rem,50vh)] w-[min(16rem,calc(100vw-2.5rem))] overflow-y-auto rounded-xl border border-glass-border bg-white py-1 shadow-lg"
+            className={cn(
+              "absolute right-0 z-50 max-h-[min(16rem,50vh)] w-[min(16rem,calc(100vw-2.5rem))] overflow-y-auto rounded-xl border border-glass-border bg-white py-1 shadow-lg",
+              dropdownDirection === "up" ? "bottom-full mb-1" : "top-full mt-1"
+            )}
           >
             {ENABLED_RECITERS.map((r) => (
               <li key={r.id} role="presentation">
@@ -135,7 +142,12 @@ export function ReaderReciterSelect() {
         <div
           role="status"
           aria-live="polite"
-          className="pointer-events-none fixed bottom-[calc(4.5rem+var(--safe-bottom,0px))] left-1/2 z-[90] max-w-[min(20rem,calc(100vw-2rem))] -translate-x-1/2 rounded-full border border-neutral-200 bg-white/95 px-4 py-2 text-center text-xs font-medium text-neutral-800 shadow-md backdrop-blur-sm"
+          className={cn(
+            "pointer-events-none fixed left-1/2 z-[90] max-w-[min(20rem,calc(100vw-2rem))] -translate-x-1/2 rounded-full border border-neutral-200 bg-white/95 px-4 py-2 text-center text-xs font-medium text-neutral-800 shadow-md backdrop-blur-sm",
+            dropdownDirection === "up"
+              ? "bottom-[calc(4rem+var(--safe-bottom,0px))]"
+              : "bottom-[calc(4.5rem+var(--safe-bottom,0px))]"
+          )}
         >
           Reciter: {toast}
         </div>

@@ -34,6 +34,8 @@ interface ReaderTopBarProps {
   canPrev: boolean;
   canNext: boolean;
   onOpenNavigator?: () => void;
+  /** When true, playback controls live in the TilawahBar — hide them here. */
+  audioActive?: boolean;
 }
 
 export function ReaderTopBar({
@@ -52,7 +54,9 @@ export function ReaderTopBar({
   canPrev,
   canNext,
   onOpenNavigator,
+  audioActive,
 }: ReaderTopBarProps) {
+  const showInlinePlayback = !audioActive;
   return (
     <header className="sticky top-safe z-40 -mx-5 border-b border-neutral-200 bg-white/95 px-5 backdrop-blur-xl md:-mx-8 md:px-8">
       <div className="flex items-center gap-2 py-3">
@@ -100,7 +104,7 @@ export function ReaderTopBar({
           >
             <ChevronRight className="h-5 w-5" />
           </button>
-          {onSkipPrev && (
+          {showInlinePlayback && onSkipPrev && (
             <button
               type="button"
               onClick={onSkipPrev}
@@ -110,7 +114,7 @@ export function ReaderTopBar({
               <SkipBack className="h-4 w-4" />
             </button>
           )}
-          {onListenSurah && <ReaderReciterSelect />}
+          {showInlinePlayback && onListenSurah && <ReaderReciterSelect />}
           {onListenSurah && (
             <button
               type="button"
@@ -126,7 +130,7 @@ export function ReaderTopBar({
               {isPlaying ? <Pause className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
             </button>
           )}
-          {onSkipNext && (
+          {showInlinePlayback && onSkipNext && (
             <button
               type="button"
               onClick={onSkipNext}

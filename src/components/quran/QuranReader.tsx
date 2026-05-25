@@ -17,6 +17,7 @@ import { useReciter } from "@/hooks/useReciter";
 import { buildSurahAudioQueue } from "@/lib/readerAudio";
 import { getSurahEntry } from "@/lib/quranNavigation";
 import { prepareReaderAyahs, showsBismillahHeader } from "@/lib/quranDisplay";
+import { cn } from "@/lib/utils";
 import type { AyahDetail } from "@/lib/types";
 
 interface QuranReaderProps {
@@ -180,7 +181,7 @@ export function QuranReader({
   useEffect(() => setNavMounted(true), []);
 
   return (
-    <div className="reader-root relative -mt-2 min-h-[50vh] pb-12">
+    <div className={cn("reader-root relative -mt-2 min-h-[50vh]", playback.mode !== "idle" ? "pb-24" : "pb-12")}>
       <QuranNavigatorToggle open={navOpen} onClick={() => setNavOpen((o) => !o)} />
       {navMounted &&
         createPortal(
@@ -189,7 +190,10 @@ export function QuranReader({
             onClick={() => setNavOpen(true)}
             aria-label="Open Quran navigator"
             data-testid="quran-nav-fab"
-            className="fixed bottom-6 right-5 z-[100] flex h-12 w-12 items-center justify-center rounded-full border border-neutral-300 bg-white text-neutral-700 shadow-lg transition-colors hover:border-accent-teal/50 hover:text-teal-900 md:hidden"
+            className={cn(
+              "fixed right-5 z-[100] flex h-12 w-12 items-center justify-center rounded-full border border-neutral-300 bg-white text-neutral-700 shadow-lg transition-all hover:border-accent-teal/50 hover:text-teal-900 md:hidden",
+              playback.mode !== "idle" ? "bottom-[calc(6.5rem+env(safe-area-inset-bottom))]" : "bottom-[calc(4.5rem+env(safe-area-inset-bottom))]"
+            )}
           >
             <ListTree className="h-5 w-5" />
           </button>,
@@ -218,6 +222,7 @@ export function QuranReader({
         canPrev={!!prevAyah}
         canNext={!!nextAyah}
         onOpenNavigator={() => setNavOpen(true)}
+        audioActive={playback.mode !== "idle"}
       />
 
       <div className="reader-body pt-5 md:pt-6">
