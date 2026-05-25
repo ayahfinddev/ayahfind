@@ -14,6 +14,7 @@ import { searchUnified } from "@/lib/api";
 import { resolveTopicSearch } from "@/lib/resolveTopicSearch";
 import type { SearchTopic } from "@/lib/searchTopics";
 import type { SearchCandidate, SearchMode } from "@/lib/types";
+import { useAudioPlayback } from "@/contexts/AudioPlaybackContext";
 import { useSearchHome } from "@/contexts/SearchHomeContext";
 
 export function SearchExperience() {
@@ -30,8 +31,10 @@ export function SearchExperience() {
   const [activeTopic, setActiveTopic] = useState<string | null>(null);
   const router = useRouter();
   const { registerReset } = useSearchHome();
+  const playback = useAudioPlayback();
 
   const resetToLanding = useCallback(() => {
+    playback.stop();
     setQuery("");
     setResults([]);
     setWeakMatches([]);
@@ -42,7 +45,7 @@ export function SearchExperience() {
     setVoiceOpen(false);
     setAiHint(null);
     setActiveTopic(null);
-  }, []);
+  }, [playback]);
 
   useEffect(() => {
     registerReset(resetToLanding);

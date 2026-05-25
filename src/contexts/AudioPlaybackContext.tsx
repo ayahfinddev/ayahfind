@@ -9,8 +9,20 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { usePathname } from "next/navigation";
 import { useReciter } from "@/hooks/useReciter";
 import { buildAyahAudioSources } from "@/lib/reciters";
+
+/** Stop playback when leaving search/reader routes — never keep audio in the background. */
+function shouldStopPlaybackOnRouteChange(prev: string | null, next: string): boolean {
+  if (!prev || prev === next) return false;
+  if (next === "/") return true;
+  if (prev === "/") return true;
+  const prevReader = prev.startsWith("/ayah/");
+  const nextReader = next.startsWith("/ayah/");
+  if (prevReader && !nextReader) return true;
+  return false;
+}
 
 export interface AyahRef {
   surah: number;
@@ -66,8 +78,10 @@ function attachPlaybackHandlers(
 }
 
 export function AudioPlaybackProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
   const { reciterId } = useReciter();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const prevPathnameRef = useRef<string | null>(null);
   const queueRef = useRef<QueueItem[]>([]);
   const queueIndexRef = useRef(0);
   const modeRef = useRef<PlaybackMode>("idle");
@@ -216,6 +230,13 @@ export function AudioPlaybackProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => () => stop(), [stop]);
+
+  useEffect(() => {
+    const prev = prevPathnameRef.current;
+    prevPathnameRef.current = pathname;
+    if (!pathname || modeRef.current === "idle") return;
+    if (shouldStopPlaybackOnRouteChange(prev, pathname)) stop();
+  }, [pathname, stop]);
 
   useEffect(() => {
     if (prevReciterRef.current === reciterId) return;
