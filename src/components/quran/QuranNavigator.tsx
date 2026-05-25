@@ -282,6 +282,7 @@ export function QuranNavigator({
     <AnimatePresence>
       {open && (
         <>
+          {/* Desktop backdrop — offset by SideNav */}
           <motion.button
             type="button"
             initial={{ opacity: 0 }}
@@ -289,9 +290,21 @@ export function QuranNavigator({
             exit={{ opacity: 0 }}
             transition={navBackdropTransition}
             aria-label="Close navigator backdrop"
-            className={cn("fixed inset-0 z-[110] bg-black/25 backdrop-blur-[2px]", PANEL_LEFT)}
+            className={cn("fixed inset-0 z-[110] hidden bg-black/25 backdrop-blur-[2px] md:block", PANEL_LEFT)}
             onClick={onClose}
           />
+          {/* Mobile backdrop — full viewport coverage */}
+          <motion.button
+            type="button"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={navBackdropTransition}
+            aria-label="Close navigator backdrop"
+            className="fixed inset-0 z-[110] bg-black/30 backdrop-blur-[2px] md:hidden"
+            onClick={onClose}
+          />
+          {/* Desktop panel — slide-in from left */}
           <motion.aside
             role="dialog"
             aria-modal="true"
@@ -311,23 +324,29 @@ export function QuranNavigator({
           >
             {panelContent}
           </motion.aside>
-          <motion.aside
-            role="dialog"
-            aria-modal="true"
-            aria-label="Quran navigator"
-            data-testid="quran-nav-panel-mobile"
-            initial={{ y: "100%", opacity: 0.94 }}
-            animate={{ y: 0, opacity: 1, transition: navPanelEnter }}
-            exit={{ y: "100%", opacity: 0, transition: navMobileExit }}
-            style={{ willChange: "transform, opacity" }}
-            className={cn(
-              "quran-nav-panel fixed inset-x-0 bottom-0 z-[120] flex max-h-[min(88dvh,720px)] flex-col rounded-t-2xl",
-              "border border-neutral-200 bg-white shadow-2xl md:hidden pb-safe"
-            )}
+          {/* Mobile panel — bottom sheet via full-viewport flex wrapper */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={navBackdropTransition}
+            className="fixed inset-0 z-[120] flex flex-col justify-end md:hidden"
+            style={{ pointerEvents: "none" }}
           >
-            <div className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-neutral-200" />
-            {panelContent}
-          </motion.aside>
+            <motion.aside
+              role="dialog"
+              aria-modal="true"
+              aria-label="Quran navigator"
+              data-testid="quran-nav-panel-mobile"
+              initial={{ y: "100%" }}
+              animate={{ y: 0, transition: navPanelEnter }}
+              exit={{ y: "100%", transition: navMobileExit }}
+              className="quran-nav-panel pointer-events-auto flex max-h-[min(82dvh,82svh,680px)] flex-col rounded-t-2xl border border-b-0 border-neutral-200 bg-white pb-safe shadow-2xl"
+            >
+              <div className="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-neutral-300" />
+              {panelContent}
+            </motion.aside>
+          </motion.div>
         </>
       )}
     </AnimatePresence>,
