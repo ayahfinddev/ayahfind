@@ -181,7 +181,7 @@ export function QuranReader({
   useEffect(() => setNavMounted(true), []);
 
   return (
-    <div className={cn("reader-root relative -mt-2 min-h-[50vh]", playback.mode !== "idle" ? "pb-24" : "pb-12")}>
+    <div className={cn("reader-root relative -mt-2 min-h-[50vh]", playback.mode !== "idle" ? "pb-32 md:pb-24" : "pb-28 md:pb-12")}>
       <QuranNavigatorToggle open={navOpen} onClick={() => setNavOpen((o) => !o)} />
       {navMounted &&
         createPortal(
@@ -191,11 +191,11 @@ export function QuranReader({
             aria-label="Open Quran navigator"
             data-testid="quran-nav-fab"
             className={cn(
-              "fixed right-5 z-[100] flex h-12 w-12 items-center justify-center rounded-full border border-neutral-300 bg-white text-neutral-700 shadow-lg transition-all hover:border-accent-teal/50 hover:text-teal-900 md:hidden",
-              playback.mode !== "idle" ? "bottom-[calc(6.5rem+env(safe-area-inset-bottom))]" : "bottom-[calc(4.5rem+env(safe-area-inset-bottom))]"
+              "fixed right-5 z-[100] flex h-10 w-10 items-center justify-center rounded-full border border-neutral-200 bg-white/95 text-neutral-600 shadow-md backdrop-blur-sm transition-all hover:border-accent-teal/50 hover:text-teal-900 md:hidden",
+              playback.mode !== "idle" ? "bottom-[calc(7.5rem+env(safe-area-inset-bottom))]" : "bottom-[calc(5.5rem+env(safe-area-inset-bottom))]"
             )}
           >
-            <ListTree className="h-5 w-5" />
+            <ListTree className="h-4 w-4" />
           </button>,
           document.body
         )}
