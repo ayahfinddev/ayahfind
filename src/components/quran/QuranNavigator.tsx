@@ -29,6 +29,13 @@ function useMounted() {
 /** Left offset: after narrow sidebar (mobile) or wide sidebar (md+). */
 const TOGGLE_LEFT = "left-[4.75rem] md:left-52";
 const PANEL_LEFT = TOGGLE_LEFT;
+
+/** Soft glide-out on close; spring only on open. */
+const NAV_EASE = [0.32, 0.72, 0, 1] as const;
+const navBackdropTransition = { duration: 0.34, ease: NAV_EASE };
+const navPanelEnter = { type: "spring" as const, damping: 32, stiffness: 280, mass: 0.9 };
+const navPanelExit = { duration: 0.44, ease: NAV_EASE };
+const navMobileExit = { duration: 0.4, ease: NAV_EASE };
 export function QuranNavigatorToggle({
   open,
   onClick,
@@ -186,7 +193,7 @@ export function QuranNavigator({
                 Go
               </button>
             </div>
-            <ul className="space-y-0.5 pb-8">
+            <ul className="space-y-0.5 pb-12">
               {filteredSurahs.map((s) => {
                 const active = s.n === surah;
                 return (
@@ -280,6 +287,7 @@ export function QuranNavigator({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={navBackdropTransition}
             aria-label="Close navigator backdrop"
             className={cn("fixed inset-0 z-[110] bg-black/25 backdrop-blur-[2px]", PANEL_LEFT)}
             onClick={onClose}
@@ -289,13 +297,12 @@ export function QuranNavigator({
             aria-modal="true"
             aria-label="Quran navigator"
             data-testid="quran-nav-panel-desktop"
-            initial={{ x: "-100%", opacity: 0.96 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: "-100%", opacity: 0.96 }}
-            transition={{ type: "spring", damping: 28, stiffness: 320 }}
-            style={{ top: "0.75rem", bottom: "0.75rem" }}
+            initial={{ x: "-100%", opacity: 0.88 }}
+            animate={{ x: 0, opacity: 1, transition: navPanelEnter }}
+            exit={{ x: "-100%", opacity: 0, transition: navPanelExit }}
+            style={{ top: "0.75rem", bottom: "0.75rem", willChange: "transform, opacity" }}
             className={cn(
-              "fixed z-[120] hidden w-[min(calc(100vw-5.5rem),340px)] flex-col",
+              "quran-nav-panel fixed z-[120] hidden w-[min(calc(100vw-5.5rem),340px)] flex-col",
               PANEL_LEFT,
               "overflow-hidden rounded-r-2xl",
               "border border-l-0 border-neutral-200 bg-white shadow-2xl md:flex",
@@ -309,12 +316,12 @@ export function QuranNavigator({
             aria-modal="true"
             aria-label="Quran navigator"
             data-testid="quran-nav-panel-mobile"
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", damping: 30, stiffness: 340 }}
+            initial={{ y: "100%", opacity: 0.94 }}
+            animate={{ y: 0, opacity: 1, transition: navPanelEnter }}
+            exit={{ y: "100%", opacity: 0, transition: navMobileExit }}
+            style={{ willChange: "transform, opacity" }}
             className={cn(
-              "fixed inset-x-0 bottom-0 z-[120] flex max-h-[min(88dvh,720px)] flex-col rounded-t-2xl",
+              "quran-nav-panel fixed inset-x-0 bottom-0 z-[120] flex max-h-[min(88dvh,720px)] flex-col rounded-t-2xl",
               "border border-neutral-200 bg-white shadow-2xl md:hidden pb-safe"
             )}
           >

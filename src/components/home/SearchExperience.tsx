@@ -127,7 +127,7 @@ export function SearchExperience() {
 
   return (
     <>
-      <header className="pb-4 pt-2">
+      <header className="pb-4 pt-2 md:pt-2">
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -138,12 +138,12 @@ export function SearchExperience() {
         <motion.h1
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-3xl font-bold tracking-tight text-neutral-950"
+          className="text-[1.625rem] font-bold leading-tight tracking-tight text-ink sm:text-3xl"
         >
           Search the Qur&apos;an &amp; Hadith{" "}
           <span className="text-gradient">naturally</span>
         </motion.h1>
-        <p className="mt-2 text-sm text-neutral-500">
+        <p className="mt-1.5 text-[0.8125rem] leading-relaxed text-ink-muted sm:mt-2 sm:text-sm">
           Imperfect recitation, mixed languages, vague meanings — we still find what you meant.
         </p>
       </header>

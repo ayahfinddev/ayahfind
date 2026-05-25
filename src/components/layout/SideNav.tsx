@@ -20,12 +20,12 @@ export function SideNav() {
   if (pathname?.startsWith("/onboarding")) return null;
 
   return (
-    <aside className="fixed left-0 top-0 z-40 flex h-dvh w-[4.75rem] flex-col border-r border-neutral-200 bg-white md:w-52">
-      <div className="border-b border-neutral-200 px-4 py-5">
-        <p className="hidden text-lg font-bold tracking-tight text-neutral-900 md:block">
+    <aside className="fixed left-0 top-0 z-40 hidden h-dvh w-[4.75rem] flex-col border-r border-border bg-canvas pt-safe md:flex lg:w-52">
+      <div className="border-b border-border px-4 py-5">
+        <p className="hidden text-lg font-bold tracking-tight text-ink lg:block">
           AyahFind
         </p>
-        <p className="text-center text-lg font-bold text-neutral-900 md:hidden">AF</p>
+        <p className="text-center text-lg font-bold text-ink lg:hidden">AF</p>
       </div>
       <nav className="flex flex-1 flex-col gap-1 p-2" aria-label="Main">
         {links.map(({ href, icon: Icon, label }) => {
@@ -39,12 +39,12 @@ export function SideNav() {
               className={cn(
                 "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
                 active
-                  ? "bg-neutral-900 text-white"
-                  : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
+                  ? "bg-ink text-canvas"
+                  : "text-ink-muted hover:bg-canvas-elevated hover:text-ink"
               )}
             >
               <Icon className="h-5 w-5 shrink-0" />
-              <span className="hidden md:inline">{label}</span>
+              <span className="hidden lg:inline">{label}</span>
             </Link>
           );
         })}

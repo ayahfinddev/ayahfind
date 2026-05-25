@@ -12,28 +12,30 @@ interface SemanticChipsProps {
 
 export function SemanticChips({ onTopic, loading, activeLabel }: SemanticChipsProps) {
   return (
-    <div className="-mt-0.5 flex flex-wrap gap-2">
-      <span className="w-full text-xs font-medium text-neutral-500">Try asking</span>
-      {SEARCH_TOPICS.map((topic, i) => (
-        <motion.button
-          key={topic.label}
-          type="button"
-          disabled={loading}
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: i * 0.04 }}
-          whileTap={{ scale: 0.97 }}
-          onClick={() => onTopic(topic)}
-          className={cn(
-            "rounded-full border px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50",
-            activeLabel === topic.label
-              ? "border-accent-teal/50 bg-accent-teal/10 text-accent-teal-dim"
-              : "border-neutral-300 bg-white text-neutral-800 hover:border-accent-teal/40 hover:text-neutral-950"
-          )}
-        >
-          {topic.label}
-        </motion.button>
-      ))}
+    <div className="-mt-0.5 space-y-1.5">
+      <span className="block text-xs font-medium text-neutral-500">Try asking</span>
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 hide-scrollbar sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
+        {SEARCH_TOPICS.map((topic, i) => (
+          <motion.button
+            key={topic.label}
+            type="button"
+            disabled={loading}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: i * 0.04 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => onTopic(topic)}
+            className={cn(
+              "shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 sm:shrink",
+              activeLabel === topic.label
+                ? "border-accent-border bg-accent-surface text-accent-dim"
+                : "border-border-strong bg-canvas text-ink hover:border-accent-border hover:text-ink"
+            )}
+          >
+            {topic.label}
+          </motion.button>
+        ))}
+      </div>
     </div>
   );
 }

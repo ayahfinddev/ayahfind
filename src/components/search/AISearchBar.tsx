@@ -39,19 +39,19 @@ export function AISearchBar({
     <motion.div
       className={cn(
         "relative overflow-hidden rounded-2xl border transition-all duration-300",
-        "bg-white backdrop-blur-xl",
+        "bg-canvas backdrop-blur-xl",
         focused
-          ? "border-neutral-900 search-glow"
+          ? "border-ink/20 search-glow"
           : "border-glass-border"
       )}
     >
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-neutral-50 via-transparent to-neutral-50" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-canvas-elevated via-transparent to-canvas-elevated" />
 
       <div className="relative flex items-center gap-2 p-2 pl-4">
         <Sparkles
           className={cn(
             "h-5 w-5 shrink-0 transition-colors",
-            focused ? "text-neutral-900" : "text-neutral-500"
+            focused ? "text-ink" : "text-ink-muted"
           )}
         />
 
@@ -62,7 +62,7 @@ export function AISearchBar({
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
             onKeyDown={(e) => e.key === "Enter" && onSubmit()}
-            className="w-full bg-transparent text-base leading-5 text-neutral-900 outline-none placeholder:text-transparent"
+            className="w-full bg-transparent text-base leading-5 text-ink outline-none placeholder:text-transparent"
             aria-label="Search Quran or Hadith"
           />
           <AnimatePresence mode="wait">
@@ -85,7 +85,7 @@ export function AISearchBar({
           type="button"
           whileTap={{ scale: 0.92 }}
           onClick={onVoiceOpen}
-          className="flex h-11 w-11 items-center justify-center rounded-xl border border-neutral-200 bg-neutral-50 text-neutral-900"
+          className="flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-canvas-elevated text-ink"
           aria-label="Voice search"
         >
           <Mic className="h-5 w-5" />
@@ -109,7 +109,7 @@ export function AISearchBar({
       </div>
 
       {onModeChange && (
-        <div className="flex gap-2 border-t border-glass-border bg-neutral-50/50 px-3 py-2.5">
+        <div className="flex gap-2 border-t border-glass-border bg-canvas-elevated/50 px-3 py-2.5">
           {(["quran", "hadith"] as const).map((m) => (
             <motion.button
               key={m}

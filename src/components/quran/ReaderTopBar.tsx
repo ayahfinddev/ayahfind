@@ -54,7 +54,7 @@ export function ReaderTopBar({
   onOpenNavigator,
 }: ReaderTopBarProps) {
   return (
-    <header className="sticky top-0 z-40 -mx-5 border-b border-neutral-200 bg-white/95 px-5 backdrop-blur-xl md:-mx-8 md:px-8">
+    <header className="sticky top-safe z-40 -mx-5 border-b border-neutral-200 bg-white/95 px-5 backdrop-blur-xl md:-mx-8 md:px-8">
       <div className="flex items-center gap-2 py-3">
         <Link href="/" className="af-icon-btn shrink-0" aria-label="Back to search">
           <ArrowLeft className="h-5 w-5" />

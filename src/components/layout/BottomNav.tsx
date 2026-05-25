@@ -20,7 +20,7 @@ export function BottomNav() {
   if (pathname?.startsWith("/onboarding")) return null;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-glass-border bg-white/95 pb-safe backdrop-blur-xl">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-glass-border bg-glass-fill pb-safe backdrop-blur-xl md:hidden">
       <div className="mx-auto flex max-w-lg justify-around px-2 py-2">
         {links.map(({ href, icon: Icon, label }) => {
           const active = pathname === href;
@@ -31,7 +31,7 @@ export function BottomNav() {
               onClick={(e) => onSearchNavClick(href, e)}
               className={cn(
                 "flex flex-col items-center gap-0.5 rounded-xl px-3 py-2 text-[10px] font-medium transition-colors",
-                active ? "text-neutral-900" : "text-neutral-400"
+                active ? "text-ink" : "text-ink-subtle"
               )}
             >
               <Icon className={cn("h-5 w-5", active && "opacity-100")} />

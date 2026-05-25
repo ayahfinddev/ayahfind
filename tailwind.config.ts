@@ -2,15 +2,25 @@ import type { Config } from "tailwindcss";
 
 const config: Config = {
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
+  darkMode: ["class", '[data-theme="dark"]'],
   theme: {
     extend: {
       colors: {
         canvas: {
-          DEFAULT: "#ffffff",
-          elevated: "#fafafa",
-          card: "#f4f4f5",
+          DEFAULT: "var(--canvas)",
+          elevated: "var(--elevated)",
+          card: "var(--card)",
+        },
+        ink: {
+          DEFAULT: "var(--ink)",
+          muted: "var(--muted)",
+          subtle: "var(--subtle)",
         },
         accent: {
+          DEFAULT: "var(--accent)",
+          dim: "var(--accent-dim)",
+          surface: "var(--accent-surface)",
+          border: "var(--accent-border)",
           emerald: "#0a0a0a",
           cyan: "#525252",
           glow: "#171717",
@@ -26,8 +36,12 @@ const config: Config = {
           muted: "#a1a1aa",
         },
         glass: {
-          border: "rgba(0, 0, 0, 0.08)",
-          fill: "rgba(255, 255, 255, 0.92)",
+          border: "var(--glass-border)",
+          fill: "var(--glass-fill)",
+        },
+        border: {
+          DEFAULT: "var(--border)",
+          strong: "var(--border-strong)",
         },
       },
       fontFamily: {

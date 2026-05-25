@@ -2,7 +2,9 @@
 
 import { usePathname } from "next/navigation";
 import { SideNav } from "./SideNav";
+import { BottomNav } from "./BottomNav";
 import { OnboardingGate } from "@/components/home/OnboardingGate";
+import { TilawahBar } from "@/components/quran/TilawahBar";
 import { cn } from "@/lib/utils";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -11,18 +13,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <OnboardingGate>
-      <div className="min-h-dvh bg-white text-neutral-900">
+      <div className="min-h-dvh bg-canvas pt-safe text-ink">
         <SideNav />
-        <main className="min-h-dvh pl-[4.75rem] md:pl-52">
+        <BottomNav />
+        <main className="min-h-dvh pl-0 md:pl-[4.75rem] lg:pl-52">
           <div
             className={cn(
-              "mx-auto w-full px-5 py-6 md:px-8",
+              "mx-auto w-full px-4 py-5 pb-24 md:px-5 md:py-6 md:pb-6 lg:px-8",
               isReader ? "max-w-4xl lg:max-w-5xl" : "max-w-3xl"
             )}
           >
             {children}
           </div>
         </main>
+        <TilawahBar />
       </div>
     </OnboardingGate>
   );

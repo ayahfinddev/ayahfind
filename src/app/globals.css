@@ -7,10 +7,41 @@
 :root {
   --canvas: #ffffff;
   --elevated: #fafafa;
+  --card: #f4f4f5;
   --ink: #0a0a0a;
   --muted: #737373;
+  --subtle: #a3a3a3;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.15);
   --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-fill: rgba(255, 255, 255, 0.92);
+  --accent: #14b8a6;
+  --accent-dim: #0d9488;
+  --accent-surface: rgba(20, 184, 166, 0.08);
+  --accent-border: rgba(20, 184, 166, 0.25);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06);
+  --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+[data-theme="dark"] {
+  --canvas: #0f1117;
+  --elevated: #1a1d27;
+  --card: #21252f;
+  --ink: #f4f4f5;
+  --muted: #a1a1aa;
+  --subtle: #71717a;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.15);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-fill: rgba(15, 17, 23, 0.92);
+  --accent: #2dd4bf;
+  --accent-dim: #14b8a6;
+  --accent-surface: rgba(45, 212, 191, 0.1);
+  --accent-border: rgba(45, 212, 191, 0.25);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.2), 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 html {
@@ -20,12 +51,16 @@ html {
 }
 
 body {
-  @apply bg-canvas text-neutral-900 antialiased;
+  background-color: var(--canvas);
+  color: var(--ink);
   font-family: "Plus Jakarta Sans", Inter, system-ui, -apple-system, sans-serif;
   font-size: 1rem;
   line-height: 1.65;
   letter-spacing: -0.011em;
   min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 a {
@@ -35,15 +70,16 @@ a {
 
 @layer components {
   .glass-panel {
-    @apply rounded-2xl border border-glass-border bg-white shadow-card;
+    @apply rounded-2xl border border-glass-border shadow-card;
+    background-color: var(--canvas);
   }
 
   .search-glow:focus-within {
-    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.12), 0 4px 20px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 0 0 2px var(--border-strong), 0 4px 20px rgba(0, 0, 0, 0.06);
   }
 
   .text-gradient {
-    @apply text-neutral-900;
+    color: var(--ink);
   }
 
   .islamic-grid {
@@ -71,8 +107,16 @@ a {
 }
 
 @layer utilities {
+  .pt-safe {
+    padding-top: var(--safe-top);
+  }
+
   .pb-safe {
     padding-bottom: calc(1rem + var(--safe-bottom));
+  }
+
+  .top-safe {
+    top: var(--safe-top);
   }
 }
 
@@ -100,6 +144,17 @@ a {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+.quran-nav-panel {
+  transform-origin: left center;
+  backface-visibility: hidden;
+}
+
+@media (max-width: 767px) {
+  .quran-nav-panel {
+    transform-origin: center bottom;
+  }
+}
+
 .quran-nav-scroll {
   flex: 1 1 0;
   min-height: 0;
@@ -119,6 +174,15 @@ a {
 
 .quran-nav-scroll::-webkit-scrollbar-track {
   background: transparent;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 @keyframes reader-flash {

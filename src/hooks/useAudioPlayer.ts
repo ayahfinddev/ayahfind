@@ -37,9 +37,10 @@ export function useAudioPlayer(src: string, fallbackSrc?: string) {
     const a = audioRef.current;
     if (a) {
       a.pause();
-      a.currentTime = 0;
       a.onended = null;
       a.onerror = null;
+      a.removeAttribute("src");
+      a.load();
     }
     audioRef.current = null;
     setPlaying(false);

@@ -40,11 +40,14 @@ interface AudioPlaybackContextValue {
   playing: boolean;
   mode: PlaybackMode;
   activeAyah: AyahRef | null;
+  currentTime: number;
+  duration: number;
   playSingle: (src: string, ref?: AyahRef, fallbackSrc?: string) => void;
   playQueue: (items: QueueItem[], startIndex: number) => void;
   toggleSingle: (src: string, ref?: AyahRef, fallbackSrc?: string) => void;
   toggleQueue: (items: QueueItem[], startIndex: number) => void;
   pause: () => void;
+  resume: () => void;
   stop: () => void;
   skipNext: () => void;
   skipPrev: () => void;
@@ -90,14 +93,30 @@ export function AudioPlaybackProvider({ children }: { children: ReactNode }) {
   const [playing, setPlaying] = useState(false);
   const [mode, setMode] = useState<PlaybackMode>("idle");
   const [activeAyah, setActiveAyah] = useState<AyahRef | null>(null);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+
+  const clearAudioListeners = useCallback((a: HTMLAudioElement) => {
+    a.onended = null;
+    a.onerror = null;
+    a.ontimeupdate = null;
+    a.onloadedmetadata = null;
+    a.ondurationchange = null;
+  }, []);
+
+  const attachTimingListeners = useCallback((a: HTMLAudioElement) => {
+    a.ontimeupdate = () => setCurrentTime(a.currentTime);
+    a.onloadedmetadata = () => setDuration(a.duration || 0);
+    a.ondurationchange = () => setDuration(a.duration || 0);
+  }, []);
 
   const stop = useCallback(() => {
     const a = audioRef.current;
     if (a) {
       a.pause();
-      a.currentTime = 0;
-      a.onended = null;
-      a.onerror = null;
+      clearAudioListeners(a);
+      a.removeAttribute("src");
+      a.load();
     }
     audioRef.current = null;
     queueRef.current = [];
@@ -106,7 +125,9 @@ export function AudioPlaybackProvider({ children }: { children: ReactNode }) {
     setPlaying(false);
     setMode("idle");
     setActiveAyah(null);
-  }, []);
+    setCurrentTime(0);
+    setDuration(0);
+  }, [clearAudioListeners]);
 
   const playAtQueueIndex = useCallback(
     (index: number) => {
@@ -117,12 +138,20 @@ export function AudioPlaybackProvider({ children }: { children: ReactNode }) {
       }
       queueIndexRef.current = index;
       setActiveAyah({ surah: item.surah, ayah: item.ayah });
+      setCurrentTime(0);
+      setDuration(0);
 
-      let audio = audioRef.current;
-      if (!audio) {
-        audio = new Audio();
-        audioRef.current = audio;
+      const prev = audioRef.current;
+      if (prev) {
+        prev.pause();
+        clearAudioListeners(prev);
+        prev.removeAttribute("src");
+        prev.load();
       }
+
+      const audio = new Audio();
+      audioRef.current = audio;
+      attachTimingListeners(audio);
 
       attachPlaybackHandlers(
         audio,
@@ -136,7 +165,7 @@ export function AudioPlaybackProvider({ children }: { children: ReactNode }) {
       audio.src = item.src;
       void audio.play().then(() => setPlaying(true)).catch(() => stop());
     },
-    [stop]
+    [stop, clearAudioListeners, attachTimingListeners]
   );
 
   const playQueue = useCallback(
@@ -161,17 +190,25 @@ export function AudioPlaybackProvider({ children }: { children: ReactNode }) {
 
       const audio = new Audio(src);
       audioRef.current = audio;
+      attachTimingListeners(audio);
       attachPlaybackHandlers(audio, src, fallbackSrc, () => stop(), () => stop(), () =>
         setPlaying(true)
       );
       void audio.play().then(() => setPlaying(true)).catch(() => stop());
     },
-    [stop]
+    [stop, attachTimingListeners]
   );
 
   const pause = useCallback(() => {
     audioRef.current?.pause();
     setPlaying(false);
+  }, []);
+
+  const resume = useCallback(() => {
+    const a = audioRef.current;
+    if (a && a.src && modeRef.current !== "idle") {
+      void a.play().then(() => setPlaying(true)).catch(() => {});
+    }
   }, []);
 
   const toggleSingle = useCallback(
@@ -232,6 +269,19 @@ export function AudioPlaybackProvider({ children }: { children: ReactNode }) {
   useEffect(() => () => stop(), [stop]);
 
   useEffect(() => {
+    const onPageHide = () => {
+      const a = audioRef.current;
+      if (a && a.paused) {
+        clearAudioListeners(a);
+        a.removeAttribute("src");
+        a.load();
+      }
+    };
+    window.addEventListener("pagehide", onPageHide);
+    return () => window.removeEventListener("pagehide", onPageHide);
+  }, [clearAudioListeners]);
+
+  useEffect(() => {
     const prev = prevPathnameRef.current;
     prevPathnameRef.current = pathname;
     if (!pathname || modeRef.current === "idle") return;
@@ -277,11 +327,14 @@ export function AudioPlaybackProvider({ children }: { children: ReactNode }) {
         playing,
         mode,
         activeAyah,
+        currentTime,
+        duration,
         playSingle,
         playQueue,
         toggleSingle,
         toggleQueue,
         pause,
+        resume,
         stop,
         skipNext,
         skipPrev,
