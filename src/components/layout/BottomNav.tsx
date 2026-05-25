@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BookMarked, Clock, Home, ScrollText, Settings } from "lucide-react";
+import { useSearchNavClick } from "@/contexts/SearchHomeContext";
 import { cn } from "@/lib/utils";
 
 const links = [
@@ -15,6 +16,7 @@ const links = [
 
 export function BottomNav() {
   const pathname = usePathname();
+  const onSearchNavClick = useSearchNavClick();
   if (pathname?.startsWith("/onboarding")) return null;
 
   return (
@@ -26,6 +28,7 @@ export function BottomNav() {
             <Link
               key={href}
               href={href}
+              onClick={(e) => onSearchNavClick(href, e)}
               className={cn(
                 "flex flex-col items-center gap-0.5 rounded-xl px-3 py-2 text-[10px] font-medium transition-colors",
                 active ? "text-neutral-900" : "text-neutral-400"

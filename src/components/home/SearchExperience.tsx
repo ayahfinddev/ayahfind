@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Brain, ChevronDown, ChevronUp, Loader2, SearchX } from "lucide-react";
 import { ContinueReadingCard } from "@/components/home/ContinueReadingCard";
@@ -14,6 +14,7 @@ import { searchUnified } from "@/lib/api";
 import { resolveTopicSearch } from "@/lib/resolveTopicSearch";
 import type { SearchTopic } from "@/lib/searchTopics";
 import type { SearchCandidate, SearchMode } from "@/lib/types";
+import { useSearchHome } from "@/contexts/SearchHomeContext";
 
 export function SearchExperience() {
   const [query, setQuery] = useState("");
@@ -28,6 +29,25 @@ export function SearchExperience() {
   const [aiHint, setAiHint] = useState<string | null>(null);
   const [activeTopic, setActiveTopic] = useState<string | null>(null);
   const router = useRouter();
+  const { registerReset } = useSearchHome();
+
+  const resetToLanding = useCallback(() => {
+    setQuery("");
+    setResults([]);
+    setWeakMatches([]);
+    setNoMatchMessage(null);
+    setWeakOpen(false);
+    setLoading(false);
+    setError(null);
+    setVoiceOpen(false);
+    setAiHint(null);
+    setActiveTopic(null);
+  }, []);
+
+  useEffect(() => {
+    registerReset(resetToLanding);
+    return () => registerReset(null);
+  }, [registerReset, resetToLanding]);
 
   const runSearch = useCallback(async (q: string) => {
     const trimmed = q.trim();
