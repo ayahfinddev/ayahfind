@@ -3,10 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   detectVoiceBrowser,
+  formatSpeechRecognitionError,
   getVoiceApiDiagnostics,
   releaseMediaStream,
   VOICE_CHROME_FALLBACK_MSG,
   VOICE_OPERA_GX_NOTICE_MSG,
+  type SpeechRecognitionErrorDetails,
   type VoiceBrowserInfo,
 } from "@/lib/voiceSearchSupport";
 
@@ -21,7 +23,36 @@ type SpeechResultEvent = {
 
 type SpeechErrorEvent = {
   error: string;
+  message?: string;
 };
+
+const IS_DEV =
+  typeof process !== "undefined" && process.env.NODE_ENV === "development";
+
+function logSpeechRecognitionError(
+  ev: SpeechErrorEvent,
+  browser: VoiceBrowserInfo,
+  context: Record<string, unknown>
+): SpeechRecognitionErrorDetails {
+  const details = formatSpeechRecognitionError(
+    ev.error,
+    browser,
+    ev.message
+  );
+  const payload = {
+    speechRecognitionError: details.code,
+    speechRecognitionMessage: details.message ?? null,
+    browser: details.browserLabel,
+    isEdge: browser.isEdge,
+    userMessage: details.userMessage,
+    ...context,
+  };
+  console.error("[voice] SpeechRecognition.onerror", payload);
+  if (IS_DEV) {
+    console.error("[voice] SpeechRecognition.onerror (raw event):", ev);
+  }
+  return details;
+}
 
 export type SpeechRecognitionInstance = {
   continuous: boolean;
@@ -101,6 +132,8 @@ export function useVoiceSearch(
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string>("");
+  const [speechDiagnostics, setSpeechDiagnostics] =
+    useState<SpeechRecognitionErrorDetails | null>(null);
 
   const recRef = useRef<SpeechRecognitionInstance | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -167,7 +200,7 @@ export function useVoiceSearch(
     installOperaSpeechProbeGlobal();
     if (info.isOperaGX) {
       console.log(
-        "[voice] Opera detected — run __ayahfindVoiceProbe() in console for activation probe"
+        "[voice] Opera detected — run __ayahfindVoiceProbe() in console for diagnostics"
       );
       setSupported(false);
       setNotice(VOICE_OPERA_GX_NOTICE_MSG);
@@ -298,6 +331,7 @@ export function useVoiceSearch(
     cancelledRef.current = false;
     finalizedRef.current = false;
     setError(null);
+    setSpeechDiagnostics(null);
     setStatus("Requesting microphone…");
     setTranscript("");
     setInterim("");
@@ -432,24 +466,27 @@ export function useVoiceSearch(
     rec.onerror = (ev: SpeechErrorEvent) => {
       if (session !== sessionRef.current) return;
       const code = ev.error;
-      console.log("[voice] onerror fired:", code);
-      if (code === "aborted") return;
+      if (code === "aborted") {
+        console.log("[voice] SpeechRecognition.onerror (ignored): aborted");
+        return;
+      }
+      const details = logSpeechRecognitionError(ev, browser, {
+        session,
+        lang: rec.lang,
+        continuous: rec.continuous,
+        secureContext:
+          typeof window !== "undefined" ? window.isSecureContext : false,
+      });
+      if (IS_DEV) {
+        setSpeechDiagnostics(details);
+      }
       clearStartTimeout();
       releaseMicrophone();
       setListening(false);
       setStatus("");
-      if (code === "no-speech") {
-        setError("No speech heard. Speak louder or move closer to the mic.");
-      } else if (code === "not-allowed" || code === "service-not-allowed") {
-        setError("Microphone blocked. Allow mic access for this site.");
-      } else if (code === "network") {
-        setError(
-          "Speech service needs internet. Check your connection or type your query below."
-        );
-      } else if (code === "audio-capture") {
-        setError("No microphone found. Plug in a mic or check sound settings.");
-      } else {
-        setError(`Voice error: ${code}. ${VOICE_CHROME_FALLBACK_MSG}`);
+      const msg = details.userMessage.trim();
+      if (msg) {
+        setError(msg);
       }
     };
 
@@ -563,6 +600,7 @@ export function useVoiceSearch(
     supported,
     notice,
     error,
+    speechDiagnostics: IS_DEV ? speechDiagnostics : null,
     status,
     displayText,
     start,
@@ -573,7 +611,7 @@ export function useVoiceSearch(
 
 const OPERA_PROBE_WAIT_MS = 4000;
 
-/** Console probe for Opera GX — run __ayahfindVoiceProbe() on ayahfind.com */
+/** Console probe — run __ayahfindVoiceProbe() to capture onerror codes per strategy */
 function installOperaSpeechProbeGlobal(): void {
   if (typeof window === "undefined") return;
   const w = window as Window & {
@@ -584,17 +622,17 @@ function installOperaSpeechProbeGlobal(): void {
   w.__ayahfindVoiceProbe = async (lang = "en-US") => {
     const api = getVoiceApiDiagnostics();
     const browser = detectVoiceBrowser();
-    console.log("[voice][opera-probe] Browser:", browser.label, browser);
-    console.log("[voice][opera-probe] SpeechRecognition?", api.speechRecognition);
+    console.log("[voice][probe] Browser:", browser.label, browser);
+    console.log("[voice][probe] SpeechRecognition?", api.speechRecognition);
     console.log(
-      "[voice][opera-probe] webkitSpeechRecognition?",
+      "[voice][probe] webkitSpeechRecognition?",
       api.webkitSpeechRecognition
     );
-    console.log("[voice][opera-probe] secureContext:", window.isSecureContext);
+    console.log("[voice][probe] secureContext:", window.isSecureContext);
 
     const SR = getSpeechRecognitionCtor();
     if (!SR) {
-      console.log("[voice][opera-probe] No constructor — aborting");
+      console.log("[voice][probe] No constructor — aborting");
       return;
     }
 
@@ -628,7 +666,7 @@ function installOperaSpeechProbeGlobal(): void {
     let gumTrack: MediaStreamTrack | undefined;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      console.log("[voice][opera-probe] getUserMedia success");
+      console.log("[voice][probe] getUserMedia success");
       gumTrack = stream.getAudioTracks()[0];
       strategies.push({
         id: "gum-then-start",
@@ -650,7 +688,7 @@ function installOperaSpeechProbeGlobal(): void {
         });
       }
     } catch (e) {
-      console.log("[voice][opera-probe] getUserMedia failed:", e);
+      console.log("[voice][probe] getUserMedia failed:", e);
     }
 
     for (const strategy of strategies) {
@@ -660,17 +698,20 @@ function installOperaSpeechProbeGlobal(): void {
       rec.onstart = () => events.push("onstart");
       rec.onspeechstart = () => events.push("onspeechstart");
       rec.onresult = () => events.push("onresult");
-      rec.onerror = (e) => events.push(`onerror:${e.error}`);
+      rec.onerror = (e) =>
+        events.push(
+          `onerror:${e.error}${e.message ? `:${e.message}` : ""}`
+        );
       rec.onend = () => events.push("onend");
       rec.onaudiostart = () => events.push("onaudiostart");
       rec.onaudioend = () => events.push("onaudioend");
 
       try {
-        console.log(`[voice][opera-probe][${strategy.id}] recognition.start called`);
+        console.log(`[voice][probe][${strategy.id}] recognition.start called`);
         if (strategy.track) rec.start(strategy.track);
         else rec.start();
       } catch (e) {
-        console.log(`[voice][opera-probe][${strategy.id}] start threw:`, e);
+        console.log(`[voice][probe][${strategy.id}] start threw:`, e);
         continue;
       }
 
@@ -681,7 +722,7 @@ function installOperaSpeechProbeGlobal(): void {
         /* ignore */
       }
       console.log(
-        `[voice][opera-probe][${strategy.id}] events after ${OPERA_PROBE_WAIT_MS}ms:`,
+        `[voice][probe][${strategy.id}] events after ${OPERA_PROBE_WAIT_MS}ms:`,
         events.length ? events : "(none — silent stub)"
       );
     }
@@ -695,7 +736,7 @@ function installOperaSpeechProbeGlobal(): void {
     }
 
     console.log(
-      "[voice][opera-probe] If every strategy logged (none — silent stub), Opera has SpeechRecognition constructor but no speech-to-text backend."
+      "[voice][probe] If every strategy logged (none — silent stub), the browser exposes SpeechRecognition but the speech backend may be unavailable."
     );
   };
 }

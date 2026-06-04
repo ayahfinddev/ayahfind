@@ -39,6 +39,7 @@ export function VoiceSearchModal({
     supported,
     notice,
     error,
+    speechDiagnostics,
     status,
     displayText,
     start,
@@ -249,6 +250,15 @@ export function VoiceSearchModal({
               <p className="mt-3 text-center text-xs text-ink-subtle">
                 Tap the mic to stop — we search automatically. Typed search always works.
               </p>
+
+              {speechDiagnostics && (
+                <pre
+                  className="mt-3 max-h-32 overflow-auto rounded-lg border border-dashed border-amber-400/60 bg-amber-50/80 p-2 text-left text-[10px] leading-snug text-amber-950"
+                  aria-label="Voice recognition diagnostics (development only)"
+                >
+                  {`[dev] SpeechRecognition.onerror\n  error: ${speechDiagnostics.code}\n  message: ${speechDiagnostics.message ?? "(none)"}\n  browser: ${speechDiagnostics.browserLabel}`}
+                </pre>
+              )}
 
               <div className="mt-6 flex gap-3">
                 <button
