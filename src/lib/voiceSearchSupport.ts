@@ -12,6 +12,12 @@ export type VoiceBrowserInfo = {
   usePermissionPriming: boolean;
 };
 
+export type VoiceApiDiagnostics = {
+  speechRecognition: boolean;
+  webkitSpeechRecognition: boolean;
+  hasSpeechCtor: boolean;
+};
+
 function isIOSDevice(ua: string): boolean {
   return (
     /iPad|iPhone|iPod/i.test(ua) ||
@@ -23,6 +29,28 @@ function isIOSDevice(ua: string): boolean {
 
 function isSafariBrowser(ua: string): boolean {
   return /Safari/i.test(ua) && !/Chrome|Chromium|CriOS|OPR|Edg|Opera/i.test(ua);
+}
+
+export function getVoiceApiDiagnostics(): VoiceApiDiagnostics {
+  if (typeof window === "undefined") {
+    return {
+      speechRecognition: false,
+      webkitSpeechRecognition: false,
+      hasSpeechCtor: false,
+    };
+  }
+  const w = window as Window & {
+    SpeechRecognition?: unknown;
+    webkitSpeechRecognition?: unknown;
+  };
+  const speechRecognition = typeof w.SpeechRecognition !== "undefined";
+  const webkitSpeechRecognition =
+    typeof w.webkitSpeechRecognition !== "undefined";
+  return {
+    speechRecognition,
+    webkitSpeechRecognition,
+    hasSpeechCtor: speechRecognition || webkitSpeechRecognition,
+  };
 }
 
 export function detectVoiceBrowser(): VoiceBrowserInfo {
@@ -52,7 +80,7 @@ export function detectVoiceBrowser(): VoiceBrowserInfo {
     typeof w.opera !== "undefined";
   const isSafari = isSafariBrowser(ua);
   const isIOS = isIOSDevice(ua);
-  const hasSpeechCtor = !!(w.SpeechRecognition ?? w.webkitSpeechRecognition);
+  const hasSpeechCtor = getVoiceApiDiagnostics().hasSpeechCtor;
   const preferNonContinuous = isOperaGX || isSafari || isIOS;
   const releaseStreamBeforeRecognition = isSafari || isIOS;
 
@@ -70,7 +98,7 @@ export function detectVoiceBrowser(): VoiceBrowserInfo {
     label,
     releaseStreamBeforeRecognition,
     preferNonContinuous,
-    usePermissionPriming: !isIOS,
+    usePermissionPriming: !isIOS && !isOperaGX,
   };
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Mic, MicOff } from "lucide-react";
 import { WaveformVisualizer } from "@/components/ui/WaveformVisualizer";
@@ -47,24 +47,29 @@ export function VoiceSearchModal({
     onResult(text);
   }, lang);
 
+  const startRef = useRef(start);
+  const cancelRef = useRef(cancel);
+  startRef.current = start;
+  cancelRef.current = cancel;
+
   useEffect(() => {
     if (!open) return;
+    cancelRef.current();
     setManualText("");
     const t = window.setTimeout(() => {
-      void start();
+      void startRef.current();
     }, 400);
     return () => {
       window.clearTimeout(t);
-      cancel();
     };
-  }, [open, lang, start, cancel]);
+  }, [open, lang]);
 
   useEffect(() => {
     if (open) return;
     setManualText("");
-    const t = window.setTimeout(() => cancel(), 300);
+    const t = window.setTimeout(() => cancelRef.current(), 300);
     return () => window.clearTimeout(t);
-  }, [open, cancel]);
+  }, [open]);
 
   const handleClose = () => {
     cancel();

@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   detectVoiceBrowser,
+  getVoiceApiDiagnostics,
   releaseMediaStream,
   VOICE_CHROME_FALLBACK_MSG,
+  type VoiceBrowserInfo,
 } from "@/lib/voiceSearchSupport";
 
 export type VoiceLang = "en-US" | "ar-SA";
@@ -46,6 +48,24 @@ function getSpeechRecognitionCtor():
   return w.SpeechRecognition ?? w.webkitSpeechRecognition;
 }
 
+function logVoiceStage(
+  stage: string,
+  browser: VoiceBrowserInfo,
+  extra?: Record<string, unknown>
+) {
+  const api = getVoiceApiDiagnostics();
+  console.log(`[voice] stage: ${stage}`, {
+    browser: browser.label,
+    isOperaGX: browser.isOperaGX,
+    usePermissionPriming: browser.usePermissionPriming,
+    preferNonContinuous: browser.preferNonContinuous,
+    SpeechRecognition: api.speechRecognition,
+    webkitSpeechRecognition: api.webkitSpeechRecognition,
+    hasSpeechCtor: api.hasSpeechCtor,
+    ...extra,
+  });
+}
+
 function mergeResults(
   results: SpeechRecognitionResultList,
   fromIndex: number
@@ -77,9 +97,9 @@ export function useVoiceSearch(
 
   const recRef = useRef<SpeechRecognitionInstance | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
+  const sessionRef = useRef(0);
   const onFinalRef = useRef(onFinal);
   const langRef = useRef(lang);
-  const browserRef = useRef(detectVoiceBrowser());
   const cancelledRef = useRef(false);
   const finalizedRef = useRef(false);
   const accumulatedFinalRef = useRef("");
@@ -117,7 +137,7 @@ export function useVoiceSearch(
   const markStartupSignal = useCallback(
     (kind: "onstart" | "onspeechstart" | "onresult") => {
       startupSignalsRef.current[kind] = true;
-      console.log(`[voice] ${kind} fired`);
+      console.log(`[voice] onstart lifecycle: ${kind} fired`);
       clearStartTimeout();
     },
     [clearStartTimeout]
@@ -133,8 +153,7 @@ export function useVoiceSearch(
 
   useEffect(() => {
     const info = detectVoiceBrowser();
-    browserRef.current = info;
-    console.log("[voice] browser detected:", info.label, info);
+    logVoiceStage("mount", info);
     setExperimentalBrowser(info.isOperaGX);
     const SR = getSpeechRecognitionCtor();
     const ok = !!SR && info.hasSpeechCtor;
@@ -189,7 +208,9 @@ export function useVoiceSearch(
   }, [teardown]);
 
   const failStart = useCallback(
-    (message: string) => {
+    (message: string, session: number) => {
+      if (session !== sessionRef.current) return;
+      logVoiceStage("failStart", detectVoiceBrowser(), { message });
       clearStartTimeout();
       cancelledRef.current = true;
       stopRecognition();
@@ -222,16 +243,28 @@ export function useVoiceSearch(
     [clearStartTimeout, releaseMicrophone, stopRecognition]
   );
 
-  const armStartTimeout = useCallback(() => {
-    clearStartTimeout();
-    startTimeoutRef.current = window.setTimeout(() => {
-      if (cancelledRef.current || hasStartupSignal()) return;
-      console.log("[voice] timeout triggered — no onstart/onspeechstart/onresult");
-      failStart(VOICE_CHROME_FALLBACK_MSG);
-    }, START_TIMEOUT_MS);
-  }, [clearStartTimeout, failStart, hasStartupSignal]);
+  const armStartTimeout = useCallback(
+    (session: number, browser: VoiceBrowserInfo) => {
+      clearStartTimeout();
+      startTimeoutRef.current = window.setTimeout(() => {
+        if (session !== sessionRef.current) return;
+        if (cancelledRef.current || hasStartupSignal()) return;
+        console.log(
+          "[voice] timeout triggered — no onstart/onspeechstart/onresult within",
+          START_TIMEOUT_MS,
+          "ms"
+        );
+        logVoiceStage("startup-timeout", browser, {
+          signals: { ...startupSignalsRef.current },
+        });
+        failStart(VOICE_CHROME_FALLBACK_MSG, session);
+      }, START_TIMEOUT_MS);
+    },
+    [clearStartTimeout, failStart, hasStartupSignal]
+  );
 
   const start = useCallback(async () => {
+    const session = ++sessionRef.current;
     resetStartupSignals();
     cancelledRef.current = false;
     finalizedRef.current = false;
@@ -243,46 +276,70 @@ export function useVoiceSearch(
     latestInterimRef.current = "";
 
     const browser = detectVoiceBrowser();
-    browserRef.current = browser;
+    logVoiceStage("start()", browser, { session });
 
     const SR = getSpeechRecognitionCtor();
     if (!SR || !browser.hasSpeechCtor) {
-      failStart(VOICE_CHROME_FALLBACK_MSG);
+      logVoiceStage("no-speech-ctor", browser);
+      failStart(VOICE_CHROME_FALLBACK_MSG, session);
       return;
     }
 
-    armStartTimeout();
-
     if (browser.usePermissionPriming) {
       try {
+        logVoiceStage("getUserMedia-request", browser);
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        if (session !== sessionRef.current) {
+          releaseMediaStream(stream);
+          return;
+        }
         mediaStreamRef.current = stream;
+        console.log("[voice] getUserMedia success:", {
+          trackCount: stream.getTracks().length,
+          labels: stream.getTracks().map((t) => t.label),
+        });
         if (browser.releaseStreamBeforeRecognition) {
           releaseMicrophone();
         }
-      } catch {
-        failStart("Microphone access denied. Allow the mic in browser settings.");
+      } catch (err) {
+        console.log("[voice] getUserMedia failed:", err);
+        failStart(
+          "Microphone access denied. Allow the mic in browser settings.",
+          session
+        );
         return;
       }
+    } else {
+      console.log(
+        "[voice] getUserMedia skipped (Opera/iOS path — SpeechRecognition owns mic)"
+      );
     }
 
-    if (cancelledRef.current) {
+    if (session !== sessionRef.current || cancelledRef.current) {
+      logVoiceStage("start-aborted-before-recognition", browser, {
+        cancelled: cancelledRef.current,
+      });
       releaseMicrophone();
+      setStatus("");
       return;
     }
 
     stopRecognition();
     recRef.current = null;
-    cancelledRef.current = false;
-    finalizedRef.current = false;
 
     const rec = new SR();
+    console.log("[voice] recognition created:", {
+      continuous: !browser.preferNonContinuous,
+      lang: langRef.current,
+    });
+
     rec.continuous = !browser.preferNonContinuous;
     rec.interimResults = true;
     rec.maxAlternatives = 1;
     rec.lang = langRef.current;
 
     rec.onstart = () => {
+      if (session !== sessionRef.current) return;
       markStartupSignal("onstart");
       releaseMicrophone();
       setError(null);
@@ -291,10 +348,12 @@ export function useVoiceSearch(
     };
 
     rec.onspeechstart = () => {
+      if (session !== sessionRef.current) return;
       markStartupSignal("onspeechstart");
     };
 
     rec.onresult = (ev: SpeechResultEvent) => {
+      if (session !== sessionRef.current) return;
       markStartupSignal("onresult");
       const { final, interim: interimPart } = mergeResults(
         ev.results,
@@ -321,6 +380,7 @@ export function useVoiceSearch(
     };
 
     rec.onerror = (ev: SpeechErrorEvent) => {
+      if (session !== sessionRef.current) return;
       const code = ev.error;
       console.log("[voice] onerror fired:", code);
       if (code === "aborted") return;
@@ -344,6 +404,7 @@ export function useVoiceSearch(
     };
 
     rec.onend = () => {
+      if (session !== sessionRef.current) return;
       clearStartTimeout();
       setListening(false);
       const instance = recRef.current;
@@ -367,13 +428,21 @@ export function useVoiceSearch(
 
     recRef.current = rec;
 
+    setStatus(
+      browser.isOperaGX
+        ? "Starting voice (Opera)…"
+        : "Starting speech recognition…"
+    );
+    armStartTimeout(session, browser);
+
     try {
       console.log("[voice] recognition.start called");
       rec.start();
+      logVoiceStage("recognition.start-returned", browser);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       console.log("[voice] recognition.start threw:", msg);
-      failStart(`${VOICE_CHROME_FALLBACK_MSG} (${msg})`);
+      failStart(`${VOICE_CHROME_FALLBACK_MSG} (${msg})`, session);
     }
   }, [
     armStartTimeout,
@@ -419,6 +488,7 @@ export function useVoiceSearch(
   );
 
   const cancel = useCallback(() => {
+    sessionRef.current += 1;
     cancelledRef.current = true;
     teardown();
     setStatus("");
