@@ -4,8 +4,12 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Providers } from "@/components/Providers";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://ayahfind.com"
+  ),
   title: "AyahFind - AI Islamic Search",
   description: "Human-error-tolerant Quran and Hadith retrieval",
+  applicationName: "AyahFind",
   appleWebApp: { capable: true, title: "AyahFind" },
 };
 
