@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { detectVoiceBrowser } from "@/lib/voiceSearchSupport";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Mic, MicOff } from "lucide-react";
 import { WaveformVisualizer } from "@/components/ui/WaveformVisualizer";
@@ -36,7 +37,7 @@ export function VoiceSearchModal({
   const {
     listening,
     supported,
-    experimentalBrowser,
+    notice,
     error,
     status,
     displayText,
@@ -52,13 +53,20 @@ export function VoiceSearchModal({
   startRef.current = start;
   cancelRef.current = cancel;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!open) return;
     cancelRef.current();
     setManualText("");
+    const browser = detectVoiceBrowser();
+    if (browser.isOperaGX) {
+      console.log("[voice] modal opened — Opera GX, typed search only");
+      return;
+    }
+    const delayMs = 400;
+    console.log("[voice] modal auto-start scheduled", { delayMs, browser: browser.label });
     const t = window.setTimeout(() => {
       void startRef.current();
-    }, 400);
+    }, delayMs);
     return () => {
       window.clearTimeout(t);
     };
@@ -128,10 +136,13 @@ export function VoiceSearchModal({
               <p className="mb-2 text-center text-sm font-medium uppercase tracking-widest text-ink-muted">
                 {listening ? "Listening" : "Voice search"}
               </p>
-              {experimentalBrowser && (
-                <p className="mb-2 text-center text-xs font-medium text-amber-700">
-                  Experimental browser support
-                </p>
+              {notice && (
+                <div
+                  role="status"
+                  className="mb-4 rounded-xl border border-amber-300/70 bg-amber-50 px-4 py-3 text-center text-sm leading-relaxed text-amber-950"
+                >
+                  {notice}
+                </div>
               )}
               <h2 className="mb-4 text-center text-xl font-semibold text-ink">
                 Recite or speak — mistakes are OK
@@ -212,16 +223,18 @@ export function VoiceSearchModal({
                 ) : (
                   <p className="font-arabic text-lg text-ink-muted" dir="auto">
                     {displayText ||
-                      (supported
-                        ? "Speak clearly into your microphone…"
-                        : "Voice not supported — type your query below")}
+                      (notice
+                        ? "Type your search below"
+                        : supported
+                          ? "Speak clearly into your microphone…"
+                          : "Voice not supported — type your query below")}
                   </p>
                 )}
               </div>
 
               <div className="mt-4">
                 <label className="mb-1 block text-xs text-ink-muted">
-                  Or type what you said (if voice fails)
+                  {notice ? "Search by typing" : "Or type what you said (if voice fails)"}
                 </label>
                 <input
                   type="text"

@@ -6,6 +6,7 @@ import {
   getVoiceApiDiagnostics,
   releaseMediaStream,
   VOICE_CHROME_FALLBACK_MSG,
+  VOICE_OPERA_GX_NOTICE_MSG,
   type VoiceBrowserInfo,
 } from "@/lib/voiceSearchSupport";
 
@@ -27,7 +28,7 @@ export type SpeechRecognitionInstance = {
   interimResults: boolean;
   lang: string;
   maxAlternatives: number;
-  start: () => void;
+  start: (audioTrack?: MediaStreamTrack) => void;
   stop: () => void;
   abort: () => void;
   onresult: ((ev: SpeechResultEvent) => void) | null;
@@ -35,6 +36,12 @@ export type SpeechRecognitionInstance = {
   onend: (() => void) | null;
   onstart: (() => void) | null;
   onspeechstart?: (() => void) | null;
+  onaudiostart?: (() => void) | null;
+  onaudioend?: (() => void) | null;
+  onsoundstart?: (() => void) | null;
+  onsoundend?: (() => void) | null;
+  onspeechend?: (() => void) | null;
+  onnomatch?: (() => void) | null;
 };
 
 function getSpeechRecognitionCtor():
@@ -91,7 +98,7 @@ export function useVoiceSearch(
   const [transcript, setTranscript] = useState("");
   const [interim, setInterim] = useState("");
   const [supported, setSupported] = useState(true);
-  const [experimentalBrowser, setExperimentalBrowser] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string>("");
 
@@ -109,6 +116,7 @@ export function useVoiceSearch(
     onstart: false,
     onspeechstart: false,
     onresult: false,
+    onaudiostart: false,
   });
 
   onFinalRef.current = onFinal;
@@ -130,12 +138,13 @@ export function useVoiceSearch(
     () =>
       startupSignalsRef.current.onstart ||
       startupSignalsRef.current.onspeechstart ||
-      startupSignalsRef.current.onresult,
+      startupSignalsRef.current.onresult ||
+      startupSignalsRef.current.onaudiostart,
     []
   );
 
   const markStartupSignal = useCallback(
-    (kind: "onstart" | "onspeechstart" | "onresult") => {
+    (kind: "onstart" | "onspeechstart" | "onresult" | "onaudiostart") => {
       startupSignalsRef.current[kind] = true;
       console.log(`[voice] onstart lifecycle: ${kind} fired`);
       clearStartTimeout();
@@ -148,13 +157,22 @@ export function useVoiceSearch(
       onstart: false,
       onspeechstart: false,
       onresult: false,
+      onaudiostart: false,
     };
   }, []);
 
   useEffect(() => {
     const info = detectVoiceBrowser();
     logVoiceStage("mount", info);
-    setExperimentalBrowser(info.isOperaGX);
+    installOperaSpeechProbeGlobal();
+    if (info.isOperaGX) {
+      console.log(
+        "[voice] Opera detected — run __ayahfindVoiceProbe() in console for activation probe"
+      );
+      setSupported(false);
+      setNotice(VOICE_OPERA_GX_NOTICE_MSG);
+      return;
+    }
     const SR = getSpeechRecognitionCtor();
     const ok = !!SR && info.hasSpeechCtor;
     setSupported(ok);
@@ -210,7 +228,8 @@ export function useVoiceSearch(
   const failStart = useCallback(
     (message: string, session: number) => {
       if (session !== sessionRef.current) return;
-      logVoiceStage("failStart", detectVoiceBrowser(), { message });
+      const browser = detectVoiceBrowser();
+      logVoiceStage("failStart", browser, { message });
       clearStartTimeout();
       cancelledRef.current = true;
       stopRecognition();
@@ -218,7 +237,12 @@ export function useVoiceSearch(
       recRef.current = null;
       setListening(false);
       setStatus("");
-      setError(message);
+      if (browser.isOperaGX) {
+        setNotice(VOICE_OPERA_GX_NOTICE_MSG);
+        setError(null);
+      } else {
+        setError(message);
+      }
     },
     [clearStartTimeout, releaseMicrophone, stopRecognition]
   );
@@ -257,7 +281,12 @@ export function useVoiceSearch(
         logVoiceStage("startup-timeout", browser, {
           signals: { ...startupSignalsRef.current },
         });
-        failStart(VOICE_CHROME_FALLBACK_MSG, session);
+        failStart(
+          browser.isOperaGX
+            ? VOICE_OPERA_GX_NOTICE_MSG
+            : VOICE_CHROME_FALLBACK_MSG,
+          session
+        );
       }, START_TIMEOUT_MS);
     },
     [clearStartTimeout, failStart, hasStartupSignal]
@@ -278,6 +307,14 @@ export function useVoiceSearch(
     const browser = detectVoiceBrowser();
     logVoiceStage("start()", browser, { session });
 
+    if (browser.isOperaGX) {
+      setSupported(false);
+      setNotice(VOICE_OPERA_GX_NOTICE_MSG);
+      setError(null);
+      setStatus("");
+      return;
+    }
+
     const SR = getSpeechRecognitionCtor();
     if (!SR || !browser.hasSpeechCtor) {
       logVoiceStage("no-speech-ctor", browser);
@@ -285,7 +322,7 @@ export function useVoiceSearch(
       return;
     }
 
-    if (browser.usePermissionPriming) {
+    if (browser.usePermissionPriming || browser.isOperaGX) {
       try {
         logVoiceStage("getUserMedia-request", browser);
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -297,8 +334,9 @@ export function useVoiceSearch(
         console.log("[voice] getUserMedia success:", {
           trackCount: stream.getTracks().length,
           labels: stream.getTracks().map((t) => t.label),
+          readyState: stream.getAudioTracks()[0]?.readyState,
         });
-        if (browser.releaseStreamBeforeRecognition) {
+        if (browser.releaseStreamBeforeRecognition && !browser.isOperaGX) {
           releaseMicrophone();
         }
       } catch (err) {
@@ -311,7 +349,7 @@ export function useVoiceSearch(
       }
     } else {
       console.log(
-        "[voice] getUserMedia skipped (Opera/iOS path — SpeechRecognition owns mic)"
+        "[voice] getUserMedia skipped (iOS path — SpeechRecognition owns mic)"
       );
     }
 
@@ -351,6 +389,18 @@ export function useVoiceSearch(
       if (session !== sessionRef.current) return;
       markStartupSignal("onspeechstart");
     };
+
+    rec.onaudiostart = () => {
+      if (session !== sessionRef.current) return;
+      console.log("[voice] onaudiostart fired");
+      markStartupSignal("onaudiostart");
+    };
+
+    rec.onaudioend = () => console.log("[voice] onaudioend fired");
+    rec.onsoundstart = () => console.log("[voice] onsoundstart fired");
+    rec.onsoundend = () => console.log("[voice] onsoundend fired");
+    rec.onspeechend = () => console.log("[voice] onspeechend fired");
+    rec.onnomatch = () => console.log("[voice] onnomatch fired");
 
     rec.onresult = (ev: SpeechResultEvent) => {
       if (session !== sessionRef.current) return;
@@ -436,8 +486,18 @@ export function useVoiceSearch(
     armStartTimeout(session, browser);
 
     try {
-      console.log("[voice] recognition.start called");
-      rec.start();
+      console.log("[voice] recognition.start called", {
+        opera: browser.isOperaGX,
+        withTrack: Boolean(browser.isOperaGX && mediaStreamRef.current),
+        secureContext:
+          typeof window !== "undefined" ? window.isSecureContext : false,
+      });
+      const track = mediaStreamRef.current?.getAudioTracks()[0];
+      if (browser.isOperaGX && track?.readyState === "live") {
+        rec.start(track);
+      } else {
+        rec.start();
+      }
       logVoiceStage("recognition.start-returned", browser);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -501,12 +561,141 @@ export function useVoiceSearch(
     transcript,
     interim,
     supported,
-    experimentalBrowser,
+    notice,
     error,
     status,
     displayText,
     start,
     stop,
     cancel,
+  };
+}
+
+const OPERA_PROBE_WAIT_MS = 4000;
+
+/** Console probe for Opera GX — run __ayahfindVoiceProbe() on ayahfind.com */
+function installOperaSpeechProbeGlobal(): void {
+  if (typeof window === "undefined") return;
+  const w = window as Window & {
+    __ayahfindVoiceProbe?: (lang?: string) => Promise<void>;
+  };
+  if (w.__ayahfindVoiceProbe) return;
+
+  w.__ayahfindVoiceProbe = async (lang = "en-US") => {
+    const api = getVoiceApiDiagnostics();
+    const browser = detectVoiceBrowser();
+    console.log("[voice][opera-probe] Browser:", browser.label, browser);
+    console.log("[voice][opera-probe] SpeechRecognition?", api.speechRecognition);
+    console.log(
+      "[voice][opera-probe] webkitSpeechRecognition?",
+      api.webkitSpeechRecognition
+    );
+    console.log("[voice][opera-probe] secureContext:", window.isSecureContext);
+
+    const SR = getSpeechRecognitionCtor();
+    if (!SR) {
+      console.log("[voice][opera-probe] No constructor — aborting");
+      return;
+    }
+
+    const strategies: Array<{
+      id: string;
+      run: (rec: SpeechRecognitionInstance) => void;
+      track?: MediaStreamTrack;
+    }> = [
+      {
+        id: "bare-no-lang",
+        run: () => {},
+      },
+      {
+        id: "lang-non-continuous",
+        run: (rec) => {
+          rec.lang = lang;
+          rec.continuous = false;
+          rec.interimResults = false;
+        },
+      },
+      {
+        id: "lang-continuous",
+        run: (rec) => {
+          rec.lang = lang;
+          rec.continuous = true;
+          rec.interimResults = true;
+        },
+      },
+    ];
+
+    let gumTrack: MediaStreamTrack | undefined;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      console.log("[voice][opera-probe] getUserMedia success");
+      gumTrack = stream.getAudioTracks()[0];
+      strategies.push({
+        id: "gum-then-start",
+        run: (rec) => {
+          rec.lang = lang;
+          rec.continuous = false;
+          rec.interimResults = false;
+        },
+      });
+      if (gumTrack) {
+        strategies.push({
+          id: "gum-start-track",
+          track: gumTrack,
+          run: (rec) => {
+            rec.lang = lang;
+            rec.continuous = false;
+            rec.interimResults = false;
+          },
+        });
+      }
+    } catch (e) {
+      console.log("[voice][opera-probe] getUserMedia failed:", e);
+    }
+
+    for (const strategy of strategies) {
+      const events: string[] = [];
+      const rec = new SR();
+      strategy.run(rec);
+      rec.onstart = () => events.push("onstart");
+      rec.onspeechstart = () => events.push("onspeechstart");
+      rec.onresult = () => events.push("onresult");
+      rec.onerror = (e) => events.push(`onerror:${e.error}`);
+      rec.onend = () => events.push("onend");
+      rec.onaudiostart = () => events.push("onaudiostart");
+      rec.onaudioend = () => events.push("onaudioend");
+
+      try {
+        console.log(`[voice][opera-probe][${strategy.id}] recognition.start called`);
+        if (strategy.track) rec.start(strategy.track);
+        else rec.start();
+      } catch (e) {
+        console.log(`[voice][opera-probe][${strategy.id}] start threw:`, e);
+        continue;
+      }
+
+      await new Promise((r) => window.setTimeout(r, OPERA_PROBE_WAIT_MS));
+      try {
+        rec.abort();
+      } catch {
+        /* ignore */
+      }
+      console.log(
+        `[voice][opera-probe][${strategy.id}] events after ${OPERA_PROBE_WAIT_MS}ms:`,
+        events.length ? events : "(none — silent stub)"
+      );
+    }
+
+    if (gumTrack) {
+      try {
+        gumTrack.stop();
+      } catch {
+        /* ignore */
+      }
+    }
+
+    console.log(
+      "[voice][opera-probe] If every strategy logged (none — silent stub), Opera has SpeechRecognition constructor but no speech-to-text backend."
+    );
   };
 }

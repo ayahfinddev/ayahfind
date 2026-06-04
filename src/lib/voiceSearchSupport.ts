@@ -1,3 +1,7 @@
+export const VOICE_OPERA_GX_NOTICE_MSG =
+  "Voice search is currently unavailable in Opera GX. You can still search by typing, or use Chrome, Edge, or Safari for voice search.";
+
+/** Fallback when the browser has no speech recognition API (non-Opera). */
 export const VOICE_CHROME_FALLBACK_MSG =
   "Voice search works best in Chrome. Please type your query below.";
 
