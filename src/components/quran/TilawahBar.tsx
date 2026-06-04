@@ -46,16 +46,16 @@ export function TilawahBar() {
         visible ? "translate-y-0" : "translate-y-full"
       )}
     >
-      <div className="relative border-t border-neutral-200/80 bg-white/95 backdrop-blur-md md:pb-safe">
+      <div className="tilawah-bar relative border-t border-glass-border bg-glass-fill backdrop-blur-xl md:pb-safe">
         <TilawahProgress />
 
         <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-2.5 lg:max-w-5xl">
           {/* Ayah reference */}
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-medium text-neutral-800">
+            <p className="truncate text-xs font-semibold text-ink">
               {surahName}
             </p>
-            <p className="truncate text-[11px] text-neutral-500">
+            <p className="truncate text-[11px] text-ink-muted">
               Ayah {ayahLabel}
             </p>
           </div>
@@ -66,7 +66,7 @@ export function TilawahBar() {
               <button
                 type="button"
                 onClick={skipPrev}
-                className="rounded-lg p-1.5 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 active:bg-neutral-200"
+                className="af-icon-btn rounded-lg p-1.5"
                 aria-label="Previous ayah"
               >
                 <SkipBack className="h-3.5 w-3.5" />
@@ -76,7 +76,7 @@ export function TilawahBar() {
             <button
               type="button"
               onClick={playing ? pause : resume}
-              className="rounded-full bg-neutral-900 p-2 text-white transition-colors hover:bg-neutral-800 active:bg-neutral-700"
+              className="rounded-full bg-accent-dim p-2 text-canvas shadow-sm transition-colors hover:brightness-110 active:brightness-95"
               aria-label={playing ? "Pause" : "Play"}
             >
               {playing ? (
@@ -90,7 +90,7 @@ export function TilawahBar() {
               <button
                 type="button"
                 onClick={skipNext}
-                className="rounded-lg p-1.5 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 active:bg-neutral-200"
+                className="af-icon-btn rounded-lg p-1.5"
                 aria-label="Next ayah"
               >
                 <SkipForward className="h-3.5 w-3.5" />
@@ -104,7 +104,7 @@ export function TilawahBar() {
             <button
               type="button"
               onClick={stop}
-              className="rounded-lg p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600"
+              className="af-icon-btn rounded-lg p-1.5"
               aria-label="Stop recitation"
             >
               <X className="h-3.5 w-3.5" />

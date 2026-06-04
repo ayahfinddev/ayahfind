@@ -51,6 +51,8 @@ interface AudioPlaybackContextValue {
   stop: () => void;
   skipNext: () => void;
   skipPrev: () => void;
+  /** Jump queue playback to a verse (no-op if not in queue mode). */
+  seekQueueAyah: (surah: number, ayah: number) => void;
   isActiveVerse: (surah: number, ayah: number) => boolean;
 }
 
@@ -260,6 +262,18 @@ export function AudioPlaybackProvider({ children }: { children: ReactNode }) {
     playAtQueueIndex(Math.max(0, queueIndexRef.current - 1));
   }, [playAtQueueIndex]);
 
+  const seekQueueAyah = useCallback(
+    (surah: number, ayah: number) => {
+      if (modeRef.current !== "queue") return;
+      const idx = queueRef.current.findIndex(
+        (item) => item.surah === surah && item.ayah === ayah
+      );
+      if (idx < 0) return;
+      playAtQueueIndex(idx);
+    },
+    [playAtQueueIndex]
+  );
+
   const isActiveVerse = useCallback(
     (surah: number, ayah: number) =>
       activeAyah?.surah === surah && activeAyah?.ayah === ayah && playing,
@@ -338,6 +352,7 @@ export function AudioPlaybackProvider({ children }: { children: ReactNode }) {
         stop,
         skipNext,
         skipPrev,
+        seekQueueAyah,
         isActiveVerse,
       }}
     >

@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, ListTree } from "lucide-react";
 import { BismillahHeader } from "@/components/quran/BismillahHeader";
@@ -14,7 +13,7 @@ import { useAudioPlayback } from "@/contexts/AudioPlaybackContext";
 import { useBookmarks } from "@/hooks/useBookmarks";
 import { useReadingMode } from "@/hooks/useReadingMode";
 import { useReciter } from "@/hooks/useReciter";
-import { buildSurahAudioQueue } from "@/lib/readerAudio";
+import { buildSurahAudioQueue, queueIndexForAyah } from "@/lib/readerAudio";
 import { getSurahEntry } from "@/lib/quranNavigation";
 import { prepareReaderAyahs, showsBismillahHeader } from "@/lib/quranDisplay";
 import { cn } from "@/lib/utils";
@@ -45,8 +44,8 @@ export function QuranReader({
 
   const displayAyahs = useMemo(() => prepareReaderAyahs(surah, ayahs), [surah, ayahs]);
   const audioQueue = useMemo(
-    () => buildSurahAudioQueue(surah, displayAyahs, reciterId, initialAyah),
-    [surah, displayAyahs, reciterId, initialAyah]
+    () => buildSurahAudioQueue(surah, displayAyahs, reciterId),
+    [surah, displayAyahs, reciterId]
   );
 
   const [focusAyah, setFocusAyah] = useState(initialAyah);
@@ -54,10 +53,6 @@ export function QuranReader({
   const scrolledRef = useRef(false);
 
   const focusIndex = displayAyahs.findIndex((a) => a.ayah === focusAyah);
-  const queueFromFocus = useMemo(
-    () => buildSurahAudioQueue(surah, displayAyahs, reciterId, focusAyah),
-    [surah, displayAyahs, reciterId, focusAyah]
-  );
 
   useEffect(() => {
     setFocusAyah(initialAyah);
@@ -103,8 +98,12 @@ export function QuranReader({
       setHighlightAyah(nextAyah);
       saveProgress(s, nextAyah, getSurahEntry(s)?.en ?? surahNameEn);
       if (s !== surah) {
+        if (playback.mode !== "idle") playback.stop();
         router.push(`/ayah/${s}/${nextAyah}`);
         return;
+      }
+      if (playback.mode === "queue") {
+        playback.seekQueueAyah(s, nextAyah);
       }
       router.replace(`/ayah/${s}/${nextAyah}`, { scroll: false });
       window.setTimeout(() => {
@@ -114,7 +113,7 @@ export function QuranReader({
         });
       }, 50);
     },
-    [router, surah, surahNameEn, saveProgress]
+    [router, surah, surahNameEn, saveProgress, playback]
   );
 
   useEffect(() => {
@@ -134,9 +133,9 @@ export function QuranReader({
   }, []);
 
   const startQueueFromFocus = useCallback(() => {
-    const idx = queueFromFocus.findIndex((q) => q.ayah === focusAyah);
-    playback.toggleQueue(queueFromFocus, idx >= 0 ? idx : 0);
-  }, [playback, queueFromFocus, focusAyah]);
+    if (!audioQueue.length) return;
+    playback.toggleQueue(audioQueue, queueIndexForAyah(audioQueue, focusAyah));
+  }, [playback, audioQueue, focusAyah]);
 
   const prevAyah = focusIndex > 0 ? displayAyahs[focusIndex - 1]?.ayah : null;
   const nextAyah =
@@ -147,34 +146,39 @@ export function QuranReader({
   const prevSurah = surah > 1 ? surah - 1 : null;
   const nextSurah = surah < 114 ? surah + 1 : null;
 
+  const prevSurahName = prevSurah ? getSurahEntry(prevSurah)?.en : null;
+  const nextSurahName = nextSurah ? getSurahEntry(nextSurah)?.en : null;
+
   const surahNav = useMemo(
     () => (
       <div className="mb-6 flex items-center justify-between gap-2">
         {prevSurah ? (
-          <Link
-            href={`/ayah/${prevSurah}/1`}
-            className="flex items-center gap-1 rounded-xl border border-border-strong bg-canvas-elevated px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:border-accent-border hover:text-ink"
+          <button
+            type="button"
+            onClick={() => goAyah(1, prevSurah)}
+            className="flex max-w-[48%] items-center gap-1 rounded-xl border border-border-strong bg-canvas-elevated px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:border-accent-border hover:text-ink"
           >
-            <ChevronLeft className="h-4 w-4" />
-            Surah {prevSurah}
-          </Link>
+            <ChevronLeft className="h-4 w-4 shrink-0" />
+            <span className="truncate">Previous: {prevSurahName ?? `Surah ${prevSurah}`}</span>
+          </button>
         ) : (
           <span />
         )}
         {nextSurah ? (
-          <Link
-            href={`/ayah/${nextSurah}/1`}
-            className="flex items-center gap-1 rounded-xl border border-border-strong bg-canvas-elevated px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:border-accent-border hover:text-ink"
+          <button
+            type="button"
+            onClick={() => goAyah(1, nextSurah)}
+            className="flex max-w-[48%] items-center gap-1 rounded-xl border border-border-strong bg-canvas-elevated px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:border-accent-border hover:text-ink"
           >
-            Surah {nextSurah}
-            <ChevronRight className="h-4 w-4" />
-          </Link>
+            <span className="truncate">Next: {nextSurahName ?? `Surah ${nextSurah}`}</span>
+            <ChevronRight className="h-4 w-4 shrink-0" />
+          </button>
         ) : (
           <span />
         )}
       </div>
     ),
-    [prevSurah, nextSurah]
+    [prevSurah, nextSurah, prevSurahName, nextSurahName, goAyah]
   );
 
   const [navMounted, setNavMounted] = useState(false);
@@ -209,12 +213,18 @@ export function QuranReader({
       <ReaderTopBar
         surah={surah}
         ayah={focusAyah}
+        totalAyahs={displayAyahs.length}
         nameEn={surahNameEn}
         nameAr={surahNameAr}
         mode={mode}
         onModeChange={setMode}
         onPrevAyah={prevAyah ? () => goAyah(prevAyah) : undefined}
         onNextAyah={nextAyah ? () => goAyah(nextAyah) : undefined}
+        onJumpAyah={(n) => goAyah(n)}
+        onPrevSurah={prevSurah ? () => goAyah(1, prevSurah) : undefined}
+        onNextSurah={nextSurah ? () => goAyah(1, nextSurah) : undefined}
+        canPrevSurah={!!prevSurah}
+        canNextSurah={!!nextSurah}
         onListenSurah={startQueueFromFocus}
         onSkipNext={playback.mode === "queue" ? playback.skipNext : undefined}
         onSkipPrev={playback.mode === "queue" ? playback.skipPrev : undefined}
@@ -227,16 +237,14 @@ export function QuranReader({
 
       <div className="reader-body pt-5 md:pt-6">
         {surahNav}
-        <p className="mb-6 text-center text-sm text-ink-muted">
-          {displayAyahs.length} ayahs - continuous recitation from the selected verse
+        <p className="mb-6 text-center text-xs tracking-wide text-ink-subtle">
+          {displayAyahs.length} ayahs in this surah
         </p>
 
         {showsBismillahHeader(surah) && <BismillahHeader />}
 
         <div className="reader-verses overflow-visible rounded-2xl border border-glass-border bg-canvas shadow-card">
-          {displayAyahs.map((a, i) => {
-            const qIdx = audioQueue.findIndex((q) => q.ayah === a.ayah);
-            return (
+          {displayAyahs.map((a, i) => (
               <VerseCard
                 key={a.ayah}
                 surah={surah}
@@ -248,11 +256,10 @@ export function QuranReader({
                 onToggleSave={() => toggle(surah, a.ayah, `${surahNameEn} ${a.ayah}`)}
                 onSelectAyah={goAyah}
                 audioQueue={audioQueue}
-                audioQueueIndex={qIdx >= 0 ? qIdx : i}
+                audioQueueIndex={queueIndexForAyah(audioQueue, a.ayah)}
                 isLast={i === displayAyahs.length - 1}
               />
-            );
-          })}
+            ))}
         </div>
       </div>
     </div>

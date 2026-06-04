@@ -69,10 +69,11 @@ export function VerseCard(props: VerseCardProps) {
     <article
       id={`ayah-${ayah.ayah}`}
       className={cn(
-        "scroll-mt-28 overflow-visible px-5 py-7 transition-colors md:px-8 md:py-9",
+        "reader-verse scroll-mt-28 overflow-visible px-5 py-8 transition-colors md:px-9 md:py-10",
         !isLast && "border-b border-glass-border",
         highlighted && "reader-highlight",
-        active ? "bg-accent-surface" : "bg-canvas hover:bg-canvas-elevated"
+        active && "is-active bg-accent-surface",
+        !active && "bg-canvas hover:bg-canvas-elevated"
       )}
     >
       <div className="flex items-start justify-between gap-3">
@@ -90,8 +91,8 @@ export function VerseCard(props: VerseCardProps) {
             className={cn(
               "flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-medium transition-colors",
               playing
-                ? "bg-ink text-canvas"
-                : "bg-canvas-elevated text-ink hover:bg-canvas-card"
+                ? "bg-accent-dim text-canvas shadow-sm"
+                : "bg-canvas-elevated text-ink hover:border-accent-border hover:bg-canvas-card"
             )}
           >
             {playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
@@ -117,10 +118,10 @@ export function VerseCard(props: VerseCardProps) {
       {showArabic && (
         <p
           className={cn(
-            "font-arabic break-words text-ink",
+            "reader-verse-arabic font-arabic break-words text-ink",
             mode === "arabic"
-              ? "mt-3 text-center text-[1.75rem] leading-[2.35] md:text-[2rem] md:leading-[2.5]"
-              : "mt-5 text-right text-[1.5rem] leading-[2.25] md:text-[1.65rem] md:leading-[2.35]"
+              ? "mt-3 text-center text-[1.85rem] leading-[2.4] md:text-[2.1rem] md:leading-[2.55]"
+              : "mt-5 text-right text-[1.55rem] leading-[2.3] md:text-[1.75rem] md:leading-[2.4]"
           )}
           dir="rtl"
           lang="ar"
@@ -132,9 +133,9 @@ export function VerseCard(props: VerseCardProps) {
       {showTranslation && ayah.translation_en && (
         <p
           className={cn(
-            "break-words leading-relaxed text-ink-muted",
+            "reader-verse-translation break-words leading-relaxed text-ink-muted",
             mode === "verse" || mode === "both"
-              ? "mt-4 text-sm md:text-[0.9375rem]"
+              ? "mt-5 text-sm md:text-[0.9375rem]"
               : "mt-3 text-base md:text-lg"
           )}
         >

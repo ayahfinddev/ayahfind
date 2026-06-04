@@ -9,7 +9,8 @@ import { cn } from "@/lib/utils";
 interface AISearchBarProps {
   value: string;
   onChange: (v: string) => void;
-  onSubmit: () => void;
+  /** Receives the current input — do not rely on parent state having flushed. */
+  onSearch: (value: string) => void;
   onVoiceOpen: () => void;
   loading?: boolean;
   mode?: "quran" | "hadith";
@@ -19,7 +20,7 @@ interface AISearchBarProps {
 export function AISearchBar({
   value,
   onChange,
-  onSubmit,
+  onSearch,
   onVoiceOpen,
   loading,
   mode = "quran",
@@ -61,7 +62,12 @@ export function AISearchBar({
             onChange={(e) => onChange(e.target.value)}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
-            onKeyDown={(e) => e.key === "Enter" && onSubmit()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                const q = value.trim();
+                if (q) onSearch(q);
+              }
+            }}
             className="w-full bg-transparent text-base leading-5 text-ink outline-none placeholder:text-transparent"
             aria-label="Search Quran or Hadith"
           />
@@ -94,8 +100,11 @@ export function AISearchBar({
         <motion.button
           type="button"
           whileTap={{ scale: 0.95 }}
-          onClick={onSubmit}
-          disabled={loading || !value.trim()}
+          onClick={() => {
+            const q = value.trim();
+            if (q) onSearch(q);
+          }}
+          disabled={!value.trim()}
           className={cn(
             "flex h-11 items-center gap-2 rounded-xl px-4 font-medium transition-all",
             value.trim()

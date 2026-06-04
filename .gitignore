@@ -39,3 +39,4 @@ tsconfig.tsbuildinfo
 scripts/render-cli.zip
 scripts/render-cli/
 scripts/render-cli-extract/
+.vercel
