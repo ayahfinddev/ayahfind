@@ -13,8 +13,8 @@ const VOICE_LANG_OPTIONS: { id: VoiceLang; label: string }[] = [
 ];
 
 const overlayVariants = {
-  hidden: { opacity: 0, pointerEvents: "none" as const },
-  visible: { opacity: 1, pointerEvents: "auto" as const },
+  hidden: { opacity: 0 },
+  visible: { opacity: 1 },
 };
 
 interface VoiceSearchModalProps {
@@ -33,14 +33,19 @@ export function VoiceSearchModal({
   const [lang, setLang] = useState<VoiceLang>("en-US");
   const [manualText, setManualText] = useState("");
 
-  const { listening, supported, error, status, displayText, start, stop, cancel } =
-    useVoiceSearch(
-      (text) => {
-        onResult(text);
-        onClose();
-      },
-      lang
-    );
+  const {
+    listening,
+    supported,
+    experimentalBrowser,
+    error,
+    status,
+    displayText,
+    start,
+    stop,
+    cancel,
+  } = useVoiceSearch((text) => {
+    onResult(text);
+  }, lang);
 
   useEffect(() => {
     if (!open) return;
@@ -55,10 +60,10 @@ export function VoiceSearchModal({
   }, [open, lang, start, cancel]);
 
   useEffect(() => {
-    if (!open) {
-      cancel();
-      setManualText("");
-    }
+    if (open) return;
+    setManualText("");
+    const t = window.setTimeout(() => cancel(), 300);
+    return () => window.clearTimeout(t);
   }, [open, cancel]);
 
   const handleClose = () => {
@@ -92,7 +97,7 @@ export function VoiceSearchModal({
           animate="visible"
           exit="hidden"
           transition={{ duration: 0.15 }}
-          className="fixed inset-0 z-40"
+          className="fixed inset-0 z-40 pointer-events-none"
         >
           <motion.div
             className="pointer-events-none absolute inset-0 bg-glass-fill backdrop-blur-xl"
@@ -118,6 +123,11 @@ export function VoiceSearchModal({
               <p className="mb-2 text-center text-sm font-medium uppercase tracking-widest text-ink-muted">
                 {listening ? "Listening" : "Voice search"}
               </p>
+              {experimentalBrowser && (
+                <p className="mb-2 text-center text-xs font-medium text-amber-700">
+                  Experimental browser support
+                </p>
+              )}
               <h2 className="mb-4 text-center text-xl font-semibold text-ink">
                 Recite or speak — mistakes are OK
               </h2>
@@ -199,7 +209,7 @@ export function VoiceSearchModal({
                     {displayText ||
                       (supported
                         ? "Speak clearly into your microphone…"
-                        : "Use Chrome or Edge for voice search")}
+                        : "Voice not supported — type your query below")}
                   </p>
                 )}
               </div>
@@ -219,7 +229,7 @@ export function VoiceSearchModal({
               </div>
 
               <p className="mt-3 text-center text-xs text-ink-subtle">
-                Tap the mic to stop — we search automatically. Needs internet on Chrome.
+                Tap the mic to stop — we search automatically. Typed search always works.
               </p>
 
               <div className="mt-6 flex gap-3">

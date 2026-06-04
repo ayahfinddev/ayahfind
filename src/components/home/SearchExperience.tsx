@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Brain, ChevronDown, ChevronUp, Loader2, SearchX } from "lucide-react";
 import { ContinueReadingCard } from "@/components/home/ContinueReadingCard";
@@ -17,6 +17,8 @@ import type { SearchCandidate, SearchMode } from "@/lib/types";
 import { useAudioPlayback } from "@/contexts/AudioPlaybackContext";
 import { useSearchHome } from "@/contexts/SearchHomeContext";
 
+type SearchSource = "button" | "enter" | "voice";
+
 export function SearchExperience() {
   const [query, setQuery] = useState("");
   const [mode, setMode] = useState<SearchMode>("quran");
@@ -29,7 +31,11 @@ export function SearchExperience() {
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [aiHint, setAiHint] = useState<string | null>(null);
   const [activeTopic, setActiveTopic] = useState<string | null>(null);
+  const searchGeneration = useRef(0);
+  const modeRef = useRef(mode);
   const router = useRouter();
+
+  modeRef.current = mode;
   const { registerReset } = useSearchHome();
   const playback = useAudioPlayback();
 
@@ -52,9 +58,14 @@ export function SearchExperience() {
     return () => registerReset(null);
   }, [registerReset, resetToLanding]);
 
-  const runSearch = useCallback(async (q: string) => {
-    const trimmed = q.trim();
+  const executeSearch = useCallback(async (raw: string, source: SearchSource) => {
+    const trimmed = raw.trim();
     if (!trimmed) return;
+
+    const generation = ++searchGeneration.current;
+    console.log("[search] transcript finalized:", trimmed);
+    console.log("[search] search invoked:", source);
+
     setQuery(trimmed);
     setActiveTopic(null);
     setLoading(true);
@@ -62,17 +73,23 @@ export function SearchExperience() {
     setNoMatchMessage(null);
     setWeakMatches([]);
     setWeakOpen(false);
+
     try {
-      if (mode === "hadith") {
+      if (modeRef.current === "hadith") {
         setResults([]);
         setAiHint("Hadith semantic index coming soon — showing Quran matches for now.");
       }
+      console.log("[search] Calling searchUnified:", trimmed);
       const data = await searchUnified(trimmed, 10);
+      if (generation !== searchGeneration.current) {
+        console.log("[search] stale response ignored");
+        return;
+      }
+      const count = data.results?.length ?? 0;
+      console.log("[search] results length:", count);
       setResults(data.results ?? []);
       setWeakMatches(data.weak_matches ?? []);
-      setNoMatchMessage(
-        (data.results?.length ?? 0) === 0 && data.message ? data.message : null
-      );
+      setNoMatchMessage(count === 0 && data.message ? data.message : null);
       setAiHint(data.intent_hint ?? data.normalized_query ?? null);
       try {
         const hist: string[] = JSON.parse(localStorage.getItem("ayahfind_history") || "[]");
@@ -82,14 +99,37 @@ export function SearchExperience() {
         /* ignore */
       }
     } catch (e) {
+      if (generation !== searchGeneration.current) return;
+      console.error("[search] error:", e);
       setError(e instanceof Error ? e.message : "Search failed");
       setResults([]);
       setWeakMatches([]);
       setNoMatchMessage(null);
     } finally {
-      setLoading(false);
+      if (generation === searchGeneration.current) {
+        setLoading(false);
+      }
     }
-  }, [mode]);
+  }, []);
+
+  const onBarSearch = useCallback(
+    (text: string) => {
+      console.log("[search] Search button clicked:", text);
+      void executeSearch(text, "button");
+    },
+    [executeSearch]
+  );
+
+  const onVoiceSearch = useCallback(
+    (text: string) => {
+      const q = text.trim();
+      if (!q) return;
+      console.log("[search] Voice transcript received:", q);
+      setVoiceOpen(false);
+      void executeSearch(q, "voice");
+    },
+    [executeSearch]
+  );
 
   const runTopic = useCallback(
     async (topic: SearchTopic) => {
@@ -154,7 +194,7 @@ export function SearchExperience() {
         <AISearchBar
           value={query}
           onChange={setQuery}
-          onSubmit={() => runSearch(query)}
+          onSearch={onBarSearch}
           onVoiceOpen={() => setVoiceOpen(true)}
           loading={loading}
           mode={mode}
@@ -259,16 +299,13 @@ export function SearchExperience() {
         </section>
       )}
 
-      <VoiceSearchModal
-        open={voiceOpen}
-        onClose={() => setVoiceOpen(false)}
-        onResult={(text) => {
-          const q = text.trim();
-          if (!q) return;
-          setVoiceOpen(false);
-          void runSearch(q);
-        }}
-      />
+      {voiceOpen && (
+        <VoiceSearchModal
+          open={voiceOpen}
+          onClose={() => setVoiceOpen(false)}
+          onResult={onVoiceSearch}
+        />
+      )}
     </>
   );
 }
