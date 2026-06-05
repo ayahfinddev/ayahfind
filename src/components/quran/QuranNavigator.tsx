@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useDragControls } from "framer-motion";
 import { BookOpen, ChevronRight, Layers, List, X } from "lucide-react";
 import {
   JUZ_STARTS,
@@ -125,6 +125,7 @@ export function QuranNavigator({
     const n = Math.min(max, Math.max(1, parseInt(jumpAyah, 10) || 1));
     go(surah, n);
   };
+  const dragControls = useDragControls();
   const currentJuz = getJuzForRef(surah, ayah);
   const currentPage = getPageForRef(surah, ayah);
   const panelContent = (
@@ -293,7 +294,7 @@ export function QuranNavigator({
             className={cn("fixed inset-0 z-[110] hidden bg-black/25 backdrop-blur-[2px] md:block", PANEL_LEFT)}
             onClick={onClose}
           />
-          {/* Mobile backdrop — full viewport coverage */}
+          {/* Mobile backdrop — stops above bottom nav so nav bar stays usable */}
           <motion.button
             type="button"
             initial={{ opacity: 0 }}
@@ -301,7 +302,8 @@ export function QuranNavigator({
             exit={{ opacity: 0 }}
             transition={navBackdropTransition}
             aria-label="Close navigator backdrop"
-            className="fixed inset-0 z-[110] bg-black/30 backdrop-blur-[2px] md:hidden"
+            className="fixed inset-x-0 top-0 z-[110] bg-black/30 backdrop-blur-[2px] md:hidden"
+            style={{ bottom: "calc(4rem + env(safe-area-inset-bottom, 0px))" }}
             onClick={onClose}
           />
           {/* Desktop panel — slide-in from left */}
@@ -324,14 +326,14 @@ export function QuranNavigator({
           >
             {panelContent}
           </motion.aside>
-          {/* Mobile panel — bottom sheet via full-viewport flex wrapper */}
+          {/* Mobile panel — bottom sheet sitting above the bottom nav bar */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={navBackdropTransition}
-            className="fixed inset-0 z-[120] flex flex-col justify-end md:hidden"
-            style={{ pointerEvents: "none" }}
+            className="fixed inset-x-0 top-0 z-[120] flex flex-col justify-end md:hidden"
+            style={{ pointerEvents: "none", bottom: "calc(4rem + env(safe-area-inset-bottom, 0px))" }}
           >
             <motion.aside
               role="dialog"
@@ -341,9 +343,20 @@ export function QuranNavigator({
               initial={{ y: "100%" }}
               animate={{ y: 0, transition: navPanelEnter }}
               exit={{ y: "100%", transition: navMobileExit }}
-              className="quran-nav-panel pointer-events-auto flex max-h-[min(82dvh,82svh,680px)] flex-col rounded-t-2xl border border-b-0 border-glass-border bg-canvas pb-safe shadow-2xl"
+              drag="y"
+              dragControls={dragControls}
+              dragListener={false}
+              dragConstraints={{ top: 0 }}
+              dragElastic={0.08}
+              onDragEnd={(_, info) => {
+                if (info.offset.y > 80 || info.velocity.y > 400) onClose();
+              }}
+              className="quran-nav-panel pointer-events-auto flex max-h-[70dvh] flex-col rounded-t-2xl border border-b-0 border-glass-border bg-canvas shadow-2xl"
             >
-              <div className="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-border-strong" />
+              <div
+                className="mx-auto mt-2.5 h-1 w-10 shrink-0 cursor-grab touch-none rounded-full bg-border-strong active:cursor-grabbing"
+                onPointerDown={(e) => dragControls.start(e)}
+              />
               {panelContent}
             </motion.aside>
           </motion.div>

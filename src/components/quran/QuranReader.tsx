@@ -1,9 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, ListTree } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { BismillahHeader } from "@/components/quran/BismillahHeader";
 import { QuranNavigator, QuranNavigatorToggle } from "@/components/quran/QuranNavigator";
 import { ReaderTopBar } from "@/components/quran/ReaderTopBar";
@@ -181,28 +180,10 @@ export function QuranReader({
     [prevSurah, nextSurah, prevSurahName, nextSurahName, goAyah]
   );
 
-  const [navMounted, setNavMounted] = useState(false);
-  useEffect(() => setNavMounted(true), []);
 
   return (
     <div className={cn("reader-root relative -mt-2 min-h-[50vh]", playback.mode !== "idle" ? "pb-32 md:pb-24" : "pb-28 md:pb-12")}>
       <QuranNavigatorToggle open={navOpen} onClick={() => setNavOpen((o) => !o)} />
-      {navMounted &&
-        createPortal(
-          <button
-            type="button"
-            onClick={() => setNavOpen(true)}
-            aria-label="Open Quran navigator"
-            data-testid="quran-nav-fab"
-            className={cn(
-              "fixed right-5 z-[100] flex h-10 w-10 items-center justify-center rounded-full border border-glass-border bg-glass-fill text-ink-muted shadow-md backdrop-blur-sm transition-all hover:border-accent-border hover:text-accent-dim md:hidden",
-              playback.mode !== "idle" ? "bottom-[calc(7.5rem+env(safe-area-inset-bottom))]" : "bottom-[calc(5.5rem+env(safe-area-inset-bottom))]"
-            )}
-          >
-            <ListTree className="h-4 w-4" />
-          </button>,
-          document.body
-        )}
       <QuranNavigator
         open={navOpen}
         onClose={() => setNavOpen(false)}
