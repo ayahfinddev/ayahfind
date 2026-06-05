@@ -5,9 +5,14 @@ export const VOICE_OPERA_GX_NOTICE_MSG =
 export const VOICE_CHROME_FALLBACK_MSG =
   "Voice search works best in Chrome. Please type your query below.";
 
+/** Shown when speech recognition fails for browser/service reasons (production-safe). */
+export const VOICE_UNAVAILABLE_MSG =
+  "Voice search is currently unavailable in this browser. You can still search by typing below.";
+
 export type VoiceBrowserInfo = {
   isOperaGX: boolean;
   isEdge: boolean;
+  isChrome: boolean;
   isSafari: boolean;
   isIOS: boolean;
   hasSpeechCtor: boolean;
@@ -16,6 +21,13 @@ export type VoiceBrowserInfo = {
   preferNonContinuous: boolean;
   usePermissionPriming: boolean;
 };
+
+function isChromeBrowser(ua: string): boolean {
+  return (
+    /Chrome|Chromium|CriOS/i.test(ua) &&
+    !/Edg|OPR|Opera/i.test(ua)
+  );
+}
 
 /** Known SpeechRecognitionErrorEvent.error values (Web Speech API). */
 export type SpeechRecognitionErrorCode =
@@ -32,7 +44,10 @@ export type SpeechRecognitionErrorDetails = {
   code: SpeechRecognitionErrorCode | string;
   message: string | undefined;
   browserLabel: string;
+  /** Production-safe message shown in the UI. */
   userMessage: string;
+  /** Detailed message for console logs and development diagnostics. */
+  debugMessage: string;
 };
 
 function isEdgeChromium(ua: string): boolean {
@@ -41,7 +56,7 @@ function isEdgeChromium(ua: string): boolean {
 
 export function speechErrorUserMessage(
   code: string,
-  browser: Pick<VoiceBrowserInfo, "isEdge" | "label">
+  _browser: Pick<VoiceBrowserInfo, "isEdge" | "label">
 ): string {
   switch (code) {
     case "no-speech":
@@ -49,22 +64,48 @@ export function speechErrorUserMessage(
     case "not-allowed":
       return "Microphone blocked. Allow mic access for this site.";
     case "service-not-allowed":
-      return "Speech recognition is blocked by the browser or page policy (HTTPS, permissions, or enterprise settings).";
+      return VOICE_UNAVAILABLE_MSG;
     case "audio-capture":
       return "No microphone found. Plug in a mic or check sound settings.";
     case "network":
-      if (browser.isEdge) {
-        return "Microsoft Edge could not reach its speech service (error: network). This is usually an Edge backend issue, not your connection. Try Chrome or type your query below.";
-      }
-      return "Speech recognition could not reach its cloud service (error: network). Check connectivity or type your query below.";
+      return VOICE_UNAVAILABLE_MSG;
     case "language-not-supported":
-      return `Speech language not supported by this browser (error: language-not-supported). Try English or Chrome.`;
+      return VOICE_UNAVAILABLE_MSG;
     case "bad-grammar":
-      return "Speech grammar error. Try again or type your query below.";
+      return "Voice search could not understand that. Try again or type your query below.";
     case "aborted":
       return "";
     default:
-      return `Voice recognition failed (error: ${code}). ${VOICE_CHROME_FALLBACK_MSG}`;
+      return VOICE_UNAVAILABLE_MSG;
+  }
+}
+
+export function speechErrorDebugMessage(
+  code: string,
+  browser: Pick<VoiceBrowserInfo, "isEdge" | "label">
+): string {
+  switch (code) {
+    case "no-speech":
+      return "SpeechRecognition error: no-speech";
+    case "not-allowed":
+      return "SpeechRecognition error: not-allowed (mic permission denied)";
+    case "service-not-allowed":
+      return `SpeechRecognition error: service-not-allowed (browser: ${browser.label})`;
+    case "audio-capture":
+      return "SpeechRecognition error: audio-capture (no mic device)";
+    case "network":
+      if (browser.isEdge) {
+        return "SpeechRecognition error: network — Microsoft Edge could not reach its speech service. This is usually an Edge backend issue, not the user's connection.";
+      }
+      return `SpeechRecognition error: network (browser: ${browser.label})`;
+    case "language-not-supported":
+      return `SpeechRecognition error: language-not-supported (browser: ${browser.label})`;
+    case "bad-grammar":
+      return "SpeechRecognition error: bad-grammar";
+    case "aborted":
+      return "SpeechRecognition error: aborted";
+    default:
+      return `SpeechRecognition error: ${code} (browser: ${browser.label})`;
   }
 }
 
@@ -73,12 +114,12 @@ export function formatSpeechRecognitionError(
   browser: VoiceBrowserInfo,
   implementationMessage?: string
 ): SpeechRecognitionErrorDetails {
-  const userMessage = speechErrorUserMessage(code, browser);
   return {
     code,
     message: implementationMessage,
     browserLabel: browser.label,
-    userMessage,
+    userMessage: speechErrorUserMessage(code, browser),
+    debugMessage: speechErrorDebugMessage(code, browser),
   };
 }
 
@@ -128,6 +169,7 @@ export function detectVoiceBrowser(): VoiceBrowserInfo {
     return {
       isOperaGX: false,
       isEdge: false,
+      isChrome: false,
       isSafari: false,
       isIOS: false,
       hasSpeechCtor: false,
@@ -150,6 +192,7 @@ export function detectVoiceBrowser(): VoiceBrowserInfo {
     typeof w.opr !== "undefined" ||
     typeof w.opera !== "undefined";
   const isEdge = isEdgeChromium(ua) && !isOperaGX;
+  const isChrome = isChromeBrowser(ua) && !isOperaGX && !isEdge;
   const isSafari = isSafariBrowser(ua);
   const isIOS = isIOSDevice(ua);
   const hasSpeechCtor = getVoiceApiDiagnostics().hasSpeechCtor;
@@ -160,6 +203,7 @@ export function detectVoiceBrowser(): VoiceBrowserInfo {
   let label = "supported";
   if (isOperaGX) label = "opera-gx";
   else if (isEdge) label = "edge";
+  else if (isChrome) label = "chrome";
   else if (isIOS) label = "ios-safari";
   else if (isSafari) label = "safari";
   else if (!hasSpeechCtor) label = "unsupported";
@@ -167,14 +211,15 @@ export function detectVoiceBrowser(): VoiceBrowserInfo {
   return {
     isOperaGX,
     isEdge,
+    isChrome,
     isSafari,
     isIOS,
     hasSpeechCtor,
     label,
     releaseStreamBeforeRecognition,
     preferNonContinuous,
-    // Edge: getUserMedia before start() can race with the speech backend and yield "network".
-    usePermissionPriming: !isIOS && !isOperaGX && !isEdge,
+    // Chrome/Edge: SpeechRecognition should own the mic; priming can prevent onresult.
+    usePermissionPriming: !isIOS && !isOperaGX && !isEdge && !isChrome,
   };
 }
 

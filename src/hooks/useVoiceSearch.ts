@@ -15,6 +15,8 @@ import {
 export type VoiceLang = "en-US" | "ar-SA";
 
 const START_TIMEOUT_MS = 5000;
+/** Chrome may deliver the last onresult slightly after onend. */
+const CHROME_ONEND_FLUSH_MS = 150;
 
 type SpeechResultEvent = {
   resultIndex: number;
@@ -45,6 +47,7 @@ function logSpeechRecognitionError(
     browser: details.browserLabel,
     isEdge: browser.isEdge,
     userMessage: details.userMessage,
+    debugMessage: details.debugMessage,
     ...context,
   };
   console.error("[voice] SpeechRecognition.onerror", payload);
@@ -95,6 +98,7 @@ function logVoiceStage(
   console.log(`[voice] stage: ${stage}`, {
     browser: browser.label,
     isOperaGX: browser.isOperaGX,
+    isChrome: browser.isChrome,
     usePermissionPriming: browser.usePermissionPriming,
     preferNonContinuous: browser.preferNonContinuous,
     SpeechRecognition: api.speechRecognition,
@@ -104,13 +108,17 @@ function logVoiceStage(
   });
 }
 
-function mergeResults(
-  results: SpeechRecognitionResultList,
-  fromIndex: number
-): { final: string; interim: string } {
+function logChrome(event: string, data?: Record<string, unknown>) {
+  console.log(`[voice][chrome] ${event}`, data ?? "");
+}
+
+/** Rebuild full transcript from the entire results list (required for Chrome continuous). */
+function collectTranscriptsFromResults(
+  results: SpeechRecognitionResultList
+): { final: string; interim: string; resultCount: number } {
   let final = "";
   let interim = "";
-  for (let i = fromIndex; i < results.length; i++) {
+  for (let i = 0; i < results.length; i++) {
     const part = results[i][0]?.transcript ?? "";
     if (results[i].isFinal) {
       final += part;
@@ -118,7 +126,7 @@ function mergeResults(
       interim += part;
     }
   }
-  return { final, interim };
+  return { final, interim, resultCount: results.length };
 }
 
 export function useVoiceSearch(
@@ -214,23 +222,41 @@ export function useVoiceSearch(
     }
   }, []);
 
-  const detachRecognition = useCallback((rec: SpeechRecognitionInstance) => {
-    rec.onresult = null;
-    rec.onerror = null;
-    rec.onend = null;
-    rec.onstart = null;
-    rec.onspeechstart = null;
-    try {
-      rec.abort();
-    } catch {
-      /* ignore */
-    }
-    try {
-      rec.stop();
-    } catch {
-      /* ignore */
-    }
-  }, []);
+  const clearRecognitionHandlers = useCallback(
+    (rec: SpeechRecognitionInstance) => {
+      rec.onresult = null;
+      rec.onerror = null;
+      rec.onend = null;
+      rec.onstart = null;
+      rec.onspeechstart = null;
+      rec.onaudiostart = null;
+    },
+    []
+  );
+
+  const detachRecognition = useCallback(
+    (rec: SpeechRecognitionInstance, { abort = true } = {}) => {
+      clearRecognitionHandlers(rec);
+      if (abort) {
+        try {
+          rec.abort();
+        } catch {
+          /* ignore */
+        }
+      }
+      try {
+        rec.stop();
+      } catch {
+        /* ignore */
+      }
+    },
+    [clearRecognitionHandlers]
+  );
+
+  const getBestTranscript = useCallback(
+    () => (accumulatedFinalRef.current + latestInterimRef.current).trim(),
+    []
+  );
 
   const stopRecognition = useCallback(() => {
     const rec = recRef.current;
@@ -281,7 +307,7 @@ export function useVoiceSearch(
   );
 
   const deliver = useCallback(
-    (text: string) => {
+    (text: string, browser?: VoiceBrowserInfo) => {
       const trimmed = text.trim();
       if (!trimmed || finalizedRef.current) return;
       finalizedRef.current = true;
@@ -294,6 +320,9 @@ export function useVoiceSearch(
       setTranscript(trimmed);
       setInterim("");
       setStatus("Searching…");
+      if (browser?.isChrome) {
+        logChrome("transcript submitted to search", { transcript: trimmed });
+      }
       console.log("[search] transcript finalized (voice hook):", trimmed);
       onFinalRef.current(trimmed);
     },
@@ -382,9 +411,9 @@ export function useVoiceSearch(
         return;
       }
     } else {
-      console.log(
-        "[voice] getUserMedia skipped (iOS path — SpeechRecognition owns mic)"
-      );
+      console.log("[voice] getUserMedia skipped — SpeechRecognition owns mic", {
+        browser: browser.label,
+      });
     }
 
     if (session !== sessionRef.current || cancelledRef.current) {
@@ -410,10 +439,26 @@ export function useVoiceSearch(
     rec.maxAlternatives = 1;
     rec.lang = langRef.current;
 
+    const tryDeliverTranscript = () => {
+      if (session !== sessionRef.current) return;
+      if (cancelledRef.current || finalizedRef.current) return;
+      const best = getBestTranscript();
+      if (best) {
+        deliver(best, browser);
+      } else {
+        setStatus("");
+        setError((prev) => prev ?? "No speech captured. Try again.");
+      }
+    };
+
     rec.onstart = () => {
       if (session !== sessionRef.current) return;
       markStartupSignal("onstart");
-      releaseMicrophone();
+      if (browser.isChrome) {
+        logChrome("onstart fired", { lang: rec.lang });
+      } else {
+        releaseMicrophone();
+      }
       setError(null);
       setListening(true);
       setStatus("Listening… speak now");
@@ -422,43 +467,68 @@ export function useVoiceSearch(
     rec.onspeechstart = () => {
       if (session !== sessionRef.current) return;
       markStartupSignal("onspeechstart");
+      if (browser.isChrome) logChrome("onspeechstart fired");
     };
 
     rec.onaudiostart = () => {
       if (session !== sessionRef.current) return;
-      console.log("[voice] onaudiostart fired");
+      if (browser.isChrome) {
+        logChrome("onaudiostart fired");
+      } else {
+        console.log("[voice] onaudiostart fired");
+      }
       markStartupSignal("onaudiostart");
     };
 
-    rec.onaudioend = () => console.log("[voice] onaudioend fired");
-    rec.onsoundstart = () => console.log("[voice] onsoundstart fired");
-    rec.onsoundend = () => console.log("[voice] onsoundend fired");
-    rec.onspeechend = () => console.log("[voice] onspeechend fired");
-    rec.onnomatch = () => console.log("[voice] onnomatch fired");
+    rec.onaudioend = () => {
+      if (browser.isChrome) logChrome("onaudioend fired");
+      else console.log("[voice] onaudioend fired");
+    };
+    rec.onsoundstart = () => {
+      if (browser.isChrome) logChrome("onsoundstart fired");
+      else console.log("[voice] onsoundstart fired");
+    };
+    rec.onsoundend = () => {
+      if (browser.isChrome) logChrome("onsoundend fired");
+      else console.log("[voice] onsoundend fired");
+    };
+    rec.onspeechend = () => {
+      if (browser.isChrome) logChrome("onspeechend fired");
+      else console.log("[voice] onspeechend fired");
+    };
+    rec.onnomatch = () => {
+      if (browser.isChrome) logChrome("onnomatch fired");
+      else console.log("[voice] onnomatch fired");
+    };
 
     rec.onresult = (ev: SpeechResultEvent) => {
       if (session !== sessionRef.current) return;
       markStartupSignal("onresult");
-      const { final, interim: interimPart } = mergeResults(
-        ev.results,
-        ev.resultIndex
-      );
-      if (final) {
-        accumulatedFinalRef.current += final;
-      }
-      const displayFinal = accumulatedFinalRef.current.trim();
-      const combined = (displayFinal + interimPart).trim();
+      const { final, interim: interimPart, resultCount } =
+        collectTranscriptsFromResults(ev.results);
+      accumulatedFinalRef.current = final;
       latestInterimRef.current = interimPart;
+      const displayFinal = final.trim();
+      const combined = (displayFinal + interimPart).trim();
       setTranscript(displayFinal);
       setInterim(interimPart);
+      if (browser.isChrome) {
+        logChrome("onresult fired", {
+          resultIndex: ev.resultIndex,
+          resultCount,
+          interimTranscript: interimPart || "(empty)",
+          finalTranscript: final || "(empty)",
+          combinedTranscript: combined || "(empty)",
+        });
+      }
       if (combined) {
         setStatus("Heard you — keep speaking or tap stop");
       }
 
-      if (browser.preferNonContinuous && final.trim()) {
-        const best = (accumulatedFinalRef.current + latestInterimRef.current).trim();
-        if (best) {
-          deliver(best);
+      if (browser.preferNonContinuous && combined) {
+        const last = ev.results[ev.resultIndex];
+        if (last?.isFinal) {
+          deliver(combined, browser);
         }
       }
     };
@@ -469,6 +539,21 @@ export function useVoiceSearch(
       if (code === "aborted") {
         console.log("[voice] SpeechRecognition.onerror (ignored): aborted");
         return;
+      }
+      if (browser.isChrome) {
+        logChrome("onerror fired", { error: code, message: ev.message ?? null });
+      }
+      if (code === "no-speech") {
+        const pending = getBestTranscript();
+        if (pending) {
+          if (browser.isChrome) {
+            logChrome("onerror no-speech ignored — delivering captured transcript", {
+              transcript: pending,
+            });
+          }
+          deliver(pending, browser);
+          return;
+        }
       }
       const details = logSpeechRecognitionError(ev, browser, {
         session,
@@ -492,24 +577,34 @@ export function useVoiceSearch(
 
     rec.onend = () => {
       if (session !== sessionRef.current) return;
+      if (browser.isChrome) {
+        logChrome("onend fired", {
+          accumulatedFinal: accumulatedFinalRef.current || "(empty)",
+          latestInterim: latestInterimRef.current || "(empty)",
+        });
+      }
       clearStartTimeout();
       setListening(false);
       const instance = recRef.current;
-      if (instance) {
-        detachRecognition(instance);
-        recRef.current = null;
-      }
-      releaseMicrophone();
-      if (cancelledRef.current || finalizedRef.current) {
-        setStatus("");
-        return;
-      }
-      const best = (accumulatedFinalRef.current + latestInterimRef.current).trim();
-      if (best) {
-        deliver(best);
+      const finalize = () => {
+        if (session !== sessionRef.current) return;
+        if (instance) {
+          detachRecognition(instance, { abort: false });
+          if (recRef.current === instance) {
+            recRef.current = null;
+          }
+        }
+        releaseMicrophone();
+        if (cancelledRef.current || finalizedRef.current) {
+          setStatus("");
+          return;
+        }
+        tryDeliverTranscript();
+      };
+      if (browser.isChrome) {
+        window.setTimeout(finalize, CHROME_ONEND_FLUSH_MS);
       } else {
-        setStatus("");
-        setError((prev) => prev ?? "No speech captured. Try again.");
+        finalize();
       }
     };
 
@@ -523,12 +618,20 @@ export function useVoiceSearch(
     armStartTimeout(session, browser);
 
     try {
-      console.log("[voice] recognition.start called", {
-        opera: browser.isOperaGX,
-        withTrack: Boolean(browser.isOperaGX && mediaStreamRef.current),
-        secureContext:
-          typeof window !== "undefined" ? window.isSecureContext : false,
-      });
+      if (browser.isChrome) {
+        logChrome("recognition.start called", {
+          lang: rec.lang,
+          continuous: rec.continuous,
+          interimResults: rec.interimResults,
+        });
+      } else {
+        console.log("[voice] recognition.start called", {
+          opera: browser.isOperaGX,
+          withTrack: Boolean(browser.isOperaGX && mediaStreamRef.current),
+          secureContext:
+            typeof window !== "undefined" ? window.isSecureContext : false,
+        });
+      }
       const track = mediaStreamRef.current?.getAudioTracks()[0];
       if (browser.isOperaGX && track?.readyState === "live") {
         rec.start(track);
@@ -561,7 +664,21 @@ export function useVoiceSearch(
       setStatus(runSearch ? "Processing…" : "");
       clearStartTimeout();
       const rec = recRef.current;
+      const browser = detectVoiceBrowser();
       if (rec) {
+        if (runSearch && !finalizedRef.current && browser.isChrome) {
+          logChrome("stop — waiting for onend to finalize transcript", {
+            transcript: getBestTranscript() || "(empty)",
+          });
+          try {
+            rec.stop();
+          } catch {
+            detachRecognition(rec);
+            recRef.current = null;
+          }
+          setListening(false);
+          return;
+        }
         try {
           detachRecognition(rec);
         } catch {
@@ -571,9 +688,9 @@ export function useVoiceSearch(
         releaseMicrophone();
         setListening(false);
         if (runSearch && !finalizedRef.current) {
-          const best = (accumulatedFinalRef.current + latestInterimRef.current).trim();
+          const best = getBestTranscript();
           if (best) {
-            deliver(best);
+            deliver(best, browser);
           }
         }
       } else {
@@ -581,7 +698,13 @@ export function useVoiceSearch(
         setListening(false);
       }
     },
-    [clearStartTimeout, deliver, detachRecognition, releaseMicrophone]
+    [
+      clearStartTimeout,
+      deliver,
+      detachRecognition,
+      getBestTranscript,
+      releaseMicrophone,
+    ]
   );
 
   const cancel = useCallback(() => {

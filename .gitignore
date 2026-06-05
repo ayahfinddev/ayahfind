@@ -7,7 +7,6 @@ venv/
 .env.*
 !.env.example
 *.db
-vector_index/*.faiss
 models/
 .pytest_cache/
 .dart_tool/

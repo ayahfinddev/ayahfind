@@ -256,7 +256,7 @@ export function VoiceSearchModal({
                   className="mt-3 max-h-32 overflow-auto rounded-lg border border-dashed border-amber-400/60 bg-amber-50/80 p-2 text-left text-[10px] leading-snug text-amber-950"
                   aria-label="Voice recognition diagnostics (development only)"
                 >
-                  {`[dev] SpeechRecognition.onerror\n  error: ${speechDiagnostics.code}\n  message: ${speechDiagnostics.message ?? "(none)"}\n  browser: ${speechDiagnostics.browserLabel}`}
+                  {`[dev] SpeechRecognition.onerror\n  error: ${speechDiagnostics.code}\n  message: ${speechDiagnostics.message ?? "(none)"}\n  browser: ${speechDiagnostics.browserLabel}\n  detail: ${speechDiagnostics.debugMessage}`}
                 </pre>
               )}
 
