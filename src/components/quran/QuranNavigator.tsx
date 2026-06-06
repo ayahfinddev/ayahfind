@@ -1,8 +1,8 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion, useDragControls } from "framer-motion";
-import { BookOpen, ChevronRight, Layers, List, X } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { BookOpen, Layers, List, X } from "lucide-react";
 import {
   JUZ_STARTS,
   PAGE_STARTS,
@@ -13,7 +13,9 @@ import {
   pageStartRef,
 } from "@/lib/quranNavigation";
 import { cn } from "@/lib/utils";
+
 type NavTab = "surah" | "juz" | "page";
+
 interface QuranNavigatorProps {
   open: boolean;
   onClose: () => void;
@@ -21,56 +23,59 @@ interface QuranNavigatorProps {
   ayah: number;
   onNavigate: (surah: number, ayah: number) => void;
 }
+
 function useMounted() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   return mounted;
 }
-/** Left offset: after narrow sidebar (mobile) or wide sidebar (md+). */
-const TOGGLE_LEFT = "left-[4.75rem] md:left-52";
-const PANEL_LEFT = TOGGLE_LEFT;
 
-/** Soft glide-out on close; spring only on open. */
-const NAV_EASE = [0.32, 0.72, 0, 1] as const;
-const navBackdropTransition = { duration: 0.34, ease: NAV_EASE };
-const navPanelEnter = { type: "spring" as const, damping: 32, stiffness: 280, mass: 0.9 };
-const navPanelExit = { duration: 0.44, ease: NAV_EASE };
-const navMobileExit = { duration: 0.4, ease: NAV_EASE };
+const EASE = [0.32, 0.72, 0, 1] as const;
+const PANEL_W = 320;
+
 export function QuranNavigatorToggle({
   open,
   onClick,
+  surahName,
 }: {
   open: boolean;
   onClick: () => void;
+  surahName?: string;
 }) {
   const mounted = useMounted();
   if (!mounted) return null;
+
   return createPortal(
     <button
       type="button"
       onClick={onClick}
-      aria-label={open ? "Close Quran navigator" : "Open Quran navigator"}
+      aria-label={open ? "Close chapter navigator" : "Open chapter navigator"}
       aria-expanded={open}
-      data-testid="quran-nav-toggle"
       className={cn(
-        "quran-nav-toggle fixed z-[100] md:hidden",
-        TOGGLE_LEFT,
-        "top-1/2 -translate-y-1/2",
-        "flex h-16 w-10 flex-col items-center justify-center gap-0.5",
-        "rounded-r-xl border border-l-0 border-border-strong",
-        "bg-canvas text-ink-muted shadow-lg",
-        "transition-all hover:border-accent-border hover:bg-accent-surface hover:text-accent-dim",
-        open && "border-accent-border bg-accent-surface text-accent-dim"
+        // Fixed tab that sticks out from the left edge
+        "fixed left-0 top-1/2 z-[100] -translate-y-1/2",
+        "flex flex-col items-center justify-center gap-2",
+        "h-[88px] w-10 rounded-r-2xl",
+        // Glass look that works in both light and dark
+        "border border-l-0 border-glass-border bg-canvas shadow-lg backdrop-blur-sm",
+        "text-ink-muted",
+        "transition-all duration-200 ease-out",
+        "hover:w-12 hover:border-accent-border hover:bg-accent-surface hover:text-accent-dim",
+        open && "border-accent-border bg-accent-surface text-accent-dim w-12"
       )}
     >
-      <ChevronRight
-        className={cn("h-5 w-5 shrink-0 transition-transform", open && "rotate-180")}
-      />
-      <span className="text-[9px] font-bold uppercase tracking-wide">Nav</span>
+      <BookOpen className="h-4 w-4 shrink-0" />
+      <span
+        className="select-none text-[8px] font-bold uppercase tracking-widest text-current"
+        style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
+      >
+        {open ? "Close" : "Chapters"}
+      </span>
     </button>,
     document.body
   );
 }
+
 export function QuranNavigator({
   open,
   onClose,
@@ -82,26 +87,27 @@ export function QuranNavigator({
   const [tab, setTab] = useState<NavTab>("surah");
   const [filter, setFilter] = useState("");
   const [jumpAyah, setJumpAyah] = useState(String(ayah));
-  const scrollRef = useRef<HTMLDivElement>(null);
   const activeSurahRef = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
     if (open) setJumpAyah(String(ayah));
   }, [open, ayah, surah]);
+
   useEffect(() => {
     if (!open || tab !== "surah") return;
-    const timer = window.setTimeout(() => {
+    const t = setTimeout(() => {
       activeSurahRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    }, 180);
-    return () => window.clearTimeout(timer);
+    }, 220);
+    return () => clearTimeout(t);
   }, [open, tab, surah]);
+
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    const handle = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handle);
+    return () => window.removeEventListener("keydown", handle);
   }, [open, onClose]);
+
   const filteredSurahs = useMemo(() => {
     const q = filter.trim().toLowerCase();
     if (!q) return SURAH_CATALOG;
@@ -112,50 +118,56 @@ export function QuranNavigator({
         s.ar.includes(filter.trim())
     );
   }, [filter]);
+
   const go = useCallback(
-    (s: number, a: number) => {
-      onNavigate(s, a);
-      onClose();
-    },
+    (s: number, a: number) => { onNavigate(s, a); onClose(); },
     [onNavigate, onClose]
   );
+
   const jumpToAyah = () => {
     const entry = SURAH_CATALOG.find((s) => s.n === surah);
     const max = entry?.c ?? 286;
     const n = Math.min(max, Math.max(1, parseInt(jumpAyah, 10) || 1));
     go(surah, n);
   };
-  const dragControls = useDragControls();
-  const currentJuz = getJuzForRef(surah, ayah);
+
+  const currentJuz  = getJuzForRef(surah, ayah);
   const currentPage = getPageForRef(surah, ayah);
+
   const panelContent = (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="shrink-0 flex items-center justify-between border-b border-glass-border px-4 py-3">
-        <div className="flex items-center gap-2">
-          <BookOpen className="h-5 w-5 text-accent-dim" />
-          <h2 className="text-sm font-semibold text-ink">Navigate Quran</h2>
+      {/* Header */}
+      <div className="flex shrink-0 items-center justify-between border-b border-glass-border px-4 py-3.5">
+        <div className="flex items-center gap-2.5">
+          <BookOpen className="h-4 w-4 text-accent-dim" />
+          <h2 className="text-sm font-semibold text-ink">Navigate</h2>
         </div>
-        <button type="button" onClick={onClose} className="af-icon-btn" aria-label="Close">
-          <X className="h-5 w-5" />
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-lg p-1.5 text-ink-muted transition-colors hover:bg-canvas-card hover:text-ink"
+          aria-label="Close"
+        >
+          <X className="h-4 w-4" />
         </button>
       </div>
+
+      {/* Tabs */}
       <div className="flex shrink-0 gap-1 border-b border-glass-border px-3 py-2">
-        {(
-          [
-            ["surah", "Surah", List],
-            ["juz", "Juz", Layers],
-            ["page", "Page", BookOpen],
-          ] as const
-        ).map(([id, label, Icon]) => (
+        {([
+          ["surah", "Surah",  List],
+          ["juz",   "Juz",   Layers],
+          ["page",  "Page",  BookOpen],
+        ] as const).map(([id, label, Icon]) => (
           <button
             key={id}
             type="button"
             onClick={() => setTab(id)}
             className={cn(
-              "flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-semibold",
+              "flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-semibold transition-colors",
               tab === id
                 ? "bg-accent-surface text-accent-dim"
-                : "text-ink-muted hover:bg-canvas-elevated"
+                : "text-ink-muted hover:bg-canvas-elevated hover:text-ink"
             )}
           >
             <Icon className="h-3.5 w-3.5" />
@@ -163,7 +175,9 @@ export function QuranNavigator({
           </button>
         ))}
       </div>
-      <div ref={scrollRef} className="quran-nav-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3">
+
+      {/* Scrollable content */}
+      <div className="quran-nav-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3">
         {tab === "surah" && (
           <>
             <input
@@ -189,12 +203,12 @@ export function QuranNavigator({
               <button
                 type="button"
                 onClick={jumpToAyah}
-                className="rounded-lg bg-ink px-2.5 py-1 text-xs font-medium text-canvas"
+                className="rounded-lg bg-accent-dim px-2.5 py-1 text-xs font-semibold text-white"
               >
                 Go
               </button>
             </div>
-            <ul className="space-y-0.5 pb-12">
+            <ul className="space-y-0.5 pb-16">
               {filteredSurahs.map((s) => {
                 const active = s.n === surah;
                 return (
@@ -212,9 +226,7 @@ export function QuranNavigator({
                     >
                       <span className="w-7 shrink-0 text-xs text-ink-subtle">{s.n}</span>
                       <span className="min-w-0 flex-1 truncate">{s.en}</span>
-                      <span className="font-arabic shrink-0 text-xs text-ink-muted" dir="rtl">
-                        {s.ar}
-                      </span>
+                      <span className="font-arabic shrink-0 text-xs text-ink-muted" dir="rtl">{s.ar}</span>
                     </button>
                   </li>
                 );
@@ -222,6 +234,7 @@ export function QuranNavigator({
             </ul>
           </>
         )}
+
         {tab === "juz" && (
           <ul className="grid grid-cols-3 gap-2 pb-8 sm:grid-cols-4">
             {JUZ_STARTS.map((_, i) => {
@@ -247,6 +260,7 @@ export function QuranNavigator({
             })}
           </ul>
         )}
+
         {tab === "page" && (
           <ul className="grid grid-cols-4 gap-2 pb-8 sm:grid-cols-5">
             {PAGE_STARTS.map((_, i) => {
@@ -273,93 +287,45 @@ export function QuranNavigator({
           </ul>
         )}
       </div>
+
+      {/* Footer */}
       <p className="shrink-0 border-t border-glass-border px-4 py-2.5 text-center text-[11px] text-ink-subtle">
         {surah}:{ayah} · Juz {currentJuz} · Page {currentPage}
       </p>
     </div>
   );
+
   if (!mounted) return null;
+
   return createPortal(
     <AnimatePresence>
       {open && (
         <>
-          {/* Desktop backdrop — offset by SideNav */}
-          <motion.button
-            type="button"
+          {/* Backdrop */}
+          <motion.div
+            key="backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={navBackdropTransition}
-            aria-label="Close navigator backdrop"
-            className={cn("fixed inset-0 z-[110] hidden bg-black/25 backdrop-blur-[2px] md:block", PANEL_LEFT)}
+            transition={{ duration: 0.28, ease: EASE }}
+            className="fixed inset-0 z-[110] bg-black/30 backdrop-blur-[2px]"
             onClick={onClose}
           />
-          {/* Mobile backdrop — stops above bottom nav so nav bar stays usable */}
-          <motion.button
-            type="button"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={navBackdropTransition}
-            aria-label="Close navigator backdrop"
-            className="fixed inset-x-0 top-0 z-[110] bg-black/30 backdrop-blur-[2px] md:hidden"
-            style={{ bottom: "calc(4rem + env(safe-area-inset-bottom, 0px))" }}
-            onClick={onClose}
-          />
-          {/* Desktop panel — slide-in from left */}
+
+          {/* Panel — always slides from the left */}
           <motion.aside
+            key="panel"
             role="dialog"
             aria-modal="true"
             aria-label="Quran navigator"
-            data-testid="quran-nav-panel-desktop"
-            initial={{ x: "-100%", opacity: 0.88 }}
-            animate={{ x: 0, opacity: 1, transition: navPanelEnter }}
-            exit={{ x: "-100%", opacity: 0, transition: navPanelExit }}
-            style={{ top: "0.75rem", bottom: "0.75rem", willChange: "transform, opacity" }}
-            className={cn(
-              "quran-nav-panel fixed z-[120] hidden w-[min(calc(100vw-5.5rem),340px)] flex-col",
-              PANEL_LEFT,
-              "overflow-hidden rounded-r-2xl",
-              "border border-l-0 border-glass-border bg-canvas shadow-2xl md:flex",
-              "md:top-3 md:bottom-3 md:w-[340px]"
-            )}
+            initial={{ x: -PANEL_W }}
+            animate={{ x: 0, transition: { type: "spring", damping: 30, stiffness: 260, mass: 0.85 } }}
+            exit={{ x: -PANEL_W, transition: { duration: 0.3, ease: EASE } }}
+            style={{ width: PANEL_W, willChange: "transform" }}
+            className="fixed inset-y-0 left-0 z-[120] flex flex-col overflow-hidden border-r border-glass-border bg-canvas shadow-2xl"
           >
             {panelContent}
           </motion.aside>
-          {/* Mobile panel — bottom sheet sitting above the bottom nav bar */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={navBackdropTransition}
-            className="fixed inset-x-0 top-0 z-[120] flex flex-col justify-end md:hidden"
-            style={{ pointerEvents: "none", bottom: "calc(4rem + env(safe-area-inset-bottom, 0px))" }}
-          >
-            <motion.aside
-              role="dialog"
-              aria-modal="true"
-              aria-label="Quran navigator"
-              data-testid="quran-nav-panel-mobile"
-              initial={{ y: "100%" }}
-              animate={{ y: 0, transition: navPanelEnter }}
-              exit={{ y: "100%", transition: navMobileExit }}
-              drag="y"
-              dragControls={dragControls}
-              dragListener={false}
-              dragConstraints={{ top: 0 }}
-              dragElastic={0.08}
-              onDragEnd={(_, info) => {
-                if (info.offset.y > 80 || info.velocity.y > 400) onClose();
-              }}
-              className="quran-nav-panel pointer-events-auto flex max-h-[70dvh] flex-col rounded-t-2xl border border-b-0 border-glass-border bg-canvas shadow-2xl"
-            >
-              <div
-                className="mx-auto mt-2.5 h-1 w-10 shrink-0 cursor-grab touch-none rounded-full bg-border-strong active:cursor-grabbing"
-                onPointerDown={(e) => dragControls.start(e)}
-              />
-              {panelContent}
-            </motion.aside>
-          </motion.div>
         </>
       )}
     </AnimatePresence>,

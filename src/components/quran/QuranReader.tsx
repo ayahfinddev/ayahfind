@@ -183,7 +183,7 @@ export function QuranReader({
 
   return (
     <div className={cn("reader-root relative -mt-2 min-h-[50vh]", playback.mode !== "idle" ? "pb-32 md:pb-24" : "pb-28 md:pb-12")}>
-      <QuranNavigatorToggle open={navOpen} onClick={() => setNavOpen((o) => !o)} />
+      <QuranNavigatorToggle open={navOpen} onClick={() => setNavOpen((o) => !o)} surahName={surahNameEn} />
       <QuranNavigator
         open={navOpen}
         onClose={() => setNavOpen(false)}
