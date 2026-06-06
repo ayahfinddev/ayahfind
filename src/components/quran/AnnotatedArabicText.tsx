@@ -3,96 +3,74 @@
 import { useState, useCallback } from "react";
 import { SymbolPopup, type SymbolId, type PopupTarget } from "./SymbolPopup";
 
-// Waqf/structural marks that appear as isolated words (surrounded by whitespace or boundaries).
-// Ordered longest-first so multi-char strings are checked before their substrings.
-const ISOLATED_MARKS: Array<[string, SymbolId]> = [
-  ["وقفة", "waqfah"],
-  ["قلى", "waqf_awla"],
-  ["صلى", "wasl_awla"],
-  ["لا", "la_waqf"],
-  ["م", "waqf_lazim"],
-  ["ج", "waqf_jaiz"],
-  ["ط", "waqf_mutlaq"],
-  ["ز", "waqf_mujawwaz"],
-  ["ص", "waqf_murakhkhas"],
-  ["ع", "ruku"],
-];
-
-const ISOLATED_MAP = new Map<string, SymbolId>(ISOLATED_MARKS);
-
-// Special Unicode Quranic symbols (non-letter, always markers)
-const SPECIAL_SYMBOL_MAP: Record<string, SymbolId> = {
-  "۩": "sajdah",   // ۩
-  "۝": "verse_end", // ۝
-  "۞": "hizb",     // ۞
+// ─── Symbol codepoint → id mapping ────────────────────────────────────────────
+// All waqf/structural marks in this dataset are dedicated Unicode Quranic
+// annotation characters (U+06D6–U+06DB, U+06DE, U+06E9) that appear as
+// space-separated standalone tokens in the text_ar field.
+// Regular Arabic letters (م ج ط…) are NOT used as waqf marks in this dataset.
+const CP_TO_SYMBOL_ID: Record<number, SymbolId> = {
+  0x06d6: "wasl_awla",   // ۖ ARABIC SMALL HIGH LIGATURE SAD WITH LAM WITH ALEF MAKSURA (صلى)
+  0x06d7: "waqf_awla",   // ۗ ARABIC SMALL HIGH LIGATURE QAF WITH LAM WITH ALEF MAKSURA (قلى)
+  0x06d8: "waqf_lazim",  // ۘ ARABIC SMALL HIGH MEEM INITIAL FORM (م)
+  0x06d9: "la_waqf",     // ۙ ARABIC SMALL HIGH LAM ALEF (لا)
+  0x06da: "waqf_jaiz",   // ۚ ARABIC SMALL HIGH JEEM (ج)
+  0x06db: "muanaq",      // ۛ ARABIC SMALL HIGH THREE DOTS (معانقة linked stop)
+  0x06de: "hizb",        // ۞ ARABIC START OF RUB EL HIZB
+  0x06e9: "sajdah",      // ۩ ARABIC PLACE OF SAJDAH
 };
 
+// Characters classified as waqf marks (should render raised/superscript)
+const WAQF_MARK_CPS = new Set([0x06d6, 0x06d7, 0x06d8, 0x06d9, 0x06da, 0x06db]);
+
+type TokenKind = "text" | "waqf" | "structural" | "shaddah";
+
 type Token =
-  | { type: "text"; content: string }
-  | { type: "symbol"; content: string; symbolId: SymbolId };
+  | { kind: "text"; content: string }
+  | { kind: "waqf" | "structural" | "shaddah"; content: string; symbolId: SymbolId };
 
 /**
- * For a plain-text segment (no special unicode markers or shaddah clusters),
- * split by whitespace and check each word against the isolated-mark list.
- */
-function processWordSegment(text: string, result: Token[]): void {
-  // Split preserving whitespace runs as their own elements
-  const parts = text.split(/(\s+)/);
-  for (const part of parts) {
-    if (!part) continue;
-    if (/^\s+$/.test(part)) {
-      result.push({ type: "text", content: part });
-      continue;
-    }
-    const id = ISOLATED_MAP.get(part);
-    if (id) {
-      result.push({ type: "symbol", content: part, symbolId: id });
-    } else {
-      result.push({ type: "text", content: part });
-    }
-  }
-}
-
-/**
- * Tokenize Arabic Quran text into plain text runs and clickable symbol tokens.
+ * Tokenize Arabic Quran text into renderable segments.
  *
- * Detection strategy:
- * 1. Special Unicode markers (۩ ۝ ۞) — always symbols, match directly.
- * 2. Shaddah clusters — Arabic letter(s) + optional diacritics + shaddah (U+0651)
- *    + optional trailing diacritics. Match the whole grapheme cluster.
- * 3. Isolated waqf letter marks — only when the token is an entire whitespace-
- *    delimited word (so م in مَالِك is NOT matched, but standalone م is).
+ * Detection:
+ *   1. Waqf/structural marks — dedicated Unicode codepoints U+06D6–U+06DB, U+06DE, U+06E9.
+ *      They appear as space-separated standalone characters in the data.
+ *   2. Shaddah clusters — Arabic letter + optional non-shaddah diacritics + U+0651 (shaddah)
+ *      + optional trailing diacritics. The whole grapheme cluster is one clickable token.
+ *   3. Everything else — rendered as plain text.
  */
 function tokenize(text: string): Token[] {
   const result: Token[] = [];
 
-  // Regex group 1: special unicode Quranic codepoints
-  // Regex group 2: Arabic letter + optional diacritics + shaddah + optional trailing diacritics
+  // Matches waqf/structural marks OR an Arabic-letter shaddah cluster.
+  // Non-shaddah diacritics: U+064B–U+0650, U+0652–U+065F (excludes shaddah U+0651 itself).
   const re =
-    /([۩۝۞]|[؀-ۿ][ً-ٟ]*ّ[ً-ٟ]*)/g;
+    /([ۖ-ۛ۞۩]|[؀-ۿ][ً-ِْ-ٟ]*ّ[ً-ِْ-ٟ]*)/g;
 
   let last = 0;
   let m: RegExpExecArray | null;
 
   while ((m = re.exec(text)) !== null) {
     if (m.index > last) {
-      processWordSegment(text.slice(last, m.index), result);
+      result.push({ kind: "text", content: text.slice(last, m.index) });
     }
 
     const matched = m[0];
-    const specialId = SPECIAL_SYMBOL_MAP[matched];
-    if (specialId) {
-      result.push({ type: "symbol", content: matched, symbolId: specialId });
+    const cp = matched.codePointAt(0)!;
+    const symbolId = CP_TO_SYMBOL_ID[cp];
+
+    if (symbolId) {
+      const kind: TokenKind = WAQF_MARK_CPS.has(cp) ? "waqf" : "structural";
+      result.push({ kind, content: matched, symbolId });
     } else {
-      // It's a shaddah cluster
-      result.push({ type: "symbol", content: matched, symbolId: "shaddah" });
+      // Shaddah cluster (no dedicated symbol id for the base char)
+      result.push({ kind: "shaddah", content: matched, symbolId: "shaddah" });
     }
 
     last = m.index + matched.length;
   }
 
   if (last < text.length) {
-    processWordSegment(text.slice(last), result);
+    result.push({ kind: "text", content: text.slice(last) });
   }
 
   return result;
@@ -100,19 +78,17 @@ function tokenize(text: string): Token[] {
 
 interface AnnotatedArabicTextProps {
   text: string;
-  className?: string;
 }
 
-export function AnnotatedArabicText({ text, className }: AnnotatedArabicTextProps) {
+export function AnnotatedArabicText({ text }: AnnotatedArabicTextProps) {
   const [popup, setPopup] = useState<PopupTarget | null>(null);
 
-  const handleSymbolClick = useCallback(
+  const handleClick = useCallback(
     (e: React.MouseEvent<HTMLSpanElement>, symbolId: SymbolId) => {
       e.stopPropagation();
       const rect = e.currentTarget.getBoundingClientRect();
       setPopup((prev) =>
-        prev?.symbolId === symbolId &&
-        Math.abs(prev.rect.left - rect.left) < 2
+        prev?.symbolId === symbolId && Math.abs(prev.rect.left - rect.left) < 4
           ? null
           : { symbolId, rect }
       );
@@ -124,36 +100,85 @@ export function AnnotatedArabicText({ text, className }: AnnotatedArabicTextProp
 
   return (
     <>
-      <span className={className}>
-        {tokens.map((token, i) => {
-          if (token.type === "text") {
-            return <span key={i}>{token.content}</span>;
-          }
+      {tokens.map((token, i) => {
+        if (token.kind === "text") {
+          return <span key={i}>{token.content}</span>;
+        }
+
+        const { kind, content, symbolId } = token;
+
+        if (kind === "waqf") {
+          // Waqf marks appear above the line in a real mushaf.
+          // Lift them with vertical-align + smaller font.
           return (
             <span
               key={i}
               role="button"
               tabIndex={0}
-              aria-label={`Quranic symbol: ${token.symbolId.replace(/_/g, " ")}`}
-              onClick={(e) => handleSymbolClick(e, token.symbolId)}
+              aria-label={`Waqf mark — click to learn more`}
+              onClick={(e) => handleClick(e, symbolId)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
                   const rect = e.currentTarget.getBoundingClientRect();
-                  setPopup({ symbolId: token.symbolId, rect });
+                  setPopup({ symbolId, rect });
                 }
               }}
-              className="quran-symbol relative inline cursor-pointer rounded text-amber-400 underline decoration-amber-400/30 decoration-dotted underline-offset-2 transition-colors hover:text-amber-300 hover:decoration-amber-300/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-400"
+              className="quran-waqf-mark inline-block cursor-pointer select-none text-[0.6em] leading-none text-amber-500 transition-opacity hover:opacity-80 focus-visible:outline-none"
+              style={{ verticalAlign: "0.8em" }}
             >
-              {token.content}
+              {content}
             </span>
           );
-        })}
-      </span>
+        }
 
-      {popup && (
-        <SymbolPopup target={popup} onClose={() => setPopup(null)} />
-      )}
+        if (kind === "structural") {
+          // ۞ (hizb) and ۩ (sajdah) render inline at normal size
+          return (
+            <span
+              key={i}
+              role="button"
+              tabIndex={0}
+              aria-label={`Quranic symbol — click to learn more`}
+              onClick={(e) => handleClick(e, symbolId)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  setPopup({ symbolId, rect });
+                }
+              }}
+              className="quran-structural-mark cursor-pointer select-none text-amber-500 transition-opacity hover:opacity-80 focus-visible:outline-none"
+            >
+              {content}
+            </span>
+          );
+        }
+
+        // Shaddah cluster — mark the whole cluster with a dotted underline.
+        // Don't change text color (the base letter would turn amber, which is distracting).
+        return (
+          <span
+            key={i}
+            role="button"
+            tabIndex={0}
+            aria-label={`Shaddah — click to learn more`}
+            onClick={(e) => handleClick(e, symbolId)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                const rect = e.currentTarget.getBoundingClientRect();
+                setPopup({ symbolId, rect });
+              }
+            }}
+            className="quran-shaddah cursor-pointer underline decoration-amber-400/50 decoration-dotted underline-offset-2 transition-opacity hover:decoration-amber-400/80 focus-visible:outline-none"
+          >
+            {content}
+          </span>
+        );
+      })}
+
+      {popup && <SymbolPopup target={popup} onClose={() => setPopup(null)} />}
     </>
   );
 }
