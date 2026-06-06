@@ -1,20 +1,20 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { SymbolPopup, type SymbolId, type PopupTarget } from "./SymbolPopup";
 
-// ─── Codepoint → symbol id ────────────────────────────────────────────────────
-// Waqf/structural marks in this dataset are dedicated Unicode Quranic annotation
-// characters that appear as space-separated tokens — NOT regular Arabic letters.
+// ─── Codepoint → symbol id ───────────────────────────────────────────────────
+// Confirmed against the actual dataset: these dedicated Unicode Quranic annotation
+// characters (U+06D6–U+06DB, U+06DE, U+06E9) appear in text_ar as standalone tokens.
 const CP_TO_ID: Record<number, SymbolId> = {
-  0x06d6: "wasl_awla",   // ۖ  صلى
-  0x06d7: "waqf_awla",   // ۗ  قلى
-  0x06d8: "waqf_lazim",  // ۘ  م
-  0x06d9: "la_waqf",     // ۙ  لا
-  0x06da: "waqf_jaiz",   // ۚ  ج
-  0x06db: "muanaq",      // ۛ  معانقة
-  0x06de: "hizb",        // ۞
-  0x06e9: "sajdah",      // ۩
+  0x06d6: "wasl_awla",
+  0x06d7: "waqf_awla",
+  0x06d8: "waqf_lazim",
+  0x06d9: "la_waqf",
+  0x06da: "waqf_jaiz",
+  0x06db: "muanaq",
+  0x06de: "hizb",
+  0x06e9: "sajdah",
 };
 
 const WAQF_CPS = new Set([0x06d6, 0x06d7, 0x06d8, 0x06d9, 0x06da, 0x06db]);
@@ -25,9 +25,10 @@ type Token =
 
 function tokenize(text: string): Token[] {
   const result: Token[] = [];
-  // [ۖ-ۛ] = U+06D6–U+06DB  ۞ = U+06DE  ۩ = U+06E9
-  // Shaddah cluster: Arabic char + optional diacritics (excl shaddah U+0651) + shaddah
-  const re = /([ۖ-ۛ۞۩]|[؀-ۿ][ً-ِْ-ٟ]*ّ[ً-ِْ-ٟ]*)/g;
+  // Use explicit Unicode escapes to avoid any file-encoding ambiguity.
+  // U+06D6–U+06DB = waqf marks, U+06DE = hizb, U+06E9 = sajdah
+  // Shaddah cluster: Arabic char + optional diacritics (excl U+0651) + shaddah U+0651
+  const re = /[ۖ-ۛ۞۩]|[؀-ۿ][ً-ِْ-ٟ]*ّ[ً-ِْ-ٟ]*/g;
   let last = 0;
   let m: RegExpExecArray | null;
 
@@ -55,13 +56,13 @@ interface Props { text: string }
 
 export function AnnotatedArabicText({ text }: Props) {
   const [popup, setPopup] = useState<PopupTarget | null>(null);
+  // Guard against duplicate pointer/click firing on the same interaction
+  const lastFiredRef = useRef<number>(0);
 
-  // Single delegated handler — no interactive elements inside the <p> tag.
-  // Finds the nearest ancestor span that carries a data-sid attribute.
-  const handleClick = useCallback((e: React.MouseEvent<HTMLSpanElement>) => {
-    const el = (e.target as HTMLElement).closest<HTMLElement>("[data-sid]");
-    if (!el) return;
-    const symbolId = el.dataset.sid as SymbolId;
+  const openPopup = useCallback((symbolId: SymbolId, el: HTMLElement) => {
+    const now = Date.now();
+    if (now - lastFiredRef.current < 300) return;
+    lastFiredRef.current = now;
     const rect = el.getBoundingClientRect();
     setPopup((prev) =>
       prev?.symbolId === symbolId && Math.abs(prev.rect.left - rect.left) < 4
@@ -74,50 +75,77 @@ export function AnnotatedArabicText({ text }: Props) {
 
   return (
     <>
-      {/* Wrapper span carries the single onClick — no buttons inside <p> */}
-      <span onClick={handleClick} style={{ touchAction: "manipulation" }}>
-        {tokens.map((token, i) => {
-          if (token.kind === "text") return <span key={i}>{token.content}</span>;
+      {tokens.map((token, i) => {
+        if (token.kind === "text") return <span key={i}>{token.content}</span>;
 
-          const { kind, content, symbolId } = token;
+        const { kind, content, symbolId } = token;
 
-          if (kind === "waqf") {
-            return (
-              <span
-                key={i}
-                data-sid={symbolId}
-                className="inline-block cursor-pointer font-arabic text-[0.9em] leading-none text-amber-500"
-                style={{ verticalAlign: "0.55em" }}
-              >
-                {content}
-              </span>
-            );
-          }
-
-          if (kind === "structural") {
-            return (
-              <span
-                key={i}
-                data-sid={symbolId}
-                className="cursor-pointer font-arabic text-amber-500"
-              >
-                {content}
-              </span>
-            );
-          }
-
-          // shaddah — solid amber underline under the whole cluster
+        if (kind === "waqf") {
           return (
             <span
               key={i}
-              data-sid={symbolId}
-              className="cursor-pointer underline decoration-amber-400/70 decoration-solid underline-offset-2"
+              role="button"
+              tabIndex={0}
+              aria-label="Waqf mark"
+              onClick={(e) => { e.stopPropagation(); openPopup(symbolId, e.currentTarget); }}
+              onPointerDown={(e) => { e.stopPropagation(); openPopup(symbolId, e.currentTarget); }}
+              className="inline-block select-none font-arabic text-amber-500"
+              style={{
+                fontSize: "1.6em",
+                verticalAlign: "0.35em",
+                lineHeight: 1,
+                cursor: "pointer",
+                touchAction: "manipulation",
+                WebkitTapHighlightColor: "transparent",
+                padding: "0 2px",
+              }}
             >
               {content}
             </span>
           );
-        })}
-      </span>
+        }
+
+        if (kind === "structural") {
+          return (
+            <span
+              key={i}
+              role="button"
+              tabIndex={0}
+              aria-label="Quranic symbol"
+              onClick={(e) => { e.stopPropagation(); openPopup(symbolId, e.currentTarget); }}
+              onPointerDown={(e) => { e.stopPropagation(); openPopup(symbolId, e.currentTarget); }}
+              className="select-none font-arabic text-amber-500"
+              style={{
+                cursor: "pointer",
+                touchAction: "manipulation",
+                WebkitTapHighlightColor: "transparent",
+              }}
+            >
+              {content}
+            </span>
+          );
+        }
+
+        // Shaddah cluster — solid amber underline
+        return (
+          <span
+            key={i}
+            role="button"
+            tabIndex={0}
+            aria-label="Shaddah"
+            onClick={(e) => { e.stopPropagation(); openPopup(symbolId, e.currentTarget); }}
+            onPointerDown={(e) => { e.stopPropagation(); openPopup(symbolId, e.currentTarget); }}
+            className="select-none underline decoration-amber-400/70 decoration-solid underline-offset-2"
+            style={{
+              cursor: "pointer",
+              touchAction: "manipulation",
+              WebkitTapHighlightColor: "transparent",
+            }}
+          >
+            {content}
+          </span>
+        );
+      })}
 
       {popup && <SymbolPopup target={popup} onClose={() => setPopup(null)} />}
     </>
