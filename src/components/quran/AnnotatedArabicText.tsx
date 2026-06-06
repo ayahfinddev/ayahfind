@@ -124,8 +124,8 @@ export function AnnotatedArabicText({ text }: AnnotatedArabicTextProps) {
                   setPopup({ symbolId, rect });
                 }
               }}
-              className="quran-waqf-mark inline-block cursor-pointer select-none text-[0.6em] leading-none text-amber-500 transition-opacity hover:opacity-80 focus-visible:outline-none"
-              style={{ verticalAlign: "0.8em" }}
+              className="quran-waqf-mark inline-block cursor-pointer select-none text-[0.85em] leading-none text-amber-500 transition-opacity hover:opacity-70 focus-visible:outline-none"
+              style={{ verticalAlign: "0.55em", padding: "0 1px" }}
             >
               {content}
             </span>
@@ -171,7 +171,7 @@ export function AnnotatedArabicText({ text }: AnnotatedArabicTextProps) {
                 setPopup({ symbolId, rect });
               }
             }}
-            className="quran-shaddah cursor-pointer underline decoration-amber-400/50 decoration-dotted underline-offset-2 transition-opacity hover:decoration-amber-400/80 focus-visible:outline-none"
+            className="quran-shaddah cursor-pointer underline decoration-amber-400/60 decoration-solid underline-offset-2 transition-opacity hover:decoration-amber-500/80 focus-visible:outline-none"
           >
             {content}
           </span>
