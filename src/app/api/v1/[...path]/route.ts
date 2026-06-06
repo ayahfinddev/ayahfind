@@ -4,6 +4,7 @@ export const maxDuration = 60;
 
 const HEALTH_TIMEOUT_MS = 8000;
 const SEARCH_TIMEOUT_MS = 28000;
+const READER_TIMEOUT_MS = 30000;
 
 function upstreamBase(): string {
   const fromEnv = process.env.API_UPSTREAM_URL?.replace(/\/$/, "");
@@ -43,6 +44,7 @@ async function proxy(req: NextRequest, ctx: { params: Promise<{ path: string[] }
   const { path } = await ctx.params;
   const segment = path.join("/");
   const isSearch = segment === "search/unified" && req.method === "POST";
+  const isReader = segment.startsWith("reader/") && req.method === "GET";
 
   if (!base) {
     if (isSearch) {
@@ -55,7 +57,7 @@ async function proxy(req: NextRequest, ctx: { params: Promise<{ path: string[] }
   }
 
   const target = `${base}/api/v1/${segment}${req.nextUrl.search}`;
-  const timeoutMs = isSearch ? SEARCH_TIMEOUT_MS : HEALTH_TIMEOUT_MS;
+  const timeoutMs = isSearch ? SEARCH_TIMEOUT_MS : isReader ? READER_TIMEOUT_MS : HEALTH_TIMEOUT_MS;
 
   const headers = new Headers(req.headers);
   headers.delete("host");
