@@ -5,6 +5,7 @@ import { useAudioPlayback, type QueueItem } from "@/contexts/AudioPlaybackContex
 import type { ReadingMode } from "@/hooks/useReadingMode";
 import type { AyahDetail } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { AnnotatedArabicText } from "@/components/quran/AnnotatedArabicText";
 
 interface VerseCardProps {
   surah: number;
@@ -126,7 +127,7 @@ export function VerseCard(props: VerseCardProps) {
           dir="rtl"
           lang="ar"
         >
-          {ayah.text_ar}
+          <AnnotatedArabicText text={ayah.text_ar} />
         </p>
       )}
 
