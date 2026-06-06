@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { SymbolPopup, type SymbolId, type PopupTarget } from "./SymbolPopup";
 
+// ── Codepoints confirmed against the actual dataset ──────────────────────────
 const CP_TO_ID: Record<number, SymbolId> = {
   0x06d6: "wasl_awla",
   0x06d7: "waqf_awla",
@@ -15,6 +16,20 @@ const CP_TO_ID: Record<number, SymbolId> = {
 };
 
 const WAQF_CPS = new Set([0x06d6, 0x06d7, 0x06d8, 0x06d9, 0x06da, 0x06db]);
+
+// Traditional Arabic abbreviation for each waqf mark.
+// We render THIS text in the badge instead of the raw annotation glyph, because
+// the annotation glyphs (U+06D6–U+06DB) have near-zero advance width and paint
+// far above their em box in Noto Naskh Arabic — making reliable hit-testing
+// impossible. Regular Arabic letters render predictably.
+const WAQF_LABEL: Record<string, string> = {
+  wasl_awla:    "صلى",
+  waqf_awla:    "قلى",
+  waqf_lazim:   "م",
+  la_waqf:      "لا",
+  waqf_jaiz:    "ج",
+  muanaq:       "∴",
+};
 
 type Token =
   | { kind: "text"; content: string }
@@ -47,28 +62,21 @@ export function AnnotatedArabicText({ text }: { text: string }) {
   const [popup, setPopup] = useState<PopupTarget | null>(null);
   const wrapperRef = useRef<HTMLSpanElement>(null);
 
-  // Use native DOM listeners — bypasses React's synthetic event system entirely.
-  // This is the most reliable approach across all browsers and devices.
+  // Native DOM listener — bypasses React's synthetic event system entirely
   useEffect(() => {
     const el = wrapperRef.current;
     if (!el) return;
-
     let lastTime = 0;
 
     const handle = (e: PointerEvent) => {
-      // debounce: ignore if fired within 300 ms of a previous trigger
       const now = Date.now();
       if (now - lastTime < 300) return;
-
       const target = (e.target as HTMLElement | null)?.closest?.("[data-sid]") as HTMLElement | null;
       if (!target) return;
-
       lastTime = now;
       e.stopPropagation();
-
       const symbolId = target.getAttribute("data-sid") as SymbolId;
       if (!symbolId) return;
-
       const rect = target.getBoundingClientRect();
       setPopup((prev) =>
         prev?.symbolId === symbolId && Math.abs(prev.rect.left - rect.left) < 4
@@ -92,42 +100,49 @@ export function AnnotatedArabicText({ text }: { text: string }) {
           const { kind, content, symbolId } = token;
 
           if (kind === "waqf") {
-            // inline-flex + minWidth guarantees a real hit box even if the
-            // Noto Naskh glyph has near-zero advance width (which it does for
-            // annotation characters like U+06D6-U+06DB).
+            // Amber pill badge with the traditional abbreviation text.
+            // The badge itself is the icon AND the button — perfectly aligned.
             return (
               <span
                 key={i}
                 data-sid={symbolId}
-                className="font-arabic text-amber-500"
+                dir="rtl"
+                lang="ar"
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: "1.2em",
-                  minWidth: "1.4em",
-                  minHeight: "1.4em",
-                  verticalAlign: "0.4em",
+                  fontFamily: '"Noto Naskh Arabic", serif',
+                  fontSize: "0.52em",
                   lineHeight: 1,
+                  minWidth: "1.6em",
+                  padding: "1px 3px",
+                  verticalAlign: "0.6em",
+                  backgroundColor: "rgba(251,191,36,0.13)",
+                  border: "1px solid rgba(251,191,36,0.4)",
+                  borderRadius: "4px",
+                  color: "rgb(146,64,14)",      // amber-900 for contrast
                   cursor: "pointer",
-                  WebkitTapHighlightColor: "rgba(251,191,36,0.2)",
+                  userSelect: "none",
+                  WebkitTapHighlightColor: "rgba(251,191,36,0.25)",
                 }}
               >
-                {content}
+                {WAQF_LABEL[symbolId] ?? content}
               </span>
             );
           }
 
           if (kind === "structural") {
+            // ۞ hizb and ۩ sajdah render fine at normal size
             return (
               <span
                 key={i}
                 data-sid={symbolId}
-                className="font-arabic text-amber-500"
                 style={{
+                  color: "rgb(180,83,9)",
                   cursor: "pointer",
-                  display: "inline",
-                  WebkitTapHighlightColor: "rgba(251,191,36,0.2)",
+                  userSelect: "none",
+                  WebkitTapHighlightColor: "rgba(251,191,36,0.25)",
                 }}
               >
                 {content}
@@ -135,7 +150,7 @@ export function AnnotatedArabicText({ text }: { text: string }) {
             );
           }
 
-          // shaddah — solid amber underline
+          // Shaddah cluster — solid amber underline under the cluster
           return (
             <span
               key={i}
@@ -143,10 +158,11 @@ export function AnnotatedArabicText({ text }: { text: string }) {
               style={{
                 cursor: "pointer",
                 textDecoration: "underline",
-                textDecorationColor: "rgba(251,191,36,0.7)",
+                textDecorationColor: "rgba(251,191,36,0.65)",
                 textDecorationStyle: "solid",
                 textUnderlineOffset: "3px",
-                WebkitTapHighlightColor: "rgba(251,191,36,0.2)",
+                userSelect: "none",
+                WebkitTapHighlightColor: "rgba(251,191,36,0.25)",
               }}
             >
               {content}
