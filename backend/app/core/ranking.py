@@ -222,7 +222,11 @@ def fuse_english_lexical(
     for c in candidates.values():
         if c.lexical_score <= 0 and c.semantic_score <= 0:
             continue
-        raw = c.lexical_score + 0.22 * c.semantic_score + 0.05 * c.popularity
+        # Semantic carries 0.50 weight: for descriptive English queries (visual scenes,
+        # paraphrases) the translation lexical match alone is unreliable because the
+        # user's wording rarely matches the translation verbatim.  Semantic bridges
+        # the gap ("moving like clouds" → "pass as the passing of clouds").
+        raw = c.lexical_score + 0.50 * c.semantic_score + 0.05 * c.popularity
         scored.append((c, raw))
     scored.sort(key=lambda x: (x[1], x[0].lexical_score), reverse=True)
     return calibrate_and_filter(scored, top_k)

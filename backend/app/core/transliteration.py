@@ -218,7 +218,27 @@ def detect_script(query: str) -> str:
 
 
 _ENGLISH_MARKERS = re.compile(
-    r"\b(the|not|don't|dont|do|does|did|approach|burden|soul|meaning|verse|ayah|god|lord|say|said|people|man|woman|forbidden|sin|mercy|pray|prayer|worship|help|world|hereafter|paradise|hell|book|chapter|surah)\b",
+    r"\b("
+    # Function / question words that are unambiguously English
+    r"the|not|don't|dont|do|does|did|like|where|who|what|which|when|how|why|about|"
+    # Quranic-concept nouns that appear in English descriptions
+    r"approach|burden|soul|souls|meaning|verse|ayah|god|lord|say|said|people|man|woman|"
+    r"forbidden|sin|mercy|pray|prayer|worship|help|world|hereafter|paradise|hell|"
+    r"book|chapter|surah|angel|angels|prophet|messenger|messengers|"
+    # Nature / scene words — the key gap that caused mountains/clouds to misroute
+    r"mountain|mountains|cloud|clouds|star|stars|earth|heaven|heavens|sky|"
+    r"sea|river|rivers|fire|light|darkness|water|wind|tree|trees|sun|moon|"
+    r"day|night|land|stone|stones|sand|rain|thunder|lightning|"
+    # Action verbs common in English paraphrases of ayahs
+    r"moving|move|passing|pass|running|flowing|see|look|swear|swears|swore|"
+    r"believe|trust|fear|love|hope|forgive|forgave|"
+    # Spiritual / ethical adjectives
+    r"righteous|faithful|grateful|patient|merciful|just|truth|wrong|good|evil|"
+    # Body parts used in Quranic imagery
+    r"heart|hearts|eye|eyes|hand|hands|face|tongue|"
+    # Extra coverage for common Quran-in-English search patterns
+    r"unto|upon|those|indeed|surely|truly|verily"
+    r")\b",
     re.I,
 )
 
@@ -231,22 +251,32 @@ def detect_search_type(query: str) -> str:
     if latin_letters < 3:
         return "english"
     words = [w for w in re.sub(r"[^a-z\s]", " ", q).split() if w]
+
+    # English-marker check comes FIRST — a query like "Allah does not burden a soul"
+    # contains "allah" (a transliteration cue) but is unmistakably English prose.
+    # One strong English marker is enough; the transliteration patterns below act as
+    # a fallback only when no English vocabulary is present.
+    if _ENGLISH_MARKERS.search(q):
+        return "english"
+
+    # Strong Arabic-transliteration patterns (particle pairs like "wa la", known
+    # verbal forms, proper names with no English context).
     if re.search(
         r"\b(wa|fa)\s+(la|ma|bi|li|fi)\s+",
         q,
     ) or re.search(
-        r"\b(taqrabu|yukallifu|iyyaka|huwallahu|huwa|qul|ahad|allahu|allah|iyyaka|ayahsabu|insanu|rabbana)\b",
+        r"\b(taqrabu|yukallifu|iyyaka|huwallahu|huwa|qul|ahad|allahu|allah|ayahsabu|insanu|rabbana)\b",
         q,
     ):
         return "transliteration"
-    if _ENGLISH_MARKERS.search(q):
-        return "english"
-    # Transliteration cues before English stopword heuristics (huwa/allahu are stopwords but phonetic)
+
+    # Softer transliteration cues — assimilated-article prefixes and common particles.
     if re.search(
         r"\b(al|an|ar|as|at|ad|az|wa|fa|la|huwa|huwallahu|iyyaka|yukallifu|taqrabu|ayahsabu|insanu|rabbana|qul|ahad|allahu)\b",
         q,
     ):
         return "transliteration"
+
     if words:
         en_stop = sum(1 for w in words if w in _STOPWORDS)
         if en_stop >= 2 or (len(words) >= 3 and en_stop / len(words) >= 0.34):

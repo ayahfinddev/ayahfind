@@ -84,6 +84,20 @@ _PARAPHRASE_REPLACEMENTS = (
     ("of you", "from you"),
     ("upon", "on"),
     ("cause for blame", "blame"),
+    # Scene / motion synonyms: "moving like clouds" ↔ "pass as the passing of clouds"
+    ("moving like", "pass as"),
+    ("move like", "pass as"),
+    ("moving", "pass"),
+    ("move", "pass"),
+    # Comparison word normalisation
+    ("like the", "as the"),
+    ("like a", "as a"),
+    # Oath / swear synonyms
+    ("swears by", "swear by"),
+    ("swore by", "swear by"),
+    # Burden / task synonyms
+    ("task a soul", "burden a soul"),
+    ("charge a soul", "burden a soul"),
 )
 
 
