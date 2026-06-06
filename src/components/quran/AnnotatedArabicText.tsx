@@ -117,7 +117,7 @@ export function AnnotatedArabicText({ text }: { text: string }) {
                   lineHeight: 1,
                   minWidth: "1.6em",
                   padding: "1px 3px",
-                  verticalAlign: "0.6em",
+                  verticalAlign: "1.25em",
                   backgroundColor: "rgba(251,191,36,0.13)",
                   border: "1px solid rgba(251,191,36,0.4)",
                   borderRadius: "4px",
