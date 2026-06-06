@@ -20,14 +20,24 @@ export function SideNav() {
   if (pathname?.startsWith("/onboarding")) return null;
 
   return (
-    <aside className="fixed left-0 top-0 z-40 hidden h-dvh w-[4.75rem] flex-col border-r border-border bg-canvas pt-safe md:flex lg:w-52">
-      <div className="border-b border-border px-4 py-5">
-        <p className="hidden text-lg font-bold tracking-tight text-ink lg:block">
-          AyahFind
-        </p>
-        <p className="text-center text-lg font-bold text-ink lg:hidden">AF</p>
+    <aside className="fixed left-0 top-0 z-40 hidden h-dvh w-[4.75rem] flex-col border-r border-black/[0.06] bg-white pt-safe md:flex lg:w-52">
+      {/* Logo */}
+      <div className="px-4 py-5 lg:px-5">
+        <div className="hidden items-center gap-2.5 lg:flex">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent-dim text-white text-sm font-bold">
+            A
+          </span>
+          <span className="text-[15px] font-semibold tracking-tight text-ink">AyahFind</span>
+        </div>
+        <div className="flex items-center justify-center lg:hidden">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-dim text-white text-sm font-bold">
+            A
+          </span>
+        </div>
       </div>
-      <nav className="flex flex-1 flex-col gap-1 p-2" aria-label="Main">
+
+      {/* Nav links */}
+      <nav className="flex flex-1 flex-col gap-0.5 px-2 pb-4" aria-label="Main">
         {links.map(({ href, icon: Icon, label }) => {
           const active =
             href === "/" ? pathname === "/" : Boolean(pathname?.startsWith(href));
@@ -37,14 +47,17 @@ export function SideNav() {
               href={href}
               onClick={(e) => onSearchNavClick(href, e)}
               className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150",
                 active
-                  ? "bg-ink text-canvas"
-                  : "text-ink-muted hover:bg-canvas-elevated hover:text-ink"
+                  ? "bg-accent-surface text-accent-dim"
+                  : "text-ink-muted hover:bg-canvas-card hover:text-ink"
               )}
             >
-              <Icon className="h-5 w-5 shrink-0" />
+              <Icon className={cn("h-[18px] w-[18px] shrink-0", active && "text-accent-dim")} />
               <span className="hidden lg:inline">{label}</span>
+              {active && (
+                <span className="ml-auto hidden h-1.5 w-1.5 rounded-full bg-accent lg:block" />
+              )}
             </Link>
           );
         })}

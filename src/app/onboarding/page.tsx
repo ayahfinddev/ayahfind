@@ -56,14 +56,14 @@ export default function OnboardingPage() {
             className="flex flex-col items-center text-center"
           >
             <motion.div
-              className="mb-8 flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-neutral-100 to-neutral-50 ring-1 ring-accent-emerald/30"
+              className="mb-8 flex h-24 w-24 items-center justify-center rounded-3xl bg-white ring-1 ring-accent-border shadow-[0_2px_12px_rgba(13,148,136,0.12)]"
               animate={{ scale: [1, 1.03, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <Slide className="h-12 w-12 text-accent-emerald" />
+              <Slide className="h-12 w-12 text-accent-dim" />
             </motion.div>
-            <h1 className="text-2xl font-bold text-white">{slides[step].title}</h1>
-            <p className="mt-4 max-w-sm text-neutral-500">{slides[step].body}</p>
+            <h1 className="text-2xl font-bold text-ink">{slides[step].title}</h1>
+            <p className="mt-4 max-w-sm text-ink-muted">{slides[step].body}</p>
           </motion.div>
         </AnimatePresence>
       </div>
@@ -73,7 +73,7 @@ export default function OnboardingPage() {
           <span
             key={i}
             className={`h-1.5 rounded-full transition-all ${
-              i === step ? "w-8 bg-accent-emerald" : "w-1.5 bg-neutral-300"
+              i === step ? "w-8 bg-accent-dim" : "w-1.5 bg-black/10"
             }`}
           />
         ))}
@@ -82,11 +82,11 @@ export default function OnboardingPage() {
       <button
         type="button"
         onClick={() => (step < slides.length - 1 ? setStep(step + 1) : finish())}
-        className="w-full rounded-2xl bg-accent-emerald py-4 font-semibold text-canvas"
+        className="w-full rounded-2xl bg-accent-dim py-4 font-semibold text-white shadow-[0_2px_12px_rgba(13,148,136,0.25)] transition-all hover:brightness-105"
       >
         {step < slides.length - 1 ? "Continue" : "Begin searching"}
       </button>
-      <button type="button" onClick={finish} className="mt-3 text-sm text-neutral-500">
+      <button type="button" onClick={finish} className="mt-3 text-sm text-ink-muted transition-colors hover:text-ink">
         Skip
       </button>
     </motion.div>

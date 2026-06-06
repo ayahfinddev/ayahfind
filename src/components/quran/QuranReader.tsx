@@ -155,7 +155,7 @@ export function QuranReader({
           <button
             type="button"
             onClick={() => goAyah(1, prevSurah)}
-            className="flex max-w-[48%] items-center gap-1 rounded-xl border border-border-strong bg-canvas-elevated px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:border-accent-border hover:text-ink"
+            className="flex max-w-[48%] items-center gap-1 rounded-xl bg-white px-3 py-1.5 text-xs font-medium text-ink-muted shadow-[0_1px_3px_rgba(0,0,0,0.05)] transition-all hover:text-ink hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
           >
             <ChevronLeft className="h-4 w-4 shrink-0" />
             <span className="truncate">Previous: {prevSurahName ?? `Surah ${prevSurah}`}</span>
@@ -167,7 +167,7 @@ export function QuranReader({
           <button
             type="button"
             onClick={() => goAyah(1, nextSurah)}
-            className="flex max-w-[48%] items-center gap-1 rounded-xl border border-border-strong bg-canvas-elevated px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:border-accent-border hover:text-ink"
+            className="flex max-w-[48%] items-center gap-1 rounded-xl bg-white px-3 py-1.5 text-xs font-medium text-ink-muted shadow-[0_1px_3px_rgba(0,0,0,0.05)] transition-all hover:text-ink hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
           >
             <span className="truncate">Next: {nextSurahName ?? `Surah ${nextSurah}`}</span>
             <ChevronRight className="h-4 w-4 shrink-0" />
@@ -224,7 +224,7 @@ export function QuranReader({
 
         {showsBismillahHeader(surah) && <BismillahHeader />}
 
-        <div className="reader-verses overflow-visible rounded-2xl border border-glass-border bg-canvas shadow-card">
+        <div className="reader-verses overflow-visible rounded-2xl bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04),0_6px_24px_rgba(0,0,0,0.05)]">
           {displayAyahs.map((a, i) => (
               <VerseCard
                 key={a.ayah}

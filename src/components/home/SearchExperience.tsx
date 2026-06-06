@@ -183,23 +183,23 @@ export function SearchExperience() {
 
   return (
     <>
-      <header className="pb-4 pt-2 md:pt-2">
+      <header className="pb-5 pt-2 md:pt-4">
         <motion.p
           {...fade(0)}
-          className="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-ink-subtle"
+          className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-subtle"
         >
           AyahFind AI
         </motion.p>
         <motion.h1
           {...slideUp(0.08)}
-          className="text-[1.625rem] font-bold leading-tight tracking-tight text-ink sm:text-3xl"
+          className="text-[1.75rem] font-bold leading-[1.2] tracking-tight text-ink sm:text-[2rem]"
         >
-          Search the Qur&apos;an &amp; Hadith{" "}
-          <span className="text-gradient">naturally</span>
+          Search the Qur&apos;an{" "}
+          <span className="text-gradient">&amp; Hadith</span>
         </motion.h1>
         <motion.p
           {...fade(0.16)}
-          className="mt-1.5 text-[0.8125rem] leading-relaxed text-ink-muted sm:mt-2 sm:text-sm"
+          className="mt-2 text-[0.875rem] leading-relaxed text-ink-muted sm:mt-2.5"
         >
           Imperfect recitation, mixed languages, vague meanings — we still find what you meant.
         </motion.p>
@@ -248,9 +248,12 @@ export function SearchExperience() {
       )}
 
       {aiHint && !loading && results.length > 0 && (
-        <div className="mt-4 flex items-start gap-2 rounded-xl border border-glass-border bg-canvas-elevated px-4 py-3 text-sm text-ink-muted">
-          <Brain className="mt-0.5 h-4 w-4 shrink-0 text-ink" />
-          <span>AI reconstructed intent · {aiHint}</span>
+        <div className="mt-4 flex items-center gap-2.5 rounded-xl bg-white px-4 py-2.5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <Brain className="h-3.5 w-3.5 shrink-0 text-accent-dim" />
+          <span className="text-[13px] text-ink-muted">
+            AI matched your meaning
+            {aiHint && <span className="ml-1 text-ink-subtle">· {aiHint}</span>}
+          </span>
         </div>
       )}
 
@@ -258,7 +261,7 @@ export function SearchExperience() {
         <motion.section
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-6 rounded-2xl border border-border-strong bg-canvas-elevated px-5 py-6 text-center"
+          className="mt-6 rounded-2xl bg-white px-5 py-8 text-center shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.05)]"
         >
           <SearchX className="mx-auto mb-3 h-10 w-10 text-ink-muted" />
           <h2 className="text-lg font-semibold text-ink">
@@ -271,10 +274,9 @@ export function SearchExperience() {
       {!loading && results.length > 0 && (
         <section className="relative z-20 mt-6 space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-ink-muted">
-              {results.length} matches
+            <h2 className="text-xs font-medium uppercase tracking-wider text-ink-subtle">
+              {results.length} results
             </h2>
-            {loading && <Loader2 className="h-4 w-4 animate-spin text-ink" />}
           </div>
           {results.map((r, i) => (
             <AyahResultCard
@@ -293,7 +295,7 @@ export function SearchExperience() {
           <button
             type="button"
             onClick={() => setWeakOpen((o) => !o)}
-            className="flex w-full items-center justify-between rounded-xl border border-glass-border bg-canvas-elevated px-4 py-3 text-left text-sm text-ink-muted hover:border-border-strong"
+            className="flex w-full items-center justify-between rounded-xl bg-white px-4 py-3 text-left text-sm text-ink-muted shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-shadow hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
           >
             <span>
               Low confidence matches (below 55%)

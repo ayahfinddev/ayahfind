@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 interface AISearchBarProps {
   value: string;
   onChange: (v: string) => void;
-  /** Receives the current input — do not rely on parent state having flushed. */
   onSearch: (value: string) => void;
   onVoiceOpen: () => void;
   loading?: boolean;
@@ -37,28 +36,25 @@ export function AISearchBar({
   }, []);
 
   return (
-    <motion.div
-      animate={{ scale: focused ? 1.005 : 1 }}
-      transition={{ duration: 0.2 }}
+    <div
       className={cn(
-        "relative overflow-hidden rounded-2xl border transition-all duration-200",
-        "bg-canvas backdrop-blur-xl",
+        "relative overflow-hidden rounded-2xl transition-all duration-300",
+        "bg-white",
         focused
-          ? "border-ink/20 search-glow"
-          : "border-glass-border"
+          ? "shadow-[0_0_0_3px_rgba(13,148,136,0.15),0_4px_24px_rgba(0,0,0,0.08)] search-glow"
+          : "shadow-[0_1px_3px_rgba(0,0,0,0.05),0_6px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.06),0_8px_28px_rgba(0,0,0,0.08)]"
       )}
     >
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-canvas-elevated via-transparent to-canvas-elevated" />
-
-      <div className="relative flex items-center gap-2 p-2 pl-4 sm:p-3 sm:pl-5">
+      {/* Main input row */}
+      <div className="flex items-center gap-3 px-5 py-4">
         <Sparkles
           className={cn(
             "h-5 w-5 shrink-0 transition-colors duration-200",
-            focused ? "text-ink" : "text-ink-muted"
+            focused ? "text-accent-dim" : "text-ink-subtle"
           )}
         />
 
-        <div className="relative flex h-11 flex-1 items-center sm:h-12">
+        <div className="relative flex h-7 flex-1 items-center">
           <input
             value={value}
             onChange={(e) => onChange(e.target.value)}
@@ -70,18 +66,18 @@ export function AISearchBar({
                 if (q) onSearch(q);
               }
             }}
-            className="w-full bg-transparent text-base leading-5 text-ink outline-none placeholder:text-transparent sm:text-lg"
+            className="w-full bg-transparent text-[1.0625rem] leading-5 text-ink outline-none placeholder:text-transparent"
             aria-label="Search Quran or Hadith"
           />
           <AnimatePresence mode="wait">
             {!value && (
               <motion.span
                 key={placeholderIdx}
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 0.55, y: 0 }}
-                exit={{ opacity: 0, y: -5 }}
-                transition={{ duration: 0.3 }}
-                className="pointer-events-none absolute inset-y-0 left-0 flex items-center text-base leading-5 text-ink-subtle sm:text-lg"
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.25 }}
+                className="pointer-events-none absolute inset-y-0 left-0 flex items-center text-[1.0625rem] leading-5 text-ink-subtle"
               >
                 {placeholders[placeholderIdx]}
               </motion.span>
@@ -89,38 +85,42 @@ export function AISearchBar({
           </AnimatePresence>
         </div>
 
-        <motion.button
-          type="button"
-          whileTap={{ scale: 0.92 }}
-          onClick={onVoiceOpen}
-          className="flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-canvas-elevated text-ink sm:h-12 sm:w-12"
-          aria-label="Voice search"
-        >
-          <Mic className="h-5 w-5" />
-        </motion.button>
+        <div className="flex items-center gap-2">
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.92 }}
+            onClick={onVoiceOpen}
+            className="flex h-9 w-9 items-center justify-center rounded-xl text-ink-subtle transition-all hover:bg-canvas-card hover:text-ink"
+            aria-label="Voice search"
+          >
+            <Mic className="h-4.5 w-4.5" />
+          </motion.button>
 
-        <motion.button
-          type="button"
-          whileTap={{ scale: 0.95 }}
-          onClick={() => {
-            const q = value.trim();
-            if (q) onSearch(q);
-          }}
-          disabled={!value.trim()}
-          className={cn(
-            "flex h-11 items-center gap-2 rounded-xl px-4 font-medium transition-all sm:h-12 sm:px-5",
-            value.trim()
-              ? "bg-accent text-canvas shadow-[0_0_20px_var(--accent-surface)]"
-              : "bg-canvas-card text-ink-subtle"
-          )}
-        >
-          <Search className="h-4 w-4" />
-          <span className="hidden sm:inline">{loading ? "..." : "Search"}</span>
-        </motion.button>
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.96 }}
+            onClick={() => {
+              const q = value.trim();
+              if (q) onSearch(q);
+            }}
+            disabled={!value.trim() || loading}
+            className={cn(
+              "flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-semibold transition-all duration-200",
+              value.trim()
+                ? "bg-accent-dim text-white shadow-[0_2px_8px_rgba(13,148,136,0.3)] hover:shadow-[0_4px_12px_rgba(13,148,136,0.4)] hover:brightness-105"
+                : "bg-canvas-card text-ink-subtle cursor-not-allowed"
+            )}
+          >
+            <Search className="h-3.5 w-3.5" />
+            <span>{loading ? "..." : "Search"}</span>
+          </motion.button>
+        </div>
       </div>
 
+      {/* Mode toggle */}
       {onModeChange && (
-        <div className="flex gap-2 border-t border-glass-border bg-canvas-elevated/50 px-3 py-2.5">
+        <div className="flex gap-1.5 border-t border-black/[0.05] bg-canvas/50 px-4 py-2.5">
+          <span className="mr-1 self-center text-xs text-ink-subtle">Search in:</span>
           {(["quran", "hadith"] as const).map((m) => (
             <motion.button
               key={m}
@@ -132,11 +132,11 @@ export function AISearchBar({
                 mode === m ? "af-segment-active" : "af-segment-inactive"
               )}
             >
-              {m === "quran" ? "Quran" : "Hadith"}
+              {m === "quran" ? "Qur'an" : "Hadith"}
             </motion.button>
           ))}
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }

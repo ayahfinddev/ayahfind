@@ -176,7 +176,7 @@ export function VoiceSearchModal({
                       {selected && (
                         <motion.span
                           layoutId="voice-lang-pill"
-                          className="absolute inset-0 rounded-full bg-ink shadow-sm"
+                          className="absolute inset-0 rounded-full bg-accent-dim shadow-sm"
                           transition={{ type: "spring", stiffness: 520, damping: 36 }}
                           aria-hidden
                         />
@@ -195,11 +195,11 @@ export function VoiceSearchModal({
                   whileTap={{ scale: 0.94 }}
                   onClick={() => (listening ? stop(true) : void start())}
                   disabled={!supported}
-                  className="relative flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-accent-emerald to-neutral-800 shadow-glow disabled:opacity-40"
+                  className="relative flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent-dim shadow-[0_4px_24px_rgba(13,148,136,0.35)] disabled:opacity-40"
                 >
                   {listening && (
                     <motion.span
-                      className="absolute inset-0 rounded-full border-2 border-accent-emerald/50"
+                      className="absolute inset-0 rounded-full border-2 border-accent/60"
                       animate={{ scale: [1, 1.35], opacity: [0.6, 0] }}
                       transition={{ duration: 1.5, repeat: Infinity }}
                     />
@@ -264,7 +264,7 @@ export function VoiceSearchModal({
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="flex-1 rounded-xl border border-glass-border py-3 text-sm text-ink-muted"
+                  className="flex-1 rounded-xl border border-black/[0.08] bg-canvas-card py-3 text-sm font-medium text-ink-muted transition-colors hover:bg-canvas-card hover:text-ink"
                 >
                   Cancel
                 </button>
@@ -272,7 +272,7 @@ export function VoiceSearchModal({
                   type="button"
                   onClick={handleSearch}
                   disabled={!canSearch}
-                  className="flex-1 rounded-xl bg-accent-emerald py-3 text-sm font-semibold text-canvas disabled:opacity-40"
+                  className="flex-1 rounded-xl bg-accent-dim py-3 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(13,148,136,0.25)] transition-all hover:brightness-105 disabled:opacity-40"
                 >
                   Search
                 </button>

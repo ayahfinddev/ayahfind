@@ -53,7 +53,7 @@ export function QuranNavigatorToggle({
       aria-expanded={open}
       data-testid="quran-nav-toggle"
       className={cn(
-        "quran-nav-toggle fixed z-[100]",
+        "quran-nav-toggle fixed z-[100] md:hidden",
         TOGGLE_LEFT,
         "top-1/2 -translate-y-1/2",
         "flex h-16 w-10 flex-col items-center justify-center gap-0.5",
