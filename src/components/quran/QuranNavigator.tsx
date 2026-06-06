@@ -52,8 +52,9 @@ export function QuranNavigatorToggle({
       aria-label={open ? "Close chapter navigator" : "Open chapter navigator"}
       aria-expanded={open}
       className={cn(
-        // Fixed tab that sticks out from the left edge
-        "fixed left-0 top-1/2 z-[100] -translate-y-1/2",
+        // Fixed tab — flush with the right edge of the SideNav at each breakpoint
+        // mobile: no sidebar → left-0 | md: 4.75rem sidebar | lg: 13rem (w-52) sidebar
+        "fixed left-0 md:left-[4.75rem] lg:left-52 top-1/2 z-[100] -translate-y-1/2",
         "flex flex-col items-center justify-center gap-2",
         "h-[88px] w-10 rounded-r-2xl",
         // Glass look that works in both light and dark
