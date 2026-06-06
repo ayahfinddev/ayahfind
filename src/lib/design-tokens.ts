@@ -36,10 +36,9 @@ export const tokens = {
 } as const;
 
 export const placeholders = [
-  "Recite an ayah imperfectly...",
-  "Search by meaning...",
-  "Try: hardship and ease",
-  "Describe a hadith...",
-  "Search in Arabic or English...",
-  "fa inama al usri yusra",
+  "mountains moving like clouds",
+  "فَبِأَيِّ آلَاءِ",
+  "not burden a soul",
+  "verse about patience",
+  "la yukallifullah",
 ];

@@ -20,7 +20,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div
             className={cn(
               "mx-auto w-full px-4 py-5 pb-24 md:px-5 md:py-6 md:pb-6 lg:px-8",
-              isReader ? "max-w-4xl lg:max-w-5xl" : "max-w-3xl"
+              isReader ? "max-w-4xl lg:max-w-5xl" : "max-w-3xl xl:max-w-4xl"
             )}
           >
             {children}

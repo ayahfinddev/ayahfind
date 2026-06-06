@@ -38,6 +38,10 @@ export function SearchExperience() {
   modeRef.current = mode;
   const { registerReset } = useSearchHome();
   const playback = useAudioPlayback();
+  const [isMobile, setIsMobile] = useState(true);
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 640);
+  }, []);
 
   const resetToLanding = useCallback(() => {
     playback.stop();
@@ -165,32 +169,47 @@ export function SearchExperience() {
     [router]
   );
 
+  const fade = (delay: number) => ({
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    transition: { duration: 0.4, delay },
+  });
+
+  const slideUp = (delay: number) => ({
+    initial: { opacity: 0, y: isMobile ? 0 : 16 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.4, delay: isMobile ? 0 : delay },
+  });
+
   return (
     <>
       <header className="pb-4 pt-2 md:pt-2">
         <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          {...fade(0)}
           className="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-ink-subtle"
         >
           AyahFind AI
         </motion.p>
         <motion.h1
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
+          {...slideUp(0.08)}
           className="text-[1.625rem] font-bold leading-tight tracking-tight text-ink sm:text-3xl"
         >
           Search the Qur&apos;an &amp; Hadith{" "}
           <span className="text-gradient">naturally</span>
         </motion.h1>
-        <p className="mt-1.5 text-[0.8125rem] leading-relaxed text-ink-muted sm:mt-2 sm:text-sm">
+        <motion.p
+          {...fade(0.16)}
+          className="mt-1.5 text-[0.8125rem] leading-relaxed text-ink-muted sm:mt-2 sm:text-sm"
+        >
           Imperfect recitation, mixed languages, vague meanings — we still find what you meant.
-        </p>
+        </motion.p>
       </header>
 
-      <ContinueReadingCard />
+      <motion.div {...slideUp(0.24)}>
+        <ContinueReadingCard />
+      </motion.div>
 
-      <section className="space-y-1.5">
+      <motion.section {...slideUp(0.32)} className="space-y-1.5">
         <AISearchBar
           value={query}
           onChange={setQuery}
@@ -204,8 +223,10 @@ export function SearchExperience() {
           onTopic={runTopic}
           loading={loading}
           activeLabel={activeTopic}
+          baseDelay={isMobile ? 0 : 0.4}
+          noStagger={isMobile}
         />
-      </section>
+      </motion.section>
 
       {loading && (
         <motion.div
@@ -261,6 +282,7 @@ export function SearchExperience() {
               result={r}
               index={i}
               highlightQuery={query}
+              noStagger={isMobile}
             />
           ))}
         </section>
@@ -292,6 +314,7 @@ export function SearchExperience() {
                   index={i}
                   variant="weak"
                   highlightQuery={query}
+                  noStagger={isMobile}
                 />
               ))}
             </div>

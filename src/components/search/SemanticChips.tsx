@@ -8,9 +8,11 @@ interface SemanticChipsProps {
   onTopic: (topic: SearchTopic) => void;
   loading?: boolean;
   activeLabel?: string | null;
+  baseDelay?: number;
+  noStagger?: boolean;
 }
 
-export function SemanticChips({ onTopic, loading, activeLabel }: SemanticChipsProps) {
+export function SemanticChips({ onTopic, loading, activeLabel, baseDelay = 0, noStagger = false }: SemanticChipsProps) {
   return (
     <div className="-mt-0.5 space-y-1.5">
       <span className="block text-xs font-medium text-ink-muted">Try asking</span>
@@ -20,9 +22,9 @@ export function SemanticChips({ onTopic, loading, activeLabel }: SemanticChipsPr
             key={topic.label}
             type="button"
             disabled={loading}
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: noStagger ? 1 : 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: i * 0.04 }}
+            transition={{ delay: noStagger ? 0 : baseDelay + i * 0.05 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => onTopic(topic)}
             className={cn(

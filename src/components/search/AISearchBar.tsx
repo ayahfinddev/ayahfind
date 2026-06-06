@@ -38,8 +38,10 @@ export function AISearchBar({
 
   return (
     <motion.div
+      animate={{ scale: focused ? 1.005 : 1 }}
+      transition={{ duration: 0.2 }}
       className={cn(
-        "relative overflow-hidden rounded-2xl border transition-all duration-300",
+        "relative overflow-hidden rounded-2xl border transition-all duration-200",
         "bg-canvas backdrop-blur-xl",
         focused
           ? "border-ink/20 search-glow"
@@ -48,15 +50,15 @@ export function AISearchBar({
     >
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-canvas-elevated via-transparent to-canvas-elevated" />
 
-      <div className="relative flex items-center gap-2 p-2 pl-4">
+      <div className="relative flex items-center gap-2 p-2 pl-4 sm:p-3 sm:pl-5">
         <Sparkles
           className={cn(
-            "h-5 w-5 shrink-0 transition-colors",
+            "h-5 w-5 shrink-0 transition-colors duration-200",
             focused ? "text-ink" : "text-ink-muted"
           )}
         />
 
-        <div className="relative flex h-11 flex-1 items-center">
+        <div className="relative flex h-11 flex-1 items-center sm:h-12">
           <input
             value={value}
             onChange={(e) => onChange(e.target.value)}
@@ -68,18 +70,18 @@ export function AISearchBar({
                 if (q) onSearch(q);
               }
             }}
-            className="w-full bg-transparent text-base leading-5 text-ink outline-none placeholder:text-transparent"
+            className="w-full bg-transparent text-base leading-5 text-ink outline-none placeholder:text-transparent sm:text-lg"
             aria-label="Search Quran or Hadith"
           />
           <AnimatePresence mode="wait">
             {!value && (
               <motion.span
                 key={placeholderIdx}
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 0.62, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.25 }}
-                className="pointer-events-none absolute inset-y-0 left-0 flex items-center text-base leading-5 text-ink-subtle"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 0.55, y: 0 }}
+                exit={{ opacity: 0, y: -5 }}
+                transition={{ duration: 0.3 }}
+                className="pointer-events-none absolute inset-y-0 left-0 flex items-center text-base leading-5 text-ink-subtle sm:text-lg"
               >
                 {placeholders[placeholderIdx]}
               </motion.span>
@@ -91,7 +93,7 @@ export function AISearchBar({
           type="button"
           whileTap={{ scale: 0.92 }}
           onClick={onVoiceOpen}
-          className="flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-canvas-elevated text-ink"
+          className="flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-canvas-elevated text-ink sm:h-12 sm:w-12"
           aria-label="Voice search"
         >
           <Mic className="h-5 w-5" />
@@ -106,7 +108,7 @@ export function AISearchBar({
           }}
           disabled={!value.trim()}
           className={cn(
-            "flex h-11 items-center gap-2 rounded-xl px-4 font-medium transition-all",
+            "flex h-11 items-center gap-2 rounded-xl px-4 font-medium transition-all sm:h-12 sm:px-5",
             value.trim()
               ? "bg-accent text-canvas shadow-[0_0_20px_var(--accent-surface)]"
               : "bg-canvas-card text-ink-subtle"

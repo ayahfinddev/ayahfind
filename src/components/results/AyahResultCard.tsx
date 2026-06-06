@@ -27,6 +27,7 @@ interface AyahResultCardProps {
   index: number;
   variant?: "default" | "weak";
   highlightQuery?: string;
+  noStagger?: boolean;
 }
 
 export function AyahResultCard({
@@ -34,6 +35,7 @@ export function AyahResultCard({
   index,
   variant = "default",
   highlightQuery = "",
+  noStagger = false,
 }: AyahResultCardProps) {
   const isWeak = variant === "weak";
   const { reciterId } = useReciter();
@@ -91,9 +93,9 @@ export function AyahResultCard({
 
   return (
     <motion.article
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: index * 0.05, duration: 0.35 }}
+      initial={{ opacity: 0, y: noStagger ? 0 : 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: noStagger ? 0 : index * 0.06, duration: 0.3 }}
       className={cn(
         "group relative rounded-2xl border p-5 shadow-card backdrop-blur-md transition-transform hover:-translate-y-0.5",
         isWeak
