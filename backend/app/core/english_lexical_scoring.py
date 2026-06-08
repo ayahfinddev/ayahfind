@@ -238,6 +238,17 @@ def score_english_translation(
     rare_hits = sum(1 for w in rare_q if _token_in_text(w, t_words))
     rare_ratio = rare_hits / len(rare_q) if rare_q else 0.0
 
+    # Paraphrase coverage: fraction of paraphrase-normalised query tokens present
+    # in the paraphrase-normalised translation.  This rewards 27:88 ("pass as the
+    # passing of clouds") over 24:43 ("mountains of clouds") for the query
+    # "mountains moving like clouds", since "pass" appears in 27:88 but not 24:43.
+    _q_para_toks = [w for w in _WORD.findall(q_para) if len(w) > 2 and w not in _ULTRA_STOP]
+    _t_para_words = set(_WORD.findall(t_para))
+    para_cov = (
+        sum(1 for w in _q_para_toks if w in _t_para_words) / len(_q_para_toks)
+        if _q_para_toks else 0.0
+    )
+
     full_partial = fuzz.partial_ratio(q_norm, t_norm) / 100.0
     generic_penalty = 1.0
     if full_partial >= 0.48 and phrase_window < 0.55 and weighted_cov < 0.45:
@@ -246,23 +257,29 @@ def score_english_translation(
         generic_penalty = 0.65 + 0.35 * weighted_cov
 
     score = (
-        phrase_window * 0.44
+        phrase_window * 0.34
         + weighted_cov * 0.26
         + content_partial * 0.12
         + token_sort * 0.06
         + bi_ratio * 0.07
         + tri_ratio * 0.05
+        + rare_ratio * 0.06
+        + para_cov * 0.04
     ) * generic_penalty
 
-    # Continuous phrase boost   avoid flat caps that collapse distinct verses.
+    # Continuous phrase boost: prefer verses matching the paraphrased query form.
+    # rare_ratio rewards matching all discriminative tokens; para_cov rewards
+    # matching paraphrase-normalised tokens (e.g. "pass" from "moving").
     if phrase_window >= 0.55:
         score = max(
             score,
             0.58
-            + phrase_window * 0.28
+            + phrase_window * 0.18
             + weighted_cov * 0.10
             + content_partial * 0.06
-            + bi_ratio * 0.04,
+            + bi_ratio * 0.04
+            + rare_ratio * 0.08
+            + para_cov * 0.08,
         )
     if phrase_window >= 0.75 and weighted_cov >= 0.45:
         score = max(score, 0.88 + (phrase_window - 0.75) * 0.20 + weighted_cov * 0.06)
@@ -277,6 +294,7 @@ def score_english_translation(
             "bigram_ratio": round(bi_ratio, 4),
             "trigram_ratio": round(tri_ratio, 4),
             "rare_ratio": round(rare_ratio, 4),
+            "para_cov": round(para_cov, 4),
             "full_partial": round(full_partial, 4),
             "generic_penalty": round(generic_penalty, 4),
             "matched_tokens": matched[:12],
