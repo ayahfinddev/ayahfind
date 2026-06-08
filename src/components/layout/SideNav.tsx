@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookMarked, Clock, Home, Info, ScrollText, Settings } from "lucide-react";
+import { BookMarked, BookOpen, Clock, Home, Info, ScrollText, Settings } from "lucide-react";
 import { useSearchNavClick } from "@/contexts/SearchHomeContext";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +11,7 @@ const links = [
   { href: "/hadith", icon: ScrollText, label: "Hadith" },
   { href: "/bookmarks", icon: BookMarked, label: "Saved" },
   { href: "/history", icon: Clock, label: "History" },
+  { href: "/symbols", icon: BookOpen, label: "Symbols" },
   { href: "/settings", icon: Settings, label: "Settings" },
   { href: "/about", icon: Info, label: "About" },
 ];
