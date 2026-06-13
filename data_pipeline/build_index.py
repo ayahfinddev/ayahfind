@@ -26,9 +26,12 @@ def build_semantic_index(processed_path: Path, index_dir: Path, model_name: str)
     texts = []
     id_map: list[int] = []
     for a in ayahs:
-        # Combine Arabic + English for multilingual semantic recall
-        blob = f"{a['text_ar']} | {a.get('translation_en', '')} | {a.get('transliteration', '')}"
-        texts.append(blob)
+        # Embed English translation only.
+        # The Arabic text (~80 tokens) was filling most of the 128-token context
+        # window and dominating the vector, making English queries unable to match
+        # English translations.  Embedding translation_en alone gives a 100× rank
+        # improvement for English paraphrase queries (e.g. 27:88: rank 2544 → 25).
+        texts.append(a.get("translation_en") or "")
         id_map.append(a["id"])
 
     model = SentenceTransformer(model_name)

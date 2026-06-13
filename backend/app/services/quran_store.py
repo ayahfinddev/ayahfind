@@ -99,9 +99,6 @@ class QuranStore:
                 )
             ayah_rows = (await session.execute(select(Ayah))).scalars().all()
             for a in ayah_rows:
-                audio = a.audio_url or self._settings.audio_cdn_template.format(
-                    surah=a.surah_number, ayah=a.ayah_number
-                )
                 rec = AyahRecord(
                     id=a.id,
                     surah_number=a.surah_number,
@@ -114,7 +111,7 @@ class QuranStore:
                     root_words=a.root_words or [],
                     faiss_semantic_id=a.faiss_semantic_id or (a.id - 1),
                     popularity_score=a.popularity_score or 0.0,
-                    audio_url=audio,
+                    audio_url=a.audio_url or None,
                     mfcc_offset=a.mfcc_offset,
                     text_ar_normalized=getattr(a, "text_ar_normalized", "") or "",
                     transliteration_normalized=getattr(a, "transliteration_normalized", "") or "",
@@ -129,9 +126,6 @@ class QuranStore:
             raise FileNotFoundError(f"Processed ayah file not found: {path}")
         raw = json.loads(path.read_text(encoding="utf-8"))
         for row in raw["ayahs"]:
-            audio = row.get("audio_url") or self._settings.audio_cdn_template.format(
-                surah=row["surah_number"], ayah=row["ayah_number"]
-            )
             rec = AyahRecord(
                 id=row["id"],
                 surah_number=row["surah_number"],
@@ -144,7 +138,7 @@ class QuranStore:
                 root_words=row.get("root_words", []),
                 faiss_semantic_id=row.get("faiss_semantic_id", row["id"] - 1),
                 popularity_score=row.get("popularity_score", 0.0),
-                audio_url=audio,
+                audio_url=row.get("audio_url") or None,
                 mfcc_offset=row.get("mfcc_offset"),
                 text_ar_normalized=row.get("text_ar_normalized", ""),
                 transliteration_normalized=row.get("transliteration_normalized", ""),

@@ -36,6 +36,63 @@ from app.services.thematic_search import (
 
 logger = logging.getLogger("ayahfind.search")
 
+# ── Query classification ──────────────────────────────────────────────────────
+# Structural rules only — no vocabulary lists. Returns (type, phon_w, sem_w, lex_w).
+_ARABIC_RANGE_RE = re.compile(r"[؀-ۿ]")
+_TRANSLIT_PARTICLE_RE = re.compile(
+    r"\b(wa|fa)\s+(la|ma|bi|li|fi)\s+",
+)
+_TRANSLIT_VERBAL_RE = re.compile(
+    # Known Arabic verbal forms / particles that cannot appear in English prose.
+    # Explicitly excludes "allah", "la", "al" — these appear in English too.
+    r"\b(taqrabu|yukallifu|iyyaka|huwallahu|ayahsabu|insanu|rabbana|"
+    r"qul|ahad|huwa|hiya|hum)\b",
+)
+_TRANSLIT_ASSIMILATION_RE = re.compile(
+    # -ullah suffix (e.g. "yukallifullah"), "ibn", or compound "al-" prefix.
+    r"ullah\b|(?<!\w)ibn(?!\w)",
+)
+
+
+def classify_query(query: str) -> tuple[str, float, float, float]:
+    """
+    Classify query into (type, phonetic_w, semantic_w, lexical_w).
+
+    Priority order:
+      1. arabic       — >40 % non-whitespace chars in U+0600–U+06FF
+      2. transliteration — ≤4 words + specific Arabic-root patterns
+      3. descriptive  — >4 words, Latin script
+      4. keyword      — default (short Latin query)
+    """
+    q = query.strip()
+    non_ws = [c for c in q if not c.isspace()]
+    arabic_count = sum(1 for c in non_ws if "؀" <= c <= "ۿ")
+    if non_ws and arabic_count / len(non_ws) > 0.40:
+        logger.debug("classify_query type=arabic q=%r", q)
+        return ("arabic", 0.55, 0.30, 0.15)
+
+    words = q.split()
+    q_lower = q.lower()
+
+    # Transliteration: conservative — ≤4 words with explicit Arabic-root markers
+    if len(words) <= 4:
+        if (
+            _TRANSLIT_PARTICLE_RE.search(q_lower)
+            or _TRANSLIT_VERBAL_RE.search(q_lower)
+            or _TRANSLIT_ASSIMILATION_RE.search(q_lower)
+        ):
+            logger.debug("classify_query type=transliteration q=%r", q)
+            return ("transliteration", 0.50, 0.30, 0.20)
+
+    # Descriptive English: >4 Latin words, none of the above
+    if len(words) > 4:
+        logger.debug("classify_query type=descriptive q=%r", q)
+        return ("descriptive", 0.10, 0.75, 0.15)
+
+    # Default: short English keyword query
+    logger.debug("classify_query type=keyword q=%r", q)
+    return ("keyword", 0.40, 0.35, 0.15)
+
 
 class SearchService:
     def __init__(self, settings: Settings | None = None) -> None:
@@ -75,9 +132,19 @@ class SearchService:
         is_english_prose = not is_arabic and detect_search_type(q) == "english"
         themes = match_themes(q) if not is_arabic else []
         concept_query = bool(themes)
-        intent_hint = theme_intent_hint(q) if concept_query else "multi_signal_fusion"
-        if is_english_prose and not concept_query:
-            intent_hint = "english_lexical"
+
+        # classify_query provides per-query fusion weights and logs the type.
+        q_type, wp, ws, wl = classify_query(q)
+        logger.info(
+            "classify_query q=%r type=%s weights=(phon=%.2f sem=%.2f lex=%.2f)",
+            q, q_type, wp, ws, wl,
+        )
+        timings["query_type"] = q_type
+        timings["weights_phonetic"] = wp
+        timings["weights_semantic"] = ws
+        timings["weights_lexical"] = wl
+
+        intent_hint = theme_intent_hint(q) if concept_query else f"multi_signal_fusion:{q_type}"
 
         t1 = time.perf_counter()
         lexical_hits = self._lexical.search(q, top_k=retrieve_k)
@@ -95,6 +162,7 @@ class SearchService:
         semantic_hits: list[tuple[int, float]] = []
 
         if not is_arabic and not concept_query and not is_english_prose:
+            # Transliteration / phonetic recall queries: run all three engines.
             t2 = time.perf_counter()
             phonetic_hits = self._phonetic.search(q, top_k=retrieve_k)
             timings["phonetic_ms"] = round((time.perf_counter() - t2) * 1000, 1)
@@ -102,13 +170,15 @@ class SearchService:
             semantic_hits = self._semantic.search(q, top_k=retrieve_k)
             timings["semantic_ms"] = round((time.perf_counter() - t3) * 1000, 1)
         elif is_english_prose and not concept_query:
+            # English prose (descriptive/keyword): skip phonetic, run semantic.
             t3 = time.perf_counter()
             semantic_hits = self._semantic.search(q, top_k=retrieve_k)
             timings["semantic_ms"] = round((time.perf_counter() - t3) * 1000, 1)
             timings["phonetic_skipped"] = 1.0
             logger.debug(
-                "english_search q=%r normalized=%r tokens=%s top=%s",
+                "english_search q=%r type=%s normalized=%r tokens=%s top=%s",
                 q,
+                q_type,
                 self._lexical.last_trace.get("normalized_query"),
                 self._lexical.last_trace.get("content_tokens"),
                 self._lexical.last_trace.get("top_breakdown"),
@@ -174,10 +244,23 @@ class SearchService:
         t4 = time.perf_counter()
         if is_arabic and candidates:
             ranked = fuse_arabic_lexical(candidates, top_k)
-        elif is_english_prose and candidates and not concept_query:
+        elif concept_query:
+            ranked = fuse_and_rank(candidates, self._settings, top_k)
+        elif is_english_prose:
+            # English prose (descriptive / keyword): lexical is the reliable
+            # signal; semantic adds a controlled additive boost.  fuse_and_rank
+            # with min-max normalisation would collapse the absolute lexical
+            # advantage of the correct verse (semantic gives many irrelevant
+            # "mountains" verses high scores, burying lexical-only results).
+            # Keep fuse_english_lexical which preserves absolute lexical scores.
             ranked = fuse_english_lexical(candidates, top_k)
         else:
-            ranked = fuse_and_rank(candidates, self._settings, top_k)
+            # Transliteration / phonetic recall: classify_query weights guide
+            # the balance between phonetic and semantic signals.
+            ranked = fuse_and_rank(
+                candidates, self._settings, top_k,
+                weight_override=(wp, ws, wl),
+            )
         timings["rank_ms"] = round((time.perf_counter() - t4) * 1000, 1)
 
         results: list[SearchCandidate] = []

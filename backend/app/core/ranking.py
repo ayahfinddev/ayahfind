@@ -236,17 +236,25 @@ def fuse_and_rank(
     candidates: dict[int, ScoredCandidate],
     settings: Settings,
     top_k: int,
+    *,
+    weight_override: tuple[float, float, float] | None = None,
 ) -> list[tuple[ScoredCandidate, float]]:
     """
     Weighted fusion with min-max normalization per signal batch, then
     calibrated filtering for display confidence and result count.
+
+    weight_override=(phonetic, semantic, lexical) bypasses settings weights
+    when classify_query provides per-query routing weights.
     """
     if not candidates:
         return []
 
-    wp = settings.weight_phonetic
-    ws = settings.weight_semantic
-    wl = settings.weight_lexical
+    if weight_override is not None:
+        wp, ws, wl = weight_override
+    else:
+        wp = settings.weight_phonetic
+        ws = settings.weight_semantic
+        wl = settings.weight_lexical
 
     items = list(candidates.values())
 

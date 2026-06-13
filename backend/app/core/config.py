@@ -57,7 +57,7 @@ class Settings(BaseSettings):
     weight_lexical: float = 0.15
     weight_audio: float = 0.10
 
-    search_top_k_retrieve: int = 15
+    search_top_k_retrieve: int = 50
     search_default_top_k: int = 5
     search_timeout_seconds: float = 25.0
     search_max_query_length: int = 500
@@ -70,10 +70,6 @@ class Settings(BaseSettings):
     cors_allow_origins: str = (
         "https://ayahfind.com,https://www.ayahfind.com,"
         "http://localhost:3000,http://127.0.0.1:3000"
-    )
-
-    audio_cdn_template: str = (
-        "https://everyayah.com/data/Alafasy_128kbps/{surah:03d}{ayah:03d}.mp3"
     )
 
     @property
