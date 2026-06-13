@@ -21,6 +21,7 @@ from app.core.english_lexical_scoring import (
     build_english_idf,
     cheap_english_overlap,
     english_content_tokens,
+    expand_query_tokens,
     normalize_english,
     score_english_translation,
 )
@@ -144,20 +145,23 @@ class LexicalSearchEngine:
 
         scored: list[tuple[int, float, dict]] = []
         q_lower = query.lower()
+        # Expand query tokens with synonym forms so verses that use translation-
+        # vocabulary synonyms (e.g. "horn" for "trumpet") pass the prefilter.
+        content_for_prefilter = expand_query_tokens(content)
         prefilter: list[tuple[int, float]] = []
         for row in rows:
             trans = row.get("translation_en") or ""
-            if not trans or not content:
+            if not trans or not content_for_prefilter:
                 continue
-            overlap = cheap_english_overlap(content, trans)
+            overlap = cheap_english_overlap(content_for_prefilter, trans)
             if overlap >= 0.18:
                 prefilter.append((row["id"], overlap))
         prefilter.sort(key=lambda x: x[1], reverse=True)
         candidate_ids = {aid for aid, _ in prefilter[:160]}
-        if not candidate_ids and content:
+        if not candidate_ids and content_for_prefilter:
             for row in rows:
                 trans = row.get("translation_en") or ""
-                if trans and cheap_english_overlap(content, trans) > 0:
+                if trans and cheap_english_overlap(content_for_prefilter, trans) > 0:
                     candidate_ids.add(row["id"])
                     if len(candidate_ids) >= 80:
                         break

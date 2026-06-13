@@ -77,6 +77,36 @@ _ULTRA_STOP = frozenset(
     }
 )
 
+# ── Translation vocabulary synonyms ──────────────────────────────────────────
+# Curated from corpus analysis: query words that map to 0-occurrence translation
+# words.  Direction is query → translation (one-way).  Each entry was verified
+# to have zero co-occurrence with its target in the corpus before being added.
+# Keep this table small and evidence-based — do not add speculative entries.
+_SYNONYM_TABLE: dict[str, tuple[str, ...]] = {
+    "oceans":      ("seas", "sea"),
+    "trumpet":     ("horn",),
+    "snake":       ("serpent",),
+    "cast":        ("throw", "threw", "thrown"),
+    "judgement":   ("judgment",),        # British → American spelling
+    "charity":     ("charitable",),      # morphological gap
+    "secretly":    ("conceal", "concealed", "secret"),
+    "mix":         ("barrier",),         # "two seas that do not mix" → barrier between them
+    "becomes":     ("became",),
+}
+
+
+def expand_query_tokens(tokens: list[str]) -> list[str]:
+    """Append synonym forms to a token list; deduped, original order preserved."""
+    seen: set[str] = set(tokens)
+    result: list[str] = list(tokens)
+    for tok in tokens:
+        for syn in _SYNONYM_TABLE.get(tok, ()):
+            if syn not in seen:
+                seen.add(syn)
+                result.append(syn)
+    return result
+
+
 _PARAPHRASE_REPLACEMENTS = (
     ("ask permission", "seek exemption"),
     ("ask", "seek"),
@@ -212,7 +242,10 @@ def score_english_translation(
     for w in q_tokens:
         wt = idf_map.get(w, 2.0)
         total_weight += wt
-        if _token_in_text(w, t_words):
+        # Check the token itself first; fall back to synonym forms.
+        # total_weight is counted once per original token (no double-counting).
+        synonyms = _SYNONYM_TABLE.get(w, ())
+        if _token_in_text(w, t_words) or any(s in t_words for s in synonyms):
             matched.append(w)
             matched_weight += wt
 
