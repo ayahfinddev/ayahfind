@@ -40,3 +40,29 @@ export interface ReaderResponse {
 }
 
 export type SearchMode = "quran" | "hadith";
+
+export interface TafsirEntry {
+  source_slug: string;
+  source_title: string;
+  author: string;
+  language: string;
+  provider: string;
+  attribution: string;
+  license_note: string;
+  verse_start: string;
+  verse_end: string;
+  text: string;
+}
+
+export interface TafsirResponse {
+  verse_key: string;
+  available: boolean;
+  entries: TafsirEntry[];
+  message?: string | null;
+  /** "fixture" | "production" | null — drives the "test content" banner. */
+  content_environment?: string | null;
+}
+
+export interface TafsirStatusResponse {
+  enabled: boolean;
+}

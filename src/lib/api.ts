@@ -1,4 +1,4 @@
-import type { ReaderResponse, SearchResponse } from "./types";
+import type { ReaderResponse, SearchResponse, TafsirResponse, TafsirStatusResponse } from "./types";
 import { getClientApiBase } from "./apiConfig";
 
 const API_BASE = getClientApiBase();
@@ -23,6 +23,18 @@ export async function searchUnified(
 export async function fetchReader(surah: number): Promise<ReaderResponse> {
   const res = await fetch(`${API_BASE}/api/v1/reader/${surah}`);
   if (!res.ok) throw new Error("Failed to load surah");
+  return res.json();
+}
+
+export async function fetchTafsir(surah: number, ayah: number): Promise<TafsirResponse> {
+  const res = await fetch(`${API_BASE}/api/v1/tafsir/${surah}/${ayah}`);
+  if (!res.ok) throw new Error("Failed to load tafsir");
+  return res.json();
+}
+
+export async function fetchTafsirStatus(): Promise<TafsirStatusResponse> {
+  const res = await fetch(`${API_BASE}/api/v1/tafsir/status`);
+  if (!res.ok) return { enabled: false };
   return res.json();
 }
 

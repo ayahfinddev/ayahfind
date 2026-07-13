@@ -6,6 +6,7 @@ import type { ReadingMode } from "@/hooks/useReadingMode";
 import type { AyahDetail } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { AnnotatedArabicText } from "@/components/quran/AnnotatedArabicText";
+import { TafsirPanel } from "@/components/quran/TafsirPanel";
 
 interface VerseCardProps {
   surah: number;
@@ -140,6 +141,8 @@ export function VerseCard(props: VerseCardProps) {
           {ayah.translation_en}
         </p>
       )}
+
+      <TafsirPanel surah={surah} ayah={ayah.ayah} />
     </article>
   );
 }
