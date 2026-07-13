@@ -142,7 +142,9 @@ export function VerseCard(props: VerseCardProps) {
         </p>
       )}
 
-      <TafsirPanel surah={surah} ayah={ayah.ayah} />
+      <div className="mt-4">
+        <TafsirPanel surah={surah} ayah={ayah.ayah} />
+      </div>
     </article>
   );
 }

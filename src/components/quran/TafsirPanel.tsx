@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, Loader2, RotateCcw } from "lucide-react";
+import { ChevronDown, Loader2, RotateCcw, ScrollText } from "lucide-react";
 import { fetchTafsir } from "@/lib/api";
 import { getCachedTafsir, setCachedTafsir } from "@/lib/tafsirCache";
 import { useTafsirAvailability } from "@/contexts/TafsirAvailabilityContext";
@@ -11,17 +11,23 @@ import { cn } from "@/lib/utils";
 interface TafsirPanelProps {
   surah: number;
   ayah: number;
+  /** "link" (default) — small text+chevron toggle, used in the full reader.
+   * "pill" — icon+label button matching the other action pills, used on
+   * search result cards. No outer margin either way — wrap with spacing
+   * as needed by the caller (the expanded panel is full-width so it wraps
+   * onto its own line inside a flex row). */
+  variant?: "link" | "pill";
 }
 
 type Status = "idle" | "loading" | "loaded" | "empty" | "error";
 
-/** Collapsed by default on every VerseCard. Fetching and expanded state are
- * local to this instance and only activate once the user opens it — with
- * many ayahs rendered in a surah, every other card stays an inert button.
- * Renders nothing at all when the feature is globally disabled (see
- * TafsirAvailabilityContext) — never a button that only leads to an
- * "unavailable" dead end. */
-export function TafsirPanel({ surah, ayah }: TafsirPanelProps) {
+/** Collapsed by default on every card it's placed on. Fetching and expanded
+ * state are local to this instance and only activate once the user opens
+ * it — with many ayahs/results rendered at once, every other card stays an
+ * inert button. Renders nothing at all when the feature is globally
+ * disabled (see TafsirAvailabilityContext) — never a button that only
+ * leads to an "unavailable" dead end. */
+export function TafsirPanel({ surah, ayah, variant = "link" }: TafsirPanelProps) {
   const verseKey = `${surah}:${ayah}`;
   const featureEnabled = useTafsirAvailability();
   const [open, setOpen] = useState(false);
@@ -69,22 +75,33 @@ export function TafsirPanel({ surah, ayah }: TafsirPanelProps) {
   if (!featureEnabled) return null;
 
   return (
-    <div className="mt-4">
+    <>
       <button
         type="button"
         onClick={toggle}
         aria-expanded={open}
         aria-controls={`tafsir-panel-${surah}-${ayah}`}
-        className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium text-accent-dim transition-colors hover:bg-accent-surface"
+        className={
+          variant === "pill"
+            ? cn(
+                "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all",
+                open ? "bg-accent-surface text-accent-dim" : "bg-canvas-card text-ink-muted hover:text-ink"
+              )
+            : "flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium text-accent-dim transition-colors hover:bg-accent-surface"
+        }
       >
-        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", open && "rotate-180")} />
+        {variant === "pill" ? (
+          <ScrollText className="h-3.5 w-3.5" />
+        ) : (
+          <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", open && "rotate-180")} />
+        )}
         Tafsir
       </button>
 
       {open && (
         <div
           id={`tafsir-panel-${surah}-${ayah}`}
-          className="mt-3 rounded-xl border border-border bg-canvas-card px-4 py-3.5"
+          className="mt-3 w-full rounded-xl border border-border bg-canvas-card px-4 py-3.5"
         >
           {status === "loading" && (
             <div className="flex items-center gap-2 text-sm text-ink-muted">
@@ -157,6 +174,6 @@ export function TafsirPanel({ surah, ayah }: TafsirPanelProps) {
           )}
         </div>
       )}
-    </div>
+    </>
   );
 }

@@ -14,6 +14,7 @@ import {
   Volume2,
 } from "lucide-react";
 import { ConfidenceBadge } from "@/components/ui/ConfidenceBadge";
+import { TafsirPanel } from "@/components/quran/TafsirPanel";
 import type { SearchCandidate } from "@/lib/types";
 import { useReciter } from "@/hooks/useReciter";
 import { highlightText } from "@/lib/highlight";
@@ -156,6 +157,7 @@ export function AyahResultCard({
             {playing ? <Volume2 className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
             {playing ? "Stop" : "Listen"}
           </button>
+          <TafsirPanel surah={result.surah} ayah={result.ayah} variant="pill" />
           <div className="ml-auto flex items-center gap-0.5">
             <button
               type="button"
