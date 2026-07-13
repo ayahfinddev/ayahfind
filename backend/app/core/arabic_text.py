@@ -125,11 +125,13 @@ def arabic_token_variants(token: str) -> set[str]:
 
 
 # Uthmani basmala prefix (matches frontend quranDisplay.ts) for display stripping only.
+# Uses [\u064b-\u0652\u0670]* after each consonant to tolerate any tashkeel ordering.
+_D = r"[\u064b-\u0652\u0670]*"
 _BISMILLAH_DISPLAY_RE = re.compile(
-    r"^\u0628\u0650\u0633\u0652\u0645\u0650\s*"
-    r"(?:\u0671|\u0627)?\u0644\u0644\u0651?\u064e?\u0647\u0650\s*"
-    r"(?:\u0671|\u0627)?\u0644\u0631\u0651?\u064e?\u062d\u0652\u0645\u064e?\u0670?\u0646\u0650\s*"
-    r"(?:\u0671|\u0627)?\u0644\u0631\u0651?\u064e?\u062d\u0650\u064a\u0645\u0650\s*",
+    rf"^\u0628{_D}\u0633{_D}\u0645{_D}\s*"
+    rf"(?:\u0671|\u0627)?\u0644{_D}\u0644{_D}\u0647{_D}\s*"
+    rf"(?:\u0671|\u0627)?\u0644{_D}\u0631{_D}\u062d{_D}\u0645{_D}\u0646{_D}\s*"
+    rf"(?:\u0671|\u0627)?\u0644{_D}\u0631{_D}\u062d{_D}\u064a{_D}\u0645{_D}\s*",
     re.UNICODE,
 )
 
