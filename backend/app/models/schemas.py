@@ -52,3 +52,26 @@ class ReaderSurahResponse(BaseModel):
     name_en: str
     name_ar: str
     ayahs: list[AyahDetail]
+
+
+class TafsirEntryOut(BaseModel):
+    source_slug: str
+    source_title: str
+    author: str
+    language: str
+    provider: str
+    attribution: str
+    license_note: str
+    verse_start: str
+    verse_end: str
+    text: str
+
+
+class TafsirVerseResponse(BaseModel):
+    verse_key: str
+    available: bool
+    entries: list[TafsirEntryOut] = Field(default_factory=list)
+    message: str | None = None
+    # "fixture" | "production" | None — lets the UI show an unmistakable
+    # "test content" banner; also None whenever available=False.
+    content_environment: str | None = None

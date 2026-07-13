@@ -1,0 +1,49 @@
+{
+  "_note": "FIXTURE DATA ONLY. Placeholder text, not real Ibn Kathir / Al-Sa'di content. Used to build and test the ingestion pipeline until upstream licensing/credentials are confirmed (see docs/TAFSIR_INGESTION.md).",
+  "sources": [
+    {
+      "slug": "ibn_kathir_en",
+      "upstream_resource_id": 169,
+      "title": "Tafsir Ibn Kathir (Abridged)",
+      "author": "Hafiz Ibn Kathir",
+      "language": "en",
+      "provider": "Quran Foundation (quran.com Content API, resource id 169)",
+      "attribution": "Tafsir Ibn Kathir (Abridged) — via Quran Foundation",
+      "license_note": "FIXTURE PLACEHOLDER. Real ingestion requires a Quran Foundation developer app (OAuth2 client_credentials) and a written redistribution agreement, since QF Content may not be cached/stored beyond 1 week or redistributed outside the app without one.",
+      "content_version": "fixture-v1"
+    },
+    {
+      "slug": "saadi_ar",
+      "upstream_resource_id": 91,
+      "title": "Tafsir al-Sa'di",
+      "author": "Shaykh Abd al-Rahman al-Sa'di",
+      "language": "ar",
+      "provider": "Quran Foundation (quran.com Content API, resource id 91)",
+      "attribution": "تفسير السعدي — via Quran Foundation",
+      "license_note": "FIXTURE PLACEHOLDER. Real ingestion requires a Quran Foundation developer app (OAuth2 client_credentials) and a written redistribution agreement, since QF Content may not be cached/stored beyond 1 week or redistributed outside the app without one.",
+      "content_version": "fixture-v1"
+    }
+  ],
+  "rows": [
+    { "source_slug": "ibn_kathir_en", "verse_key": "1:1", "upstream_entry_id": "ik-1-1", "text": "<p>[FIXTURE] The opening verse begins with the blessed name of Allah, combining His attributes of universal mercy (ar-Rahman) and specific mercy for the believers (ar-Raheem).</p>" },
+    { "source_slug": "ibn_kathir_en", "verse_key": "1:2", "upstream_entry_id": "ik-1-2", "text": "<p>[FIXTURE] All praise belongs to Allah alone as Lord and Sustainer of every world and every creature within it.</p>" },
+    { "source_slug": "ibn_kathir_en", "verse_key": "1:3", "upstream_entry_id": "ik-1-3", "text": "<p>[FIXTURE] A repetition emphasizing that mercy is the defining quality of how Allah deals with His creation.</p>" },
+    { "source_slug": "ibn_kathir_en", "verse_key": "1:4", "upstream_entry_id": "ik-1-4", "text": "<p>[FIXTURE] Sovereignty over the Day of Judgement is affirmed exclusively for Allah, when no other authority avails.</p>" },
+    { "source_slug": "ibn_kathir_en", "verse_key": "1:5", "upstream_entry_id": "ik-1-5", "text": "<p>[FIXTURE] Worship and the seeking of aid are directed to Allah alone, the foundation of sincere devotion (ikhlas).</p>" },
+    { "source_slug": "ibn_kathir_en", "verse_key": "1:6", "upstream_entry_id": "ik-1-6", "text": "<p>[FIXTURE] A supplication asking to be kept firm upon the straight, balanced path.</p>" },
+    { "source_slug": "ibn_kathir_en", "verse_key": "1:7", "upstream_entry_id": "ik-1-7", "text": "<p>[FIXTURE] The path of those favored, distinguished from the path of those who earned anger or who went astray.</p>" },
+
+    { "source_slug": "ibn_kathir_en", "verse_key": "2:1", "upstream_entry_id": "ik-2-1-5", "text": "<p>[FIXTURE] These disjoined letters open the surah; scholars differ on their meaning, and this single explanation is understood to cover the passage through verse 5.</p>" },
+    { "source_slug": "ibn_kathir_en", "verse_key": "2:2", "upstream_entry_id": "ik-2-1-5", "text": "<p>[FIXTURE] These disjoined letters open the surah; scholars differ on their meaning, and this single explanation is understood to cover the passage through verse 5.</p>" },
+    { "source_slug": "ibn_kathir_en", "verse_key": "2:3", "upstream_entry_id": "ik-2-1-5", "text": "<p>[FIXTURE] These disjoined letters open the surah; scholars differ on their meaning, and this single explanation is understood to cover the passage through verse 5.</p>" },
+    { "source_slug": "ibn_kathir_en", "verse_key": "2:4", "upstream_entry_id": "ik-2-1-5", "text": "<p>[FIXTURE] These disjoined letters open the surah; scholars differ on their meaning, and this single explanation is understood to cover the passage through verse 5.</p>" },
+    { "source_slug": "ibn_kathir_en", "verse_key": "2:5", "upstream_entry_id": "ik-2-1-5", "text": "<p>[FIXTURE] These disjoined letters open the surah; scholars differ on their meaning, and this single explanation is understood to cover the passage through verse 5.</p>" },
+
+    { "source_slug": "ibn_kathir_en", "verse_key": "112:1", "upstream_entry_id": "ik-112-1", "text": "<p>[FIXTURE LONG ENTRY] This surah is a concise declaration of Allah's absolute oneness (tawhid). [FIXTURE FILLER] Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur. Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur. [FIXTURE END]</p>" },
+
+    { "source_slug": "saadi_ar", "verse_key": "1:1", "upstream_entry_id": "sa-1-1", "text": "<p>[FIXTURE] افتتاح السورة باسم الله تبركاً واستعانةً.</p>" },
+    { "source_slug": "saadi_ar", "verse_key": "1:2", "upstream_entry_id": "sa-1-2", "text": "<p>[FIXTURE] الحمد لله رب العالمين ثناء على كماله وإحسانه إلى خلقه.</p>" },
+    { "source_slug": "saadi_ar", "verse_key": "1:3", "upstream_entry_id": "sa-1-3", "text": "<p>[FIXTURE] تأكيد لمعنى الرحمة الواسعة التي شملت كل شيء.</p>" },
+    { "source_slug": "saadi_ar", "verse_key": "1:4", "upstream_entry_id": "sa-1-4", "text": "<script>alert('xss')<\/script><img src=x onerror=\"alert(1)\"><p>[FIXTURE] مالك يوم الدين إثبات الجزاء والحساب.<\/p>" }
+  ]
+}

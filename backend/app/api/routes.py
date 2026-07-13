@@ -9,7 +9,7 @@ import time
 import traceback
 from pathlib import Path
 
-from fastapi import APIRouter, File, HTTPException, Query, Request, UploadFile
+from fastapi import APIRouter, File, HTTPException, Query, Request, Response, UploadFile
 from fastapi.responses import JSONResponse
 
 from app.api.diagnostics import build_debug_search_payload, build_health_payload
@@ -20,9 +20,12 @@ from app.models.schemas import (
     ReaderSurahResponse,
     SearchRequest,
     SearchResponse,
+    TafsirEntryOut,
+    TafsirVerseResponse,
 )
 from app.services.quran_store import QuranStore
 from app.services.search_service import SearchService
+from app.services.tafsir_store import TafsirCorrupted, get_tafsir_store, html_to_plain_text
 
 logger = logging.getLogger("ayahfind.search")
 
@@ -237,6 +240,81 @@ async def get_ayah(surah: int, ayah: int) -> AyahDetail:
         phonetic_primary=rec.phonetic_primary,
         phonetic_latin=rec.phonetic_latin,
         audio_url=rec.audio_url,
+    )
+
+
+@router.get("/tafsir/status")
+async def get_tafsir_status() -> dict:
+    """Cheap, global feature-availability check — the frontend uses this to
+    decide whether to render the Tafsir button at all, so it never shows a
+    button that only leads to an "unavailable" dead end (see TafsirPanel)."""
+    tafsir_store = get_tafsir_store()
+    enabled = await asyncio.to_thread(tafsir_store.available)
+    return {"enabled": enabled}
+
+
+@router.get("/tafsir/{surah}/{ayah}", response_model=TafsirVerseResponse)
+async def get_tafsir(surah: int, ayah: int, response: Response) -> TafsirVerseResponse:
+    verse_key = f"{surah}:{ayah}"
+
+    store = get_store()
+    if store.get_by_ref(surah, ayah) is None:
+        raise HTTPException(status_code=404, detail="Ayah not found")
+
+    tafsir_store = get_tafsir_store()
+    try:
+        rows = await asyncio.to_thread(tafsir_store.lookup, verse_key)
+    except TafsirCorrupted as e:
+        logger.error("tafsir_corrupted verse_key=%s err=%s", verse_key, e)
+        # headers= is required here (not response.headers) — FastAPI builds
+        # its own response for a raised HTTPException, so mutations on the
+        # injected `response` object before raising are silently dropped.
+        raise HTTPException(
+            status_code=503,
+            detail="Tafsir is temporarily unavailable",
+            headers={"Cache-Control": "no-store"},
+        ) from e
+
+    if not rows:
+        logger.info("tafsir_unavailable verse_key=%s", verse_key)
+        # Disabled / db-missing / no-entry-yet — none of these are safe to
+        # cache long-term (content can show up, or the flag can flip).
+        response.headers["Cache-Control"] = "no-store"
+        return TafsirVerseResponse(
+            verse_key=verse_key,
+            available=False,
+            entries=[],
+            message="No tafsir available for this ayah yet.",
+        )
+
+    # Only cache long-term once we know this is verified production content —
+    # fixture content (dev/test only) must never be cached like it's final.
+    if tafsir_store.content_environment == "production":
+        response.headers["Cache-Control"] = "public, max-age=86400"
+    else:
+        response.headers["Cache-Control"] = "no-store"
+
+    entries = [
+        TafsirEntryOut(
+            source_slug=r.source_slug,
+            source_title=r.source_title,
+            author=r.author,
+            language=r.language,
+            provider=r.provider,
+            attribution=r.attribution,
+            license_note=r.license_note,
+            verse_start=r.verse_start,
+            verse_end=r.verse_end,
+            text=html_to_plain_text(r.text_html),
+        )
+        for r in rows
+    ]
+    logger.info("tafsir_ok verse_key=%s sources=%s", verse_key, [e.source_slug for e in entries])
+    return TafsirVerseResponse(
+        verse_key=verse_key,
+        available=True,
+        entries=entries,
+        content_environment=tafsir_store.content_environment,
     )
 
 

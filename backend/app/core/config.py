@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     debug: bool = True
     api_prefix: str = "/api/v1"
 
+    # "development" | "production" — used to refuse serving fixture tafsir
+    # content in production even if TAFSIR_ENABLED=true (see tafsir_store.py).
+    environment: str = "development"
+
     database_url: str = Field(
         default_factory=lambda: f"sqlite+aiosqlite:///{(REPO_ROOT / 'data' / 'ayahfind.db').as_posix()}"
     )
@@ -47,6 +51,13 @@ class Settings(BaseSettings):
     vector_index_dir: Path = Field(default_factory=lambda: REPO_ROOT / "vector_index")
     audio_dir: Path = Field(default_factory=lambda: REPO_ROOT / "data" / "audio")
     mfcc_index_path: Path = Field(default_factory=lambda: REPO_ROOT / "vector_index" / "mfcc_bank.npz")
+
+    # Tafsir: off by default until a verified data/tafsir.db is actually
+    # present for the deploy (see docs/TAFSIR_INGESTION.md). The route/service
+    # also independently no-ops if the file is missing, so flipping this on
+    # without a db present degrades gracefully rather than erroring.
+    tafsir_enabled: bool = False
+    tafsir_db_path: Path = Field(default_factory=lambda: REPO_ROOT / "data" / "tafsir.db")
 
     # JSON corpus is the default for beta deploys (no Postgres required).
     use_database: bool = False
