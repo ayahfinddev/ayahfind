@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Sunrise, Bookmark, Copy, Share2, ArrowRight } from "lucide-react";
+import { Sun, Bookmark, Copy, Share2, ArrowRight } from "lucide-react";
 import { fetchReader } from "@/lib/api";
 import { getTodaysReflection } from "@/lib/dailyReflection";
 import { getSurahEntry } from "@/lib/quranNavigation";
@@ -40,10 +40,7 @@ export function DailyReflectionCard() {
   }, [ref.surah, ref.ayah]);
 
   if (failed) return null;
-
-  if (!ayah) {
-    return <SkeletonCard />;
-  }
+  if (!ayah) return <SkeletonCard />;
 
   const surahName = getSurahEntry(ref.surah)?.en ?? `Surah ${ref.surah}`;
   const href = `/ayah/${ref.surah}/${ref.ayah}`;
@@ -78,37 +75,30 @@ export function DailyReflectionCard() {
   };
 
   return (
-    <ContentCard
-      elevation="surface"
-      padding="sm"
-      className="relative flex min-h-[160px] flex-col overflow-hidden rounded-[20px] p-3.5"
-      style={{
-        background: "linear-gradient(160deg, rgba(212,175,55,0.08), transparent 55%), var(--surface)",
-      }}
-    >
-      {/* Decorative corner flourish — a quiet "opened page" feel */}
-      <svg viewBox="0 0 40 40" aria-hidden="true" className="absolute right-3 top-3 h-9 w-9 opacity-[0.16] text-gold">
-        <path d="M2 20a18 18 0 0118-18M8 20a12 12 0 0112-12M14 20a6 6 0 016-6" fill="none" stroke="currentColor" strokeWidth="1.5" />
-      </svg>
+    <ContentCard elevation="surface" padding="sm" className="relative flex h-full flex-col overflow-hidden rounded-2xl p-3.5">
+      <span
+        aria-hidden="true"
+        className="absolute inset-x-0 top-0 h-[2px]"
+        style={{ background: "linear-gradient(90deg, transparent, var(--highlight), transparent)" }}
+      />
+      <h2 className="mb-1.5 flex items-center gap-2 text-base font-semibold text-text">
+        <Sun className="h-4.5 w-4.5" style={{ color: "var(--highlight)" }} />
+        Daily Verse
+      </h2>
 
-      <div className="relative flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-text-tertiary">
-        <Sunrise className="h-4 w-4 text-gold" />
-        Daily reflection
-      </div>
-
-      <div className="relative mt-2 flex-1">
-        <p className="text-right font-arabic text-xl leading-relaxed text-text" dir="rtl" lang="ar">
+      <div className="flex-1">
+        <p className="text-center font-arabic text-[1.35rem] leading-relaxed text-text" dir="rtl" lang="ar">
           {ayah.text_ar}
-          <span className="mx-1 inline-block text-sm align-middle text-gold">۝</span>
         </p>
         {ayah.translation_en && (
-          <p className="mt-1.5 font-serif text-[15px] italic leading-snug text-text-secondary">
-            &ldquo;{ayah.translation_en}&rdquo;
-          </p>
+          <p className="mt-1.5 text-center text-sm text-text-secondary">{ayah.translation_en}</p>
         )}
+        <p className="mt-1 text-center text-xs text-text-tertiary">
+          — {surahName} ({ref.surah}:{ref.ayah})
+        </p>
       </div>
 
-      <div className="relative mt-2 flex items-center justify-between">
+      <div className="mt-2.5 flex items-center justify-between">
         <div className="flex items-center gap-1">
           <button
             type="button"
@@ -116,7 +106,7 @@ export function DailyReflectionCard() {
             aria-label={saved ? "Remove bookmark" : "Bookmark this ayah"}
             aria-pressed={saved}
             className={cn(
-              "flex h-8 w-8 items-center justify-center rounded-lg transition-colors duration-150 ease-out hover:bg-accent-surface hover:text-primary-hover",
+              "flex h-7 w-7 items-center justify-center rounded-lg transition-colors duration-150 ease-out hover:bg-surface-secondary hover:text-primary-hover",
               saved ? "text-primary-hover" : "text-text-tertiary"
             )}
           >
@@ -126,7 +116,7 @@ export function DailyReflectionCard() {
             type="button"
             onClick={() => void handleCopy()}
             aria-label="Copy ayah text"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-text-tertiary transition-colors duration-150 ease-out hover:bg-accent-surface hover:text-primary-hover"
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-text-tertiary transition-colors duration-150 ease-out hover:bg-surface-secondary hover:text-primary-hover"
           >
             <Copy className="h-4 w-4" />
           </button>
@@ -134,7 +124,7 @@ export function DailyReflectionCard() {
             type="button"
             onClick={() => void handleShare()}
             aria-label="Share this ayah"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-text-tertiary transition-colors duration-150 ease-out hover:bg-accent-surface hover:text-primary-hover"
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-text-tertiary transition-colors duration-150 ease-out hover:bg-surface-secondary hover:text-primary-hover"
           >
             <Share2 className="h-4 w-4" />
           </button>
@@ -142,10 +132,10 @@ export function DailyReflectionCard() {
         </div>
         <Link
           href={href}
-          className="inline-flex h-8 items-center gap-1 rounded-lg bg-primary px-3 text-xs font-semibold text-white transition-colors duration-150 ease-out hover:bg-primary-hover"
+          className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-primary px-3.5 text-xs font-semibold text-white transition-colors duration-150 ease-out hover:bg-primary-hover"
         >
           Read Context
-          <ArrowRight className="h-3 w-3" />
+          <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       </div>
     </ContentCard>

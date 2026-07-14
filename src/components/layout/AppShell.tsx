@@ -17,12 +17,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="min-h-dvh bg-canvas pt-safe text-ink">
         <SideNav />
         <BottomNav />
-        <main className="min-h-dvh pl-0 md:pl-[4.75rem] lg:pl-52">
+        <main className="min-h-dvh pl-0 md:pl-[4.75rem] lg:pl-60">
           <div
             key={pathname}
             className={cn(
-              "page-enter mx-auto w-full px-4 pb-24 md:px-6 md:pb-8 lg:px-8",
-              isHome ? "py-1 md:py-1.5" : "py-6 md:py-8",
+              "page-enter mx-auto w-full px-4 pb-24 md:px-6 md:pb-8 lg:px-9",
+              isHome ? "py-2.5 md:py-3" : "py-6 md:py-8",
               isHome
                 ? "max-w-4xl lg:max-w-6xl xl:max-w-[1280px]"
                 : isReader

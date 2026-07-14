@@ -12,14 +12,19 @@ export function SideNav() {
   if (pathname?.startsWith("/onboarding")) return null;
 
   return (
-    <aside className="fixed left-0 top-0 z-40 hidden h-dvh w-[4.75rem] flex-col border-r border-border bg-surface pt-safe md:flex lg:w-52">
+    <aside
+      className="fixed left-0 top-0 z-40 hidden h-dvh w-[4.75rem] flex-col pt-safe md:flex lg:w-60"
+      style={{ backgroundColor: "var(--sidebar-bg)" }}
+    >
       {/* Logo */}
       <div className="px-4 py-5 lg:px-5">
         <div className="hidden items-center gap-2.5 lg:flex">
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-white text-sm font-bold">
             A
           </span>
-          <span className="text-[15px] font-semibold tracking-tight text-text">AyahFind</span>
+          <span className="text-[15px] font-semibold tracking-tight" style={{ color: "var(--sidebar-text)" }}>
+            AyahFind
+          </span>
         </div>
         <div className="flex items-center justify-center lg:hidden">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white text-sm font-bold">
@@ -37,18 +42,14 @@ export function SideNav() {
               key={href}
               href={href}
               onClick={(e) => onSearchNavClick(href, e)}
-              className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-150 ease-out",
-                active
-                  ? "bg-accent-surface text-primary-hover"
-                  : "text-text-secondary hover:bg-surface-secondary hover:text-text"
-              )}
+              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-150 ease-out"
+              style={{
+                backgroundColor: active ? "var(--sidebar-active)" : "transparent",
+                color: active ? "var(--sidebar-text)" : "var(--sidebar-text-muted)",
+              }}
             >
-              <Icon className={cn("h-[18px] w-[18px] shrink-0", active && "text-primary-hover")} />
+              <Icon className="h-[18px] w-[18px] shrink-0" />
               <span className="hidden lg:inline">{label}</span>
-              {active && (
-                <span className="ml-auto hidden h-1.5 w-1.5 rounded-full bg-primary lg:block" />
-              )}
             </Link>
           );
         })}

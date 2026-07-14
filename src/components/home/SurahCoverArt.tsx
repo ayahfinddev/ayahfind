@@ -1,32 +1,39 @@
 /**
- * Original illustrated "cover art" for Continue Reading — a dusk skyline
- * with a mosque silhouette, evoking Makkah/Madinah without depicting any
- * real, specific, or copyrighted place. Warm decorative gradient, distinct
- * from the app's interactive teal accent (this is atmosphere, not UI).
+ * Designed cover template for Continue Reading — approved in place of a
+ * stock photo (see the theme/asset review). Deliberately theme-independent
+ * (same deep-forest gradient + gold frame in every theme) so it reads as a
+ * consistent editorial system across all 114 surahs, like a book spine,
+ * rather than shifting with the page's palette.
  */
-export function SurahCoverArt({ className }: { className?: string }) {
+export function SurahCoverArt({ nameAr, className }: { nameAr: string; className?: string }) {
   return (
-    <svg viewBox="0 0 100 100" role="img" aria-label="Illustrated mosque skyline at dusk" className={className}>
-      <defs>
-        <linearGradient id="cover-sky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#e8b573" />
-          <stop offset="45%" stopColor="#c97a52" />
-          <stop offset="100%" stopColor="#1f4d3a" />
-        </linearGradient>
-      </defs>
-      <rect width="100" height="100" fill="url(#cover-sky)" />
-      <circle cx="74" cy="24" r="9" fill="#faf5e6" opacity="0.85" />
-      <circle cx="71" cy="21" r="7.5" fill="url(#cover-sky)" />
-      <g fill="#12271d" opacity="0.92">
-        <rect x="0" y="72" width="100" height="28" />
-        <path d="M30 72 a20 20 0 0 1 40 0 Z" />
-        <circle cx="50" cy="48" r="3" />
-        <rect x="48" y="48" width="4" height="24" />
-        <rect x="14" y="58" width="6" height="42" />
-        <circle cx="17" cy="55" r="3" />
-        <rect x="80" y="58" width="6" height="42" />
-        <circle cx="83" cy="55" r="3" />
-      </g>
-    </svg>
+    <div
+      className={className}
+      style={{
+        background: "linear-gradient(155deg, #2f6b46 0%, #1c4a30 60%, #123321 100%)",
+        position: "relative",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <span
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          inset: "10%",
+          border: "1px solid rgba(212,175,90,0.55)",
+          borderRadius: "12%",
+        }}
+      />
+      <span
+        dir="rtl"
+        lang="ar"
+        className="font-arabic"
+        style={{ color: "#e7c67a", fontSize: "clamp(1rem, 14%, 1.6rem)", textAlign: "center", padding: "0 8%" }}
+      >
+        {nameAr}
+      </span>
+    </div>
   );
 }

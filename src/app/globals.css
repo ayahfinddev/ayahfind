@@ -7,39 +7,37 @@
 /* ─── Design tokens ──────────────────────────────────────── */
 /* Semantic layer — source of truth. Themes below only ever override these. */
 :root {
-  --background: #FAF7F2;
-  --background-rgb: 250 247 242;
-  --surface: #FFFEFC;
-  --surface-rgb: 255 254 252;
-  --surface-secondary: #F1ECE1;
-  --surface-secondary-rgb: 241 236 225;
-  --surface-elevated: #FFFEFC;
-  --surface-elevated-rgb: 255 254 252;
-  --surface-floating: #FFFEFC;
-  --surface-floating-rgb: 255 254 252;
+  --background: #f7f4ed;
+  --background-rgb: 247 244 237;
+  --surface: #fffdf8;
+  --surface-rgb: 255 253 248;
+  --surface-secondary: #f0ece0;
+  --surface-secondary-rgb: 240 236 224;
+  --surface-elevated: #fbf8f1;
+  --surface-elevated-rgb: 251 248 241;
+  --surface-floating: #fffefb;
+  --surface-floating-rgb: 255 254 251;
 
-  --text: #1C1917;
-  --text-rgb: 28 25 23;
-  --text-secondary: #78716C;
-  --text-secondary-rgb: 120 113 108;
-  --text-tertiary: #8C867E;
-  --text-tertiary-rgb: 140 134 126;
+  --text: #17241d;
+  --text-rgb: 23 36 29;
+  --text-secondary: #626a63;
+  --text-secondary-rgb: 98 106 99;
+  --text-tertiary: #8a8f89;
+  --text-tertiary-rgb: 138 143 137;
 
-  --border: rgba(28, 25, 23, 0.07);
-  --border-strong: rgba(28, 25, 23, 0.12);
-  --glass-border: rgba(28, 25, 23, 0.07);
-  --glass-fill: rgba(250, 247, 242, 0.95);
+  --border: #e7e1d6;
+  --border-strong: #d8d0c2;
+  --glass-border: rgba(23, 36, 29, 0.08);
+  --glass-fill: rgba(247, 244, 237, 0.95);
 
-  --primary: #2F6B46;
+  --primary: #2f6b46;
   --primary-rgb: 47 107 70;
-  --primary-hover: #244F35;
-  --primary-hover-rgb: 36 79 53;
+  --primary-hover: #275a3b;
+  --primary-hover-rgb: 39 90 59;
   --secondary: #6D8B74;
   --secondary-rgb: 109 139 116;
-  --accent-surface: rgba(47, 107, 70, 0.08);
-  --accent-border: rgba(47, 107, 70, 0.22);
-  --gold: #D4AF37;
-  --gold-rgb: 212 175 55;
+  --accent-surface: #edf4ee;
+  --accent-border: #d4e4d7;
 
   --success: #16a34a;
   --success-rgb: 22 163 74;
@@ -48,11 +46,20 @@
   --error: #dc2626;
   --error-rgb: 220 38 38;
 
-  /* Tajweed/waqf highlight marks — theme-aware, replaces hardcoded amber */
-  --highlight: #92400e;
-  --highlight-rgb: 146 64 14;
-  --highlight-surface: rgba(251, 191, 36, 0.13);
-  --highlight-border: rgba(251, 191, 36, 0.4);
+  /* Gold/highlight — one coordinated tone per theme, used both for the
+   * decorative gold accents (progress hairlines, Mushaf glow) and for
+   * tajweed/waqf highlight marks in the reader. */
+  --highlight: #b28a47;
+  --highlight-rgb: 178 138 71;
+  --highlight-surface: rgba(178, 138, 71, 0.13);
+  --highlight-border: rgba(178, 138, 71, 0.35);
+  --gold: var(--highlight);
+  --gold-rgb: var(--highlight-rgb);
+
+  /* Overlay tint used behind white text on photography (Explore cards,
+   * Continue Reading cover) — a coordinated dark tone per theme, never a
+   * filter/hue-rotation on the photo itself. */
+  --image-overlay: rgba(23, 36, 29, 0.75);
 
   /* Shadows — three tiers, mapped 1:1 onto the surface hierarchy */
   --shadow-xs:   0 1px 2px rgba(15, 23, 42, 0.04);
@@ -76,283 +83,336 @@
   --subtle: var(--text-tertiary);
   --accent: var(--primary);
   --accent-dim: var(--primary-hover);
+
+  /* Sidebar — a coordinated part of each theme, not a fixed constant.
+   * Default's sidebar is a proper forest green (not near-black). */
+  --sidebar-bg: #1f3a2a;
+  --sidebar-active: #2f5a3f;
+  --sidebar-text: #f2f0ea;
+  --sidebar-text-muted: #a9bdae;
 }
 
 /* ─── Themes ─────────────────────────────────────────────── */
-/* Each theme redefines only the semantic vars above; layout never changes,
- * only the palette. `light` is the :root default above. */
+/* Five user-facing themes (see THEME_OPTIONS in settings/page.tsx and the
+ * ThemeMigration guard in Providers.tsx): Default (`light`, this file's
+ * :root block) — Forest & Ivory, Night (`dark`) — Forest Night & Warm
+ * Cream, Sand (`sand`) — Olive & Parchment, Royal (`royal`) — Indigo &
+ * Antique Gold, AMOLED (`amoled`) — True Black & Forest Green. Each is a
+ * fully coordinated environment — background, surfaces, text, border,
+ * primary, accent, gold, sidebar and image-overlay all shift together.
+ *
+ * Emerald/Midnight/the old Forest palette below are retired from the
+ * picker but kept defined so any pre-existing `localStorage` value still
+ * renders instead of resolving to undefined CSS; ThemeMigration silently
+ * resets those stored preferences to Default on load. */
 
 [data-theme="dark"] {
-  --background: #131417;
-  --background-rgb: 19 20 23;
-  --surface: #1b1d22;
-  --surface-rgb: 27 29 34;
-  --surface-secondary: #22252b;
-  --surface-secondary-rgb: 34 37 43;
-  --surface-elevated: #23262c;
-  --surface-elevated-rgb: 35 38 44;
-  --surface-floating: #26292f;
-  --surface-floating-rgb: 38 41 47;
-  --text: #f4f4f5;
-  --text-rgb: 244 244 245;
-  --text-secondary: #a1a1aa;
-  --text-secondary-rgb: 161 161 170;
-  --text-tertiary: #8a8a92;
-  --text-tertiary-rgb: 138 138 146;
+  --background: #101713;
+  --background-rgb: 16 23 19;
+  --surface: #17211b;
+  --surface-rgb: 23 33 27;
+  --surface-secondary: #1a251e;
+  --surface-secondary-rgb: 26 37 30;
+  --surface-elevated: #1d2922;
+  --surface-elevated-rgb: 29 41 34;
+  --surface-floating: #202d25;
+  --surface-floating-rgb: 32 45 37;
+  --text: #f3efe6;
+  --text-rgb: 243 239 230;
+  --text-secondary: #c5beb1;
+  --text-secondary-rgb: 197 190 177;
+  --text-tertiary: #938c81;
+  --text-tertiary-rgb: 147 140 129;
   --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.14);
   --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-fill: rgba(19, 20, 23, 0.9);
-  --primary: #2dd4bf;
-  --primary-rgb: 45 212 191;
-  --primary-hover: #14b8a6;
-  --primary-hover-rgb: 20 184 166;
-  --accent-surface: rgba(45, 212, 191, 0.14);
-  --accent-border: rgba(45, 212, 191, 0.3);
-  --success: #22c55e;
-  --success-rgb: 34 197 94;
+  --glass-fill: rgba(16, 23, 19, 0.9);
+  --primary: #73a781;
+  --primary-rgb: 115 167 129;
+  --primary-hover: #84b792;
+  --primary-hover-rgb: 132 183 146;
+  --accent-surface: rgba(115, 167, 129, 0.12);
+  --accent-border: rgba(115, 167, 129, 0.28);
+  --success: #4ade80;
+  --success-rgb: 74 222 128;
   --warning: #f59e0b;
   --warning-rgb: 245 158 11;
   --error: #f87171;
   --error-rgb: 248 113 113;
-  --highlight: #fbbf24;
-  --highlight-rgb: 251 191 36;
-  --highlight-surface: rgba(251, 191, 36, 0.16);
-  --highlight-border: rgba(251, 191, 36, 0.4);
+  /* Night — Forest Night & Warm Cream */
+  --highlight: #c5a15b;
+  --highlight-rgb: 197 161 91;
+  --highlight-surface: rgba(197, 161, 91, 0.16);
+  --highlight-border: rgba(197, 161, 91, 0.4);
+  --image-overlay: rgba(16, 23, 19, 0.8);
+  --sidebar-bg: #0c130f;
+  --sidebar-active: #1c2a20;
+  --sidebar-text: #f3efe6;
+  --sidebar-text-muted: #8fa396;
 }
 
 [data-theme="emerald"] {
-  --background: #f3f7f4;
-  --background-rgb: 243 247 244;
+  /* Retired from the picker (see the note above) — kept only so a stored
+   * preference from before the 5-theme reduction still renders. */
+  --background: #eef5f1;
+  --background-rgb: 238 245 241;
   --surface: #ffffff;
   --surface-rgb: 255 255 255;
-  --surface-secondary: #e8f1ea;
-  --surface-secondary-rgb: 232 241 234;
-  --surface-elevated: #ffffff;
-  --surface-elevated-rgb: 255 255 255;
+  --surface-secondary: #e3eee8;
+  --surface-secondary-rgb: 227 238 232;
+  --surface-elevated: #f7fbf9;
+  --surface-elevated-rgb: 247 251 249;
   --surface-floating: #ffffff;
   --surface-floating-rgb: 255 255 255;
-  --text: #14261c;
-  --text-rgb: 20 38 28;
-  --text-secondary: #4d6a58;
-  --text-secondary-rgb: 77 106 88;
-  --text-tertiary: #7a9186;
-  --text-tertiary-rgb: 122 145 134;
-  --border: rgba(20, 38, 28, 0.08);
-  --border-strong: rgba(20, 38, 28, 0.14);
-  --glass-border: rgba(20, 38, 28, 0.08);
-  --glass-fill: rgba(243, 247, 244, 0.95);
-  --primary: #10b981;
-  --primary-rgb: 16 185 129;
-  --primary-hover: #059669;
-  --primary-hover-rgb: 5 150 105;
-  --accent-surface: rgba(16, 185, 129, 0.1);
-  --accent-border: rgba(16, 185, 129, 0.25);
+  --text: #12211c;
+  --text-rgb: 18 33 28;
+  --text-secondary: #4d6a5d;
+  --text-secondary-rgb: 77 106 93;
+  --text-tertiary: #7c9389;
+  --text-tertiary-rgb: 124 147 137;
+  --border: #d8e6e0;
+  --border-strong: #c3d6ce;
+  --glass-border: rgba(18, 33, 28, 0.08);
+  --glass-fill: rgba(238, 245, 241, 0.95);
+  --primary: #0f7a5c;
+  --primary-rgb: 15 122 92;
+  --primary-hover: #0c6249;
+  --primary-hover-rgb: 12 98 73;
+  --accent-surface: #e2f2ec;
+  --accent-border: #c1e0d3;
   --success: #22c55e;
   --success-rgb: 34 197 94;
   --warning: #d97706;
   --warning-rgb: 217 119 6;
   --error: #dc2626;
   --error-rgb: 220 38 38;
-  --highlight: #92400e;
-  --highlight-rgb: 146 64 14;
-  --highlight-surface: rgba(251, 191, 36, 0.13);
-  --highlight-border: rgba(251, 191, 36, 0.4);
+  --highlight: #a98a4a;
+  --highlight-rgb: 169 138 74;
+  --highlight-surface: rgba(169, 138, 74, 0.13);
+  --highlight-border: rgba(169, 138, 74, 0.35);
+  --image-overlay: rgba(15, 33, 28, 0.75);
 }
 
 [data-theme="midnight"] {
-  --background: #0b0f1e;
-  --background-rgb: 11 15 30;
-  --surface: #121729;
-  --surface-rgb: 18 23 41;
-  --surface-secondary: #182036;
-  --surface-secondary-rgb: 24 32 54;
-  --surface-elevated: #1a2340;
-  --surface-elevated-rgb: 26 35 64;
-  --surface-floating: #1d2748;
-  --surface-floating-rgb: 29 39 72;
-  --text: #e8ecf7;
-  --text-rgb: 232 236 247;
-  --text-secondary: #9aa5c4;
-  --text-secondary-rgb: 154 165 196;
-  --text-tertiary: #8892ab;
-  --text-tertiary-rgb: 136 146 171;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.14);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-fill: rgba(11, 15, 30, 0.9);
-  --primary: #6366f1;
-  --primary-rgb: 99 102 241;
-  --primary-hover: #4f46e5;
-  --primary-hover-rgb: 79 70 229;
-  --accent-surface: rgba(99, 102, 241, 0.16);
-  --accent-border: rgba(99, 102, 241, 0.32);
-  --success: #22c55e;
-  --success-rgb: 34 197 94;
+  /* Retired from the picker (see the note above) — kept only so a stored
+   * preference from before the 5-theme reduction still renders. */
+  --background: #0d1218;
+  --background-rgb: 13 18 24;
+  --surface: #131a22;
+  --surface-rgb: 19 26 34;
+  --surface-secondary: #161e26;
+  --surface-secondary-rgb: 22 30 38;
+  --surface-elevated: #182029;
+  --surface-elevated-rgb: 24 32 41;
+  --surface-floating: #1c2530;
+  --surface-floating-rgb: 28 37 48;
+  --text: #e8edf2;
+  --text-rgb: 232 237 242;
+  --text-secondary: #a7b3bf;
+  --text-secondary-rgb: 167 179 191;
+  --text-tertiary: #7d8894;
+  --text-tertiary-rgb: 125 136 148;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-strong: rgba(255, 255, 255, 0.13);
+  --glass-border: rgba(255, 255, 255, 0.07);
+  --glass-fill: rgba(13, 18, 24, 0.9);
+  --primary: #5d8a8f;
+  --primary-rgb: 93 138 143;
+  --primary-hover: #6f9ba0;
+  --primary-hover-rgb: 111 155 160;
+  --accent-surface: rgba(93, 138, 143, 0.13);
+  --accent-border: rgba(93, 138, 143, 0.28);
+  --success: #4ade80;
+  --success-rgb: 74 222 128;
   --warning: #f59e0b;
   --warning-rgb: 245 158 11;
   --error: #f87171;
   --error-rgb: 248 113 113;
-  --highlight: #fbbf24;
-  --highlight-rgb: 251 191 36;
-  --highlight-surface: rgba(251, 191, 36, 0.16);
-  --highlight-border: rgba(251, 191, 36, 0.4);
+  --highlight: #a68a5c;
+  --highlight-rgb: 166 138 92;
+  --highlight-surface: rgba(166, 138, 92, 0.16);
+  --highlight-border: rgba(166, 138, 92, 0.4);
+  --image-overlay: rgba(13, 18, 24, 0.8);
 }
 
 [data-theme="sand"] {
-  --background: #f5ecdb;
-  --background-rgb: 245 236 219;
-  --surface: #fffdf7;
-  --surface-rgb: 255 253 247;
-  --surface-secondary: #ede0c6;
-  --surface-secondary-rgb: 237 224 198;
-  --surface-elevated: #fffdf7;
-  --surface-elevated-rgb: 255 253 247;
-  --surface-floating: #fffdf7;
-  --surface-floating-rgb: 255 253 247;
-  --text: #2b2013;
-  --text-rgb: 43 32 19;
-  --text-secondary: #6b5a3f;
-  --text-secondary-rgb: 107 90 63;
-  --text-tertiary: #8d7a5c;
-  --text-tertiary-rgb: 141 122 92;
-  --border: rgba(43, 32, 19, 0.08);
-  --border-strong: rgba(43, 32, 19, 0.14);
-  --glass-border: rgba(43, 32, 19, 0.08);
-  --glass-fill: rgba(245, 236, 219, 0.95);
-  --primary: #b45309;
-  --primary-rgb: 180 83 9;
-  --primary-hover: #92400e;
-  --primary-hover-rgb: 146 64 14;
-  --accent-surface: rgba(180, 83, 9, 0.1);
-  --accent-border: rgba(180, 83, 9, 0.25);
+  /* Sand — Olive & Parchment: warm parchment ground, muted olive primary,
+   * clay-bronze gold. */
+  --background: #f2e8d5;
+  --background-rgb: 242 232 213;
+  --surface: #fbf3e3;
+  --surface-rgb: 251 243 227;
+  --surface-secondary: #ecdec4;
+  --surface-secondary-rgb: 236 222 196;
+  --surface-elevated: #f7ecd8;
+  --surface-elevated-rgb: 247 236 216;
+  --surface-floating: #fdf6ea;
+  --surface-floating-rgb: 253 246 234;
+  --text: #2e2417;
+  --text-rgb: 46 36 23;
+  --text-secondary: #6e5c42;
+  --text-secondary-rgb: 110 92 66;
+  --text-tertiary: #93815f;
+  --text-tertiary-rgb: 147 129 95;
+  --border: #e0d1b3;
+  --border-strong: #cdb98f;
+  --glass-border: rgba(46, 36, 23, 0.08);
+  --glass-fill: rgba(242, 232, 213, 0.95);
+  --primary: #6b7d3f;
+  --primary-rgb: 107 125 63;
+  --primary-hover: #57682f;
+  --primary-hover-rgb: 87 104 47;
+  --accent-surface: #eef0dc;
+  --accent-border: #d7dcb8;
   --success: #16a34a;
   --success-rgb: 22 163 74;
   --warning: #d97706;
   --warning-rgb: 217 119 6;
   --error: #dc2626;
   --error-rgb: 220 38 38;
-  --highlight: #9a3412;
-  --highlight-rgb: 154 52 18;
-  --highlight-surface: rgba(234, 88, 12, 0.13);
-  --highlight-border: rgba(234, 88, 12, 0.35);
+  --highlight: #a67c3d;
+  --highlight-rgb: 166 124 61;
+  --highlight-surface: rgba(166, 124, 61, 0.14);
+  --highlight-border: rgba(166, 124, 61, 0.35);
+  --image-overlay: rgba(46, 36, 23, 0.7);
+  --sidebar-bg: #4a4023;
+  --sidebar-active: #5c5230;
+  --sidebar-text: #f5ecd8;
+  --sidebar-text-muted: #cbb98f;
 }
 
 [data-theme="forest"] {
-  --background: #0f1712;
-  --background-rgb: 15 23 18;
-  --surface: #16221a;
-  --surface-rgb: 22 34 26;
-  --surface-secondary: #1c2b21;
-  --surface-secondary-rgb: 28 43 33;
-  --surface-elevated: #1c2e22;
-  --surface-elevated-rgb: 28 46 34;
-  --surface-floating: #203526;
-  --surface-floating-rgb: 32 53 38;
-  --text: #e7f0e9;
-  --text-rgb: 231 240 233;
-  --text-secondary: #9db3a4;
-  --text-secondary-rgb: 157 179 164;
-  --text-tertiary: #8aa396;
-  --text-tertiary-rgb: 138 163 150;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.14);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-fill: rgba(15, 23, 18, 0.9);
-  --primary: #34d399;
-  --primary-rgb: 52 211 153;
-  --primary-hover: #10b981;
-  --primary-hover-rgb: 16 185 129;
-  --accent-surface: rgba(52, 211, 153, 0.14);
-  --accent-border: rgba(52, 211, 153, 0.3);
+  /* Retired from the picker (see the note above) — kept only so a stored
+   * preference from before the 5-theme reduction still renders. */
+  --background: #0e150f;
+  --background-rgb: 14 21 15;
+  --surface: #141e17;
+  --surface-rgb: 20 30 23;
+  --surface-secondary: #17201a;
+  --surface-secondary-rgb: 23 32 26;
+  --surface-elevated: #19251c;
+  --surface-elevated-rgb: 25 37 28;
+  --surface-floating: #1c2921;
+  --surface-floating-rgb: 28 41 33;
+  --text: #e9efe7;
+  --text-rgb: 233 239 231;
+  --text-secondary: #aebbaa;
+  --text-secondary-rgb: 174 187 170;
+  --text-tertiary: #869484;
+  --text-tertiary-rgb: 134 148 132;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-strong: rgba(255, 255, 255, 0.13);
+  --glass-border: rgba(255, 255, 255, 0.07);
+  --glass-fill: rgba(14, 21, 15, 0.9);
+  --primary: #4f8f63;
+  --primary-rgb: 79 143 99;
+  --primary-hover: #5fa373;
+  --primary-hover-rgb: 95 163 115;
+  --accent-surface: rgba(79, 143, 99, 0.13);
+  --accent-border: rgba(79, 143, 99, 0.28);
   --success: #4ade80;
   --success-rgb: 74 222 128;
   --warning: #fbbf24;
   --warning-rgb: 251 191 36;
   --error: #f87171;
   --error-rgb: 248 113 113;
-  --highlight: #fbbf24;
-  --highlight-rgb: 251 191 36;
-  --highlight-surface: rgba(251, 191, 36, 0.16);
-  --highlight-border: rgba(251, 191, 36, 0.4);
+  --highlight: #b3924f;
+  --highlight-rgb: 179 146 79;
+  --highlight-surface: rgba(179, 146, 79, 0.16);
+  --highlight-border: rgba(179, 146, 79, 0.4);
+  --image-overlay: rgba(14, 21, 15, 0.8);
 }
 
 [data-theme="royal"] {
-  --background: #130f22;
-  --background-rgb: 19 15 34;
-  --surface: #1c1733;
-  --surface-rgb: 28 23 51;
-  --surface-secondary: #241e42;
-  --surface-secondary-rgb: 36 30 66;
-  --surface-elevated: #251f45;
-  --surface-elevated-rgb: 37 31 69;
-  --surface-floating: #2a234f;
-  --surface-floating-rgb: 42 35 79;
-  --text: #ede9fb;
-  --text-rgb: 237 233 251;
-  --text-secondary: #b1a4d8;
-  --text-secondary-rgb: 177 164 216;
-  --text-tertiary: #9c8fc2;
-  --text-tertiary-rgb: 156 143 194;
+  /* Royal — Indigo & Antique Gold: deep indigo ground, restrained
+   * antique-gold accents. */
+  --background: #12111f;
+  --background-rgb: 18 17 31;
+  --surface: #191828;
+  --surface-rgb: 25 24 40;
+  --surface-secondary: #1c1b2b;
+  --surface-secondary-rgb: 28 27 43;
+  --surface-elevated: #1f1e30;
+  --surface-elevated-rgb: 31 30 48;
+  --surface-floating: #232238;
+  --surface-floating-rgb: 35 34 56;
+  --text: #ece9f5;
+  --text-rgb: 236 233 245;
+  --text-secondary: #aca6c4;
+  --text-secondary-rgb: 172 166 196;
+  --text-tertiary: #837da0;
+  --text-tertiary-rgb: 131 125 160;
   --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.14);
   --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-fill: rgba(19, 15, 34, 0.9);
-  --primary: #a78bfa;
-  --primary-rgb: 167 139 250;
-  --primary-hover: #8b5cf6;
-  --primary-hover-rgb: 139 92 246;
-  --accent-surface: rgba(167, 139, 250, 0.16);
-  --accent-border: rgba(167, 139, 250, 0.32);
+  --glass-fill: rgba(18, 17, 31, 0.9);
+  --primary: #6b63a8;
+  --primary-rgb: 107 99 168;
+  --primary-hover: #7a72ba;
+  --primary-hover-rgb: 122 114 186;
+  --accent-surface: rgba(107, 99, 168, 0.14);
+  --accent-border: rgba(107, 99, 168, 0.3);
   --success: #4ade80;
   --success-rgb: 74 222 128;
   --warning: #fbbf24;
   --warning-rgb: 251 191 36;
   --error: #f87171;
   --error-rgb: 248 113 113;
-  --highlight: #fbbf24;
-  --highlight-rgb: 251 191 36;
-  --highlight-surface: rgba(251, 191, 36, 0.16);
-  --highlight-border: rgba(251, 191, 36, 0.4);
+  --highlight: #b6963f;
+  --highlight-rgb: 182 150 63;
+  --highlight-surface: rgba(182, 150, 63, 0.16);
+  --highlight-border: rgba(182, 150, 63, 0.4);
+  --image-overlay: rgba(18, 17, 31, 0.82);
+  --sidebar-bg: #1c1a30;
+  --sidebar-active: #2c2848;
+  --sidebar-text: #ece9f5;
+  --sidebar-text-muted: #9088b0;
 }
 
 [data-theme="amoled"] {
+  /* AMOLED — True Black & Forest Green: pure black ground, near-black
+   * surfaces, border-led elevation, restrained green. */
   --background: #000000;
   --background-rgb: 0 0 0;
-  --surface: #000000;
-  --surface-rgb: 0 0 0;
-  --surface-secondary: #0a0a0a;
-  --surface-secondary-rgb: 10 10 10;
-  --surface-elevated: #050505;
-  --surface-elevated-rgb: 5 5 5;
+  --surface: #050505;
+  --surface-rgb: 5 5 5;
+  --surface-secondary: #0d0d0d;
+  --surface-secondary-rgb: 13 13 13;
+  --surface-elevated: #0a0a0a;
+  --surface-elevated-rgb: 10 10 10;
   --surface-floating: #0a0a0a;
   --surface-floating-rgb: 10 10 10;
-  --text: #f4f4f5;
-  --text-rgb: 244 244 245;
-  --text-secondary: #a1a1aa;
-  --text-secondary-rgb: 161 161 170;
-  --text-tertiary: #8a8a92;
-  --text-tertiary-rgb: 138 138 146;
-  --border: rgba(255, 255, 255, 0.12);
-  --border-strong: rgba(255, 255, 255, 0.2);
-  --glass-border: rgba(255, 255, 255, 0.12);
+  --text: #f0f0f0;
+  --text-rgb: 240 240 240;
+  --text-secondary: #a8a8a8;
+  --text-secondary-rgb: 168 168 168;
+  --text-tertiary: #808080;
+  --text-tertiary-rgb: 128 128 128;
+  --border: rgba(255, 255, 255, 0.14);
+  --border-strong: rgba(255, 255, 255, 0.22);
+  --glass-border: rgba(255, 255, 255, 0.14);
   --glass-fill: rgba(0, 0, 0, 0.92);
-  --primary: #2dd4bf;
-  --primary-rgb: 45 212 191;
-  --primary-hover: #14b8a6;
-  --primary-hover-rgb: 20 184 166;
-  --accent-surface: rgba(45, 212, 191, 0.14);
-  --accent-border: rgba(45, 212, 191, 0.32);
+  --primary: #4f9668;
+  --primary-rgb: 79 150 104;
+  --primary-hover: #5da876;
+  --primary-hover-rgb: 93 168 118;
+  --accent-surface: rgba(79, 150, 104, 0.14);
+  --accent-border: rgba(79, 150, 104, 0.3);
   --success: #22c55e;
   --success-rgb: 34 197 94;
   --warning: #f59e0b;
   --warning-rgb: 245 158 11;
   --error: #f87171;
   --error-rgb: 248 113 113;
-  --highlight: #fbbf24;
-  --highlight-rgb: 251 191 36;
-  --highlight-surface: rgba(251, 191, 36, 0.18);
-  --highlight-border: rgba(251, 191, 36, 0.45);
+  --highlight: #a6884f;
+  --highlight-rgb: 166 136 79;
+  --highlight-surface: rgba(166, 136, 79, 0.18);
+  --highlight-border: rgba(166, 136, 79, 0.45);
+  --image-overlay: rgba(0, 0, 0, 0.88);
+  --sidebar-bg: #020403;
+  --sidebar-active: #16321f;
+  --sidebar-text: #f0f0f0;
+  --sidebar-text-muted: #7a8a7d;
   /* True black swallows box-shadow — elevation comes from border-strong instead. */
   --shadow-xs: none;
   --shadow-sm: none;

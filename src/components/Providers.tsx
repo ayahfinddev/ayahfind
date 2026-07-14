@@ -5,6 +5,7 @@ import { AudioPlaybackProvider } from "@/contexts/AudioPlaybackContext";
 import { SearchHomeProvider } from "@/contexts/SearchHomeContext";
 import { TafsirAvailabilityProvider } from "@/contexts/TafsirAvailabilityContext";
 import { ThemeTransitionGuard } from "@/components/ThemeTransitionGuard";
+import { ThemeMigration } from "@/components/ThemeMigration";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -12,9 +13,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
       attribute="data-theme"
       defaultTheme="system"
       enableSystem
-      themes={["light", "dark", "emerald", "midnight", "sand", "forest", "royal", "amoled"]}
+      themes={["light", "dark", "sand", "royal", "amoled"]}
     >
       <ThemeTransitionGuard />
+      <ThemeMigration />
       <SearchHomeProvider>
         <AudioPlaybackProvider>
           <TafsirAvailabilityProvider>{children}</TafsirAvailabilityProvider>

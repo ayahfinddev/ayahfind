@@ -11,14 +11,11 @@ import { cn } from "@/lib/utils";
 import { ContentCard } from "@/components/ui/ContentCard";
 
 const THEME_OPTIONS = [
-  { value: "light", label: "Light", swatch: ["#F7F6F2", "#14b8a6"] },
-  { value: "dark", label: "Dark", swatch: ["#1b1d22", "#2dd4bf"] },
-  { value: "emerald", label: "Emerald", swatch: ["#e8f1ea", "#10b981"] },
-  { value: "midnight", label: "Midnight", swatch: ["#121729", "#6366f1"] },
-  { value: "sand", label: "Sand", swatch: ["#f5ecdb", "#b45309"] },
-  { value: "forest", label: "Forest", swatch: ["#16221a", "#34d399"] },
-  { value: "royal", label: "Royal", swatch: ["#1c1733", "#a78bfa"] },
-  { value: "amoled", label: "AMOLED", swatch: ["#000000", "#2dd4bf"] },
+  { value: "light", label: "Default", swatch: ["#f7f4ed", "#2f6b46"] },
+  { value: "dark", label: "Night", swatch: ["#17211b", "#73a781"] },
+  { value: "sand", label: "Sand", swatch: ["#fbf3e3", "#6b7d3f"] },
+  { value: "royal", label: "Royal", swatch: ["#191828", "#6b63a8"] },
+  { value: "amoled", label: "AMOLED", swatch: ["#000000", "#4f9668"] },
   { value: "system", label: "System", swatch: null },
 ] as const;
 
