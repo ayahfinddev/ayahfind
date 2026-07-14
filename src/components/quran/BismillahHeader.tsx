@@ -1,17 +1,22 @@
 "use client";
 
 import { BISMILLAH_AR } from "@/lib/quranDisplay";
+import { ReaderSection } from "@/components/ui/ReaderSection";
 
+/**
+ * Renders as the chapter's opening line, in the same visual rhythm as the
+ * verse list below it — not a separate floating card.
+ */
 export function BismillahHeader() {
   return (
-    <div className="reader-bismillah mb-8 rounded-2xl border border-glass-border bg-gradient-to-b from-accent-surface to-canvas px-6 py-7 text-center shadow-card md:mb-10 md:px-10 md:py-9">
+    <ReaderSection label="Bismillah" className="reader-bismillah border-b border-border pb-6 md:pb-8">
       <p
-        className="font-arabic text-[1.65rem] leading-[2.1] text-ink md:text-[1.85rem]"
+        className="font-arabic text-center text-arabic-md text-text"
         dir="rtl"
         lang="ar"
       >
         {BISMILLAH_AR}
       </p>
-    </div>
+    </ReaderSection>
   );
 }

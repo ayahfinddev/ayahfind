@@ -1,5 +1,13 @@
 """
-Ensure augmented retrieval never regresses baseline production behavior.
+Ensure augmented retrieval never regresses baseline production behavior,
+within QuranSearchEngine's own baseline/augmented modes.
+
+NOTE: QuranSearchEngine (quran_search_engine.py) is NOT wired into any
+live endpoint — POST /search/unified and /debug-search both use
+SearchService (search_service.py) instead. This suite guards
+QuranSearchEngine's internal retrieval_augmentation flag, which is
+independent of the live retrieval path. For the live engine's
+regression gate, see test_retrieval_regression.py.
 
 For every benchmark case: if baseline finds the target, augmented must too.
 If baseline has a confident primary (#1), augmented primary must match.

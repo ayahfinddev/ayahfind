@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from rapidfuzz import fuzz
 
-from app.core.arabic_text import arabic_for_search, arabic_to_latin_transliteration
+from app.core.arabic_text import arabic_for_search, arabic_to_latin_transliteration, cached_transliteration
 from app.core.phonetic import arabic_to_phonetic_primary, encode_query_phonetic, latin_to_phonetic_latin
 from app.core.transliteration import normalize_transliteration
 from app.services.quran_store import QuranStore
@@ -34,7 +34,9 @@ class PhoneticSearchEngine:
                     combined = max(combined, self._match_score(latin_q, alt_latin))
                 if not ayah.transliteration:
                     alt_trans = normalize_transliteration(
-                        arabic_to_latin_transliteration(search_ar)
+                        cached_transliteration(
+                            ayah.id, ayah.text_ar, ayah.surah_number, ayah.ayah_number
+                        )
                     )
                     if len(alt_trans) >= 10:
                         partial = fuzz.partial_ratio(query.lower(), alt_trans) / 100.0
@@ -54,4 +56,18 @@ class PhoneticSearchEngine:
             return 0.0
         pr = fuzz.partial_ratio(query_key, ayah_key) / 100.0
         wr = fuzz.WRatio(query_key, ayah_key) / 100.0
-        return max(pr, wr)
+        base = max(pr, wr)
+        # Coverage tiebreak: a short famous phrase (e.g. "alhamdu lillahi
+        # rabbil alameen") often recurs verbatim as a *fragment* inside much
+        # longer ayat. partial_ratio scores those identically to the ayah
+        # the phrase actually belongs to, since it only measures the best
+        # substring alignment. Reward candidates where the query covers most
+        # of the target text over ones where it's a small buried fragment.
+        # Gated to already-strong matches (base >= 0.70): applied
+        # unconditionally, a short target ayah gets a high coverage ratio
+        # against almost any short query merely by chance, which distorted
+        # rankings for single-word queries unrelated to that ayah at all.
+        if base >= 0.70:
+            coverage = min(1.0, len(query_key) / max(1, len(ayah_key)))
+            base = base * (0.90 + 0.10 * coverage)
+        return base

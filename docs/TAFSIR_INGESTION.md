@@ -1,126 +1,167 @@
-# Tafsir ingestion
+# Tafsir architecture
 
-Two approved collections: **Tafsir Ibn Kathir (Abridged)**, English, and
-**Tafsir al-Sa'di**, Arabic. Stored in sqlite, isolated from the search
-corpus and from the dormant SQLAlchemy Ayah/Surah models in
-`backend/app/db`. Schema: `data_pipeline/tafsir_schema.py`.
+Two approved collections: **Tafsir Ibn Kathir (Abridged)**, English
+(Quran Foundation resource id **169**), and **Tafsir al-Sa'di**, Arabic
+(resource id **91**).
 
-## Database paths — read this before running anything
+**Production serves these live from the Quran Foundation Content API**,
+cached in a bounded in-memory TTL cache — there is no committed database.
+This supersedes the earlier "ingest once, commit `data/tafsir.db`, refresh
+on redeploy" design: Quran Foundation's terms cap caching at under a week,
+and a committed/shipped sqlite file doesn't fit that even if refreshed
+every deploy. See `backend/app/services/qf_tafsir_provider.py`.
 
-Two distinct filenames exist so fixture content can never be mistaken for,
-or accidentally deployed as, production data:
+Local development and tests still use a fixture sqlite db (see below) —
+that part of the architecture is unchanged.
+
+## How provider selection works
+
+`get_tafsir_store()` in `backend/app/services/tafsir_store.py` is the only
+thing `backend/app/api/routes.py` calls. It picks based on
+`Settings.environment`:
+
+| `ENVIRONMENT` | Provider | Data source |
+|---|---|---|
+| `production` | `QFTafsirProvider` (`qf_tafsir_provider.py`) | Live Quran Foundation Content API + in-memory cache |
+| anything else (`development`, tests) | `TafsirStore` (`tafsir_store.py`) | Local fixture sqlite db, `data/tafsir.fixture.db` |
+
+Both expose the same async interface (`available()`, `lookup(verse_key)`,
+`content_environment`), so routes.py and the response schema
+(`TafsirVerseResponse`) are unchanged by this — the frontend needs no
+changes at all.
+
+## Production: Quran Foundation Content API
+
+### Required environment variables (Render)
+
+```
+QF_CLIENT_ID=...
+QF_CLIENT_SECRET=...
+QF_ENV=production
+```
+
+Credentials are backend-only — never read by or exposed to the frontend
+(`src/lib/api.ts` only ever calls our own `/api/v1/tafsir/*` routes). No
+token URL or API base URL needs to be configured: `QF_ENV` selects between
+the production and prelive host pairs, which are hardcoded constants in
+`qf_client.py` (confirmed against Quran Foundation's public docs,
+2026-07-13 — see below).
+
+### OAuth2 client_credentials flow (`qf_client.py`)
+
+- Token endpoint: `POST https://oauth2.quran.foundation/oauth2/token`
+  (production) / `https://prelive-oauth2.quran.foundation/oauth2/token`
+  (prelive) — HTTP Basic auth (`client_id:client_secret`),
+  `grant_type=client_credentials`, `scope=content`.
+- Content API base: `https://apis.quran.foundation/content/api/v4`
+  (production) / `https://apis-prelive.quran.foundation/content/api/v4`
+  (prelive) — headers `x-auth-token: <access_token>`, `x-client-id:
+  <QF_CLIENT_ID>`.
+- The token is cached in-process until shortly before `expires_in` elapses
+  (60s buffer). A 401 on any content request triggers exactly one token
+  refresh and one retry — a second 401 is not retried again.
+- **Not independently verified**: the exact query-parameter contract for a
+  single-verse tafsir endpoint (a "get one ayah's tafsir" endpoint appears
+  to exist per the docs, but its parameter names couldn't be confirmed
+  with confidence). `qf_client.py` therefore only uses the endpoint whose
+  shape *was* verified verbatim: `GET /tafsirs/{resource_id}/by_chapter/{n}`
+  (paginated, `{"tafsirs": [...], "pagination": {...}}`). The provider
+  fetches and caches a whole chapter at a time and extracts the requested
+  ayah from it — this also naturally warms the cache for every other ayah
+  in that surah.
+
+### Resource catalogue validation (`qf_tafsir_provider.py`)
+
+Before serving anything, `QFTafsirProvider` calls
+`GET /resources/tafsirs` once per process and checks that resource 169 is
+still English/"Kathir" and 91 is still Arabic/"Sa" (case-insensitive
+substring match on whatever language/name fields the catalogue returns).
+A mismatch makes the whole provider report unavailable and logs an error —
+this needs a human to look at Quran Foundation's catalogue, not a retry.
+A transient failure *during* validation (timeout/5xx) is not treated as a
+mismatch — it's retried on a later request (30s cooldown) rather than
+sticking permanently.
+
+**Not independently verified**: the exact field names in the
+`/resources/tafsirs` response on the *new* gated API (the shape used here —
+`id`, `language_name`, `name` — is what the legacy, unauthenticated
+`api.quran.com/api/v4/resources/tafsirs` returned when checked; the gated
+API is presumed to return the same or similar fields but this hasn't been
+confirmed against a real token). **This should be smoke-tested against the
+real API as the first thing done with real credentials**, before flipping
+`TAFSIR_ENABLED=true` in production.
+
+### Caching (`tafsir_cache.py`)
+
+Bounded in-memory TTL cache, keyed by `(source_slug, surah_number)` —
+114 surahs x 2 sources = at most ~228 keys, well under the configured
+`tafsir_cache_max_entries` (300) bound. Entries expire after
+`tafsir_cache_ttl_seconds` (default 6 days — under Quran Foundation's
+7-day cap). Resets on every process restart/redeploy since it's pure
+in-memory (Render's free plan has no persistent disk, which is exactly why
+this isn't sqlite-on-disk).
+
+### Failure handling
+
+- **Disabled or missing credentials** → `available()` is `False`, no
+  network call attempted. `/api/v1/tafsir/status` returns
+  `{"enabled": false}`, the frontend hides the Tafsir button entirely.
+- **Resource mismatch** → same as above, but logged as an error (needs a
+  human).
+- **Upstream timeout / 429 / 5xx during a lookup** → caught per-source,
+  logged as a warning, that source is skipped for this request (the other
+  source may still succeed); the route returns its normal graceful
+  `available: false` shape, never a 503. The reader never breaks.
+- Credentials and raw provider error bodies are never included in logs or
+  responses — only status codes and our own messages.
+
+## Local development / tests: fixture sqlite (unchanged)
 
 | File | Meaning | Committed to git? |
 |---|---|---|
 | `data/tafsir.fixture.db` | Local/dev database, built from `data_pipeline/fixtures/tafsir_sample.json`. Placeholder text only (`[FIXTURE] ...`), tagged `content_environment=fixture`. | **No** — gitignored (`*.db`) |
-| `data/tafsir.db` | The production path. Only ever written by `--live` ingestion, and only once real, permitted content exists. Tagged `content_environment=production`. | **Not yet** — gitignored (`*.db`) until a verified production dataset is deliberately approved and force-added |
-
-Both are matched by the blanket `*.db` rule in `.gitignore`. Neither should
-be committed casually — a production dataset gets committed as a deliberate,
-reviewed decision once the licensing question below is resolved, not as a
-side effect of running the ingestion script.
-
-The backend reads `TAFSIR_DB_PATH` (`backend/app/core/config.py`,
-`Settings.tafsir_db_path`), which **defaults to `data/tafsir.db`** — i.e.
-production, absent by default, so the app can never accidentally pick up
-fixture content in a deploy that doesn't set anything. For local
-development, point it at the fixture db explicitly, e.g. in your local
-`.env` (gitignored, never committed):
-
-```
-TAFSIR_ENABLED=true
-TAFSIR_DB_PATH=data/tafsir.fixture.db
-```
-
-`TAFSIR_DB_PATH` is resolved relative to the process's working directory if
-given as a relative path — run the backend from the repo root (as the
-default `.claude/launch.json` dev config does) for `data/tafsir.fixture.db`
-to resolve correctly, or use an absolute path.
-
-Even if `TAFSIR_DB_PATH` were ever pointed at a fixture-tagged db in a
-production deployment (`ENVIRONMENT=production`), `TafsirStore` refuses to
-serve it — see `backend/app/services/tafsir_store.py`. That check is a
-second line of defense; keeping fixture content out of the production
-filename/path in the first place is the first.
-
-## Current status: fixtures only, no real content sourced
-
-Real ingestion is gated behind the two things below.
-
-## What was verified against Quran Foundation's public docs (2026-07-13)
-
-- **Auth**: Content API uses OAuth2 `client_credentials` grant (scope
-  `content`) against the OAuth2 token endpoint, then `x-auth-token` +
-  `x-client-id` headers on each content request. Requires a registered
-  developer app — no app credentials exist for this project yet.
-- **Resource catalogue**: confirmed via `/resources/tafsirs` — resource id
-  **169** = "Ibn Kathir (Abridged)", English, slug `en-tafisr-ibn-kathir`;
-  resource id **91** = "Al-Sa'di", Arabic, slug `ar-tafseer-al-saddi`. Both
-  match the two approved sources.
-- **Licensing (the actual blocker)**: Quran Foundation's Developer Terms of
-  Service (`https://api-docs.quran.foundation/legal/developer-terms/`)
-  state QF Content (defined to include translations, and by extension the
-  same class of content as tafsir) **may not be cached or stored longer
-  than 1 week unless expressly permitted**, and **may not be resold,
-  sublicensed, or redistributed** except as integral to the end-user
-  experience of the registered application — with no exception for
-  non-commercial/open-source use.
-
-  Committing a static `tafsir.db` to git and shipping it in a Docker image
-  indefinitely is a stronger form of storage/redistribution than that
-  1-week limit contemplates. Before running real ingestion, either:
-  1. Get written permission from Quran Foundation for a static/committed
-     dataset (their terms explicitly allow "unless expressly permitted"), or
-  2. Switch to a **rebuild-on-deploy** model: ingest at Docker build time
-     using build-time secrets, producing an image-local, *not committed*
-     `tafsir.db` that's refreshed on every deploy (naturally more often
-     than weekly for an actively developed app) — see `run_live_ingestion`
-     in `data_pipeline/ingest_tafsir.py`, which already implements this
-     shape and is off by default.
-
-  A third-party mirror (e.g. the `spa5k/tafsir_api` GitHub project) was
-  also checked — it re-serves the same quran.com-sourced content under an
-  MIT license for its *code*, but does not resolve the content-licensing
-  question above; using it would just move the same restriction one hop
-  away, not clear it.
-
-## Running ingestion
+| `data/tafsir.db` | Legacy production path from the superseded committed-db design. No longer used by the app (production now reads live from Quran Foundation instead) — kept only because `data_pipeline/ingest_tafsir.py --live` still writes here if ever run manually. | **No** — gitignored (`*.db`), and shouldn't be populated going forward |
 
 ```bash
 # Fixture mode (default, safe, no network) -> data/tafsir.fixture.db
 python -m data_pipeline.ingest_tafsir
-
-# Live mode -> data/tafsir.db (NOT enabled by default — see gating below)
-python -m data_pipeline.ingest_tafsir --live
-
-# Either mode accepts an explicit path override:
-python -m data_pipeline.ingest_tafsir --db-path /some/other/path.db
 ```
 
-Live mode requires, with no defaults/guesses baked in:
+Local `.env` (gitignored):
 
 ```
-QURAN_FOUNDATION_OAUTH_TOKEN_URL=...   # from your app's dashboard
-QURAN_FOUNDATION_API_BASE_URL=...      # from your app's dashboard
-QURAN_FOUNDATION_CLIENT_ID=...
-QURAN_FOUNDATION_CLIENT_SECRET=...
-TAFSIR_LIVE_INGESTION_CONFIRMED=yes    # explicit ack that licensing was checked
+TAFSIR_ENABLED=true
+TAFSIR_DB_PATH=data/tafsir.fixture.db
+# ENVIRONMENT unset/"development" -> get_tafsir_store() picks the sqlite path
 ```
 
-Every ingestion run (fixture or live) builds into a temp sqlite file,
-verifies it (`data_pipeline/tafsir_integrity.py`: schema version, approved
-sources only, no empty bodies, checksums, valid `verse_key`s cross-checked
-against `data/processed/ayahs_processed.json`, no duplicate entry-to-verse
-mappings), and only then atomically replaces the target file. A failed or
-incomplete run leaves the last good database at that path untouched.
+Tests build their own throwaway sqlite db per test (via pytest's
+`tmp_path`) directly from the fixture JSON — they never depend on
+`data/tafsir.fixture.db` existing on disk, and the QF-backed provider's
+tests (`test_qf_client.py`, `test_tafsir_cache.py`,
+`test_qf_tafsir_provider.py`) never touch the real network — everything is
+mocked via `httpx.MockTransport`.
 
-## Turning the feature on
+`data_pipeline/ingest_tafsir.py --live` (batch-ingest into a committed db)
+still exists but is superseded and shouldn't be used for production
+anymore — it predates the live-API architecture and is kept only in case a
+one-off offline snapshot is ever needed for something unrelated to serving
+production traffic.
 
-`TAFSIR_ENABLED` (in `backend/app/core/config.py`) defaults to `false`.
-Set it to `true` only once a verified production `data/tafsir.db` (content
-tagged `content_environment=production`) actually exists for that deploy —
-`render.yaml` has deliberately **not** been changed to set this, since
-flipping it on for production is a content-readiness decision, not a code
-change. Tests build their own throwaway sqlite db per test (via pytest's
-`tmp_path`) from the fixture JSON directly — they never depend on either
-`data/tafsir.fixture.db` or `data/tafsir.db` existing on disk.
+## Turning the feature on in production — manual steps required
+
+1. **Register a Quran Foundation developer app** and obtain
+   `QF_CLIENT_ID` / `QF_CLIENT_SECRET` (production credentials, not
+   prelive, unless intentionally testing against prelive first).
+2. **Confirm the resource catalogue smoke-test**: with real credentials,
+   call `GET /resources/tafsirs` once (e.g. via curl, or by temporarily
+   enabling the feature against prelive) and confirm the response actually
+   has `id`, and a language/name field `validate_resource_catalogue`
+   can match against — adjust `qf_tafsir_provider.py`'s field lookups if
+   the real shape differs from what's assumed here.
+3. **Set on Render**: `QF_CLIENT_ID`, `QF_CLIENT_SECRET`, `QF_ENV=production`,
+   and only then `TAFSIR_ENABLED=true`. None of these are set in
+   `render.yaml` — flipping this on is a deliberate deploy-time decision,
+   not a code change.
+4. No frontend environment variable is needed — the frontend only ever
+   calls our own backend.

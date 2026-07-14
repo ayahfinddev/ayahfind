@@ -118,13 +118,13 @@ export function AnnotatedArabicText({ text }: { text: string }) {
                   minWidth: "1.6em",
                   padding: "1px 3px",
                   verticalAlign: "2.2em",
-                  backgroundColor: "rgba(251,191,36,0.13)",
-                  border: "1px solid rgba(251,191,36,0.4)",
+                  backgroundColor: "var(--highlight-surface)",
+                  border: "1px solid var(--highlight-border)",
                   borderRadius: "4px",
-                  color: "rgb(146,64,14)",      // amber-900 for contrast
+                  color: "var(--highlight)",
                   cursor: "pointer",
                   userSelect: "none",
-                  WebkitTapHighlightColor: "rgba(251,191,36,0.25)",
+                  WebkitTapHighlightColor: "var(--highlight-surface)",
                 }}
               >
                 {WAQF_LABEL[symbolId] ?? content}
@@ -139,10 +139,10 @@ export function AnnotatedArabicText({ text }: { text: string }) {
                 key={i}
                 data-sid={symbolId}
                 style={{
-                  color: "rgb(180,83,9)",
+                  color: "var(--highlight)",
                   cursor: "pointer",
                   userSelect: "none",
-                  WebkitTapHighlightColor: "rgba(251,191,36,0.25)",
+                  WebkitTapHighlightColor: "var(--highlight-surface)",
                 }}
               >
                 {content}
@@ -158,11 +158,11 @@ export function AnnotatedArabicText({ text }: { text: string }) {
               style={{
                 cursor: "pointer",
                 textDecoration: "underline",
-                textDecorationColor: "rgba(251,191,36,0.65)",
+                textDecorationColor: "var(--highlight-border)",
                 textDecorationStyle: "solid",
                 textUnderlineOffset: "3px",
                 userSelect: "none",
-                WebkitTapHighlightColor: "rgba(251,191,36,0.25)",
+                WebkitTapHighlightColor: "var(--highlight-surface)",
               }}
             >
               {content}

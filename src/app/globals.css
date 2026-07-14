@@ -1,37 +1,63 @@
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* ─── Design tokens ──────────────────────────────────────── */
+/* Semantic layer — source of truth. Themes below only ever override these. */
 :root {
-  /* Warm off-white foundation */
-  --canvas: #F7F6F2;
-  --elevated: #FFFFFF;
-  --card: #F0EFE9;
+  --background: #FAF7F2;
+  --background-rgb: 250 247 242;
+  --surface: #FFFEFC;
+  --surface-rgb: 255 254 252;
+  --surface-secondary: #F1ECE1;
+  --surface-secondary-rgb: 241 236 225;
+  --surface-elevated: #FFFEFC;
+  --surface-elevated-rgb: 255 254 252;
+  --surface-floating: #FFFEFC;
+  --surface-floating-rgb: 255 254 252;
 
-  /* Warm text scale */
-  --ink: #1C1917;
-  --muted: #78716C;
-  --subtle: #A8A29E;
+  --text: #1C1917;
+  --text-rgb: 28 25 23;
+  --text-secondary: #78716C;
+  --text-secondary-rgb: 120 113 108;
+  --text-tertiary: #8C867E;
+  --text-tertiary-rgb: 140 134 126;
 
-  /* Soft warm borders */
   --border: rgba(28, 25, 23, 0.07);
   --border-strong: rgba(28, 25, 23, 0.12);
   --glass-border: rgba(28, 25, 23, 0.07);
-  --glass-fill: rgba(247, 246, 242, 0.95);
+  --glass-fill: rgba(250, 247, 242, 0.95);
 
-  /* Teal accent */
-  --accent: #14b8a6;
-  --accent-dim: #0d9488;
-  --accent-surface: rgba(13, 148, 136, 0.08);
-  --accent-border: rgba(13, 148, 136, 0.22);
+  --primary: #2F6B46;
+  --primary-rgb: 47 107 70;
+  --primary-hover: #244F35;
+  --primary-hover-rgb: 36 79 53;
+  --secondary: #6D8B74;
+  --secondary-rgb: 109 139 116;
+  --accent-surface: rgba(47, 107, 70, 0.08);
+  --accent-border: rgba(47, 107, 70, 0.22);
+  --gold: #D4AF37;
+  --gold-rgb: 212 175 55;
 
-  /* Shadows — warm, soft */
-  --shadow-xs:   0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-sm:   0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.05);
-  --shadow-md:   0 2px 6px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.07);
+  --success: #16a34a;
+  --success-rgb: 22 163 74;
+  --warning: #d97706;
+  --warning-rgb: 217 119 6;
+  --error: #dc2626;
+  --error-rgb: 220 38 38;
+
+  /* Tajweed/waqf highlight marks — theme-aware, replaces hardcoded amber */
+  --highlight: #92400e;
+  --highlight-rgb: 146 64 14;
+  --highlight-surface: rgba(251, 191, 36, 0.13);
+  --highlight-border: rgba(251, 191, 36, 0.4);
+
+  /* Shadows — three tiers, mapped 1:1 onto the surface hierarchy */
+  --shadow-xs:   0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm:   0 4px 16px rgba(15, 23, 42, 0.05);
+  --shadow-md:   0 12px 40px rgba(15, 23, 42, 0.08);
   --shadow-card: var(--shadow-sm);
 
   /* Safe areas */
@@ -39,21 +65,303 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left:   env(safe-area-inset-left, 0px);
   --safe-right:  env(safe-area-inset-right, 0px);
+
+  /* Back-compat aliases — existing className/Tailwind-key usage keeps resolving
+   * unchanged while the codebase migrates to the semantic names above. */
+  --canvas: var(--background);
+  --elevated: var(--surface);
+  --card: var(--surface-secondary);
+  --ink: var(--text);
+  --muted: var(--text-secondary);
+  --subtle: var(--text-tertiary);
+  --accent: var(--primary);
+  --accent-dim: var(--primary-hover);
+}
+
+/* ─── Themes ─────────────────────────────────────────────── */
+/* Each theme redefines only the semantic vars above; layout never changes,
+ * only the palette. `light` is the :root default above. */
+
+[data-theme="dark"] {
+  --background: #131417;
+  --background-rgb: 19 20 23;
+  --surface: #1b1d22;
+  --surface-rgb: 27 29 34;
+  --surface-secondary: #22252b;
+  --surface-secondary-rgb: 34 37 43;
+  --surface-elevated: #23262c;
+  --surface-elevated-rgb: 35 38 44;
+  --surface-floating: #26292f;
+  --surface-floating-rgb: 38 41 47;
+  --text: #f4f4f5;
+  --text-rgb: 244 244 245;
+  --text-secondary: #a1a1aa;
+  --text-secondary-rgb: 161 161 170;
+  --text-tertiary: #8a8a92;
+  --text-tertiary-rgb: 138 138 146;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-fill: rgba(19, 20, 23, 0.9);
+  --primary: #2dd4bf;
+  --primary-rgb: 45 212 191;
+  --primary-hover: #14b8a6;
+  --primary-hover-rgb: 20 184 166;
+  --accent-surface: rgba(45, 212, 191, 0.14);
+  --accent-border: rgba(45, 212, 191, 0.3);
+  --success: #22c55e;
+  --success-rgb: 34 197 94;
+  --warning: #f59e0b;
+  --warning-rgb: 245 158 11;
+  --error: #f87171;
+  --error-rgb: 248 113 113;
+  --highlight: #fbbf24;
+  --highlight-rgb: 251 191 36;
+  --highlight-surface: rgba(251, 191, 36, 0.16);
+  --highlight-border: rgba(251, 191, 36, 0.4);
+}
+
+[data-theme="emerald"] {
+  --background: #f3f7f4;
+  --background-rgb: 243 247 244;
+  --surface: #ffffff;
+  --surface-rgb: 255 255 255;
+  --surface-secondary: #e8f1ea;
+  --surface-secondary-rgb: 232 241 234;
+  --surface-elevated: #ffffff;
+  --surface-elevated-rgb: 255 255 255;
+  --surface-floating: #ffffff;
+  --surface-floating-rgb: 255 255 255;
+  --text: #14261c;
+  --text-rgb: 20 38 28;
+  --text-secondary: #4d6a58;
+  --text-secondary-rgb: 77 106 88;
+  --text-tertiary: #7a9186;
+  --text-tertiary-rgb: 122 145 134;
+  --border: rgba(20, 38, 28, 0.08);
+  --border-strong: rgba(20, 38, 28, 0.14);
+  --glass-border: rgba(20, 38, 28, 0.08);
+  --glass-fill: rgba(243, 247, 244, 0.95);
+  --primary: #10b981;
+  --primary-rgb: 16 185 129;
+  --primary-hover: #059669;
+  --primary-hover-rgb: 5 150 105;
+  --accent-surface: rgba(16, 185, 129, 0.1);
+  --accent-border: rgba(16, 185, 129, 0.25);
+  --success: #22c55e;
+  --success-rgb: 34 197 94;
+  --warning: #d97706;
+  --warning-rgb: 217 119 6;
+  --error: #dc2626;
+  --error-rgb: 220 38 38;
+  --highlight: #92400e;
+  --highlight-rgb: 146 64 14;
+  --highlight-surface: rgba(251, 191, 36, 0.13);
+  --highlight-border: rgba(251, 191, 36, 0.4);
+}
+
+[data-theme="midnight"] {
+  --background: #0b0f1e;
+  --background-rgb: 11 15 30;
+  --surface: #121729;
+  --surface-rgb: 18 23 41;
+  --surface-secondary: #182036;
+  --surface-secondary-rgb: 24 32 54;
+  --surface-elevated: #1a2340;
+  --surface-elevated-rgb: 26 35 64;
+  --surface-floating: #1d2748;
+  --surface-floating-rgb: 29 39 72;
+  --text: #e8ecf7;
+  --text-rgb: 232 236 247;
+  --text-secondary: #9aa5c4;
+  --text-secondary-rgb: 154 165 196;
+  --text-tertiary: #8892ab;
+  --text-tertiary-rgb: 136 146 171;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-fill: rgba(11, 15, 30, 0.9);
+  --primary: #6366f1;
+  --primary-rgb: 99 102 241;
+  --primary-hover: #4f46e5;
+  --primary-hover-rgb: 79 70 229;
+  --accent-surface: rgba(99, 102, 241, 0.16);
+  --accent-border: rgba(99, 102, 241, 0.32);
+  --success: #22c55e;
+  --success-rgb: 34 197 94;
+  --warning: #f59e0b;
+  --warning-rgb: 245 158 11;
+  --error: #f87171;
+  --error-rgb: 248 113 113;
+  --highlight: #fbbf24;
+  --highlight-rgb: 251 191 36;
+  --highlight-surface: rgba(251, 191, 36, 0.16);
+  --highlight-border: rgba(251, 191, 36, 0.4);
+}
+
+[data-theme="sand"] {
+  --background: #f5ecdb;
+  --background-rgb: 245 236 219;
+  --surface: #fffdf7;
+  --surface-rgb: 255 253 247;
+  --surface-secondary: #ede0c6;
+  --surface-secondary-rgb: 237 224 198;
+  --surface-elevated: #fffdf7;
+  --surface-elevated-rgb: 255 253 247;
+  --surface-floating: #fffdf7;
+  --surface-floating-rgb: 255 253 247;
+  --text: #2b2013;
+  --text-rgb: 43 32 19;
+  --text-secondary: #6b5a3f;
+  --text-secondary-rgb: 107 90 63;
+  --text-tertiary: #8d7a5c;
+  --text-tertiary-rgb: 141 122 92;
+  --border: rgba(43, 32, 19, 0.08);
+  --border-strong: rgba(43, 32, 19, 0.14);
+  --glass-border: rgba(43, 32, 19, 0.08);
+  --glass-fill: rgba(245, 236, 219, 0.95);
+  --primary: #b45309;
+  --primary-rgb: 180 83 9;
+  --primary-hover: #92400e;
+  --primary-hover-rgb: 146 64 14;
+  --accent-surface: rgba(180, 83, 9, 0.1);
+  --accent-border: rgba(180, 83, 9, 0.25);
+  --success: #16a34a;
+  --success-rgb: 22 163 74;
+  --warning: #d97706;
+  --warning-rgb: 217 119 6;
+  --error: #dc2626;
+  --error-rgb: 220 38 38;
+  --highlight: #9a3412;
+  --highlight-rgb: 154 52 18;
+  --highlight-surface: rgba(234, 88, 12, 0.13);
+  --highlight-border: rgba(234, 88, 12, 0.35);
+}
+
+[data-theme="forest"] {
+  --background: #0f1712;
+  --background-rgb: 15 23 18;
+  --surface: #16221a;
+  --surface-rgb: 22 34 26;
+  --surface-secondary: #1c2b21;
+  --surface-secondary-rgb: 28 43 33;
+  --surface-elevated: #1c2e22;
+  --surface-elevated-rgb: 28 46 34;
+  --surface-floating: #203526;
+  --surface-floating-rgb: 32 53 38;
+  --text: #e7f0e9;
+  --text-rgb: 231 240 233;
+  --text-secondary: #9db3a4;
+  --text-secondary-rgb: 157 179 164;
+  --text-tertiary: #8aa396;
+  --text-tertiary-rgb: 138 163 150;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-fill: rgba(15, 23, 18, 0.9);
+  --primary: #34d399;
+  --primary-rgb: 52 211 153;
+  --primary-hover: #10b981;
+  --primary-hover-rgb: 16 185 129;
+  --accent-surface: rgba(52, 211, 153, 0.14);
+  --accent-border: rgba(52, 211, 153, 0.3);
+  --success: #4ade80;
+  --success-rgb: 74 222 128;
+  --warning: #fbbf24;
+  --warning-rgb: 251 191 36;
+  --error: #f87171;
+  --error-rgb: 248 113 113;
+  --highlight: #fbbf24;
+  --highlight-rgb: 251 191 36;
+  --highlight-surface: rgba(251, 191, 36, 0.16);
+  --highlight-border: rgba(251, 191, 36, 0.4);
+}
+
+[data-theme="royal"] {
+  --background: #130f22;
+  --background-rgb: 19 15 34;
+  --surface: #1c1733;
+  --surface-rgb: 28 23 51;
+  --surface-secondary: #241e42;
+  --surface-secondary-rgb: 36 30 66;
+  --surface-elevated: #251f45;
+  --surface-elevated-rgb: 37 31 69;
+  --surface-floating: #2a234f;
+  --surface-floating-rgb: 42 35 79;
+  --text: #ede9fb;
+  --text-rgb: 237 233 251;
+  --text-secondary: #b1a4d8;
+  --text-secondary-rgb: 177 164 216;
+  --text-tertiary: #9c8fc2;
+  --text-tertiary-rgb: 156 143 194;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-fill: rgba(19, 15, 34, 0.9);
+  --primary: #a78bfa;
+  --primary-rgb: 167 139 250;
+  --primary-hover: #8b5cf6;
+  --primary-hover-rgb: 139 92 246;
+  --accent-surface: rgba(167, 139, 250, 0.16);
+  --accent-border: rgba(167, 139, 250, 0.32);
+  --success: #4ade80;
+  --success-rgb: 74 222 128;
+  --warning: #fbbf24;
+  --warning-rgb: 251 191 36;
+  --error: #f87171;
+  --error-rgb: 248 113 113;
+  --highlight: #fbbf24;
+  --highlight-rgb: 251 191 36;
+  --highlight-surface: rgba(251, 191, 36, 0.16);
+  --highlight-border: rgba(251, 191, 36, 0.4);
+}
+
+[data-theme="amoled"] {
+  --background: #000000;
+  --background-rgb: 0 0 0;
+  --surface: #000000;
+  --surface-rgb: 0 0 0;
+  --surface-secondary: #0a0a0a;
+  --surface-secondary-rgb: 10 10 10;
+  --surface-elevated: #050505;
+  --surface-elevated-rgb: 5 5 5;
+  --surface-floating: #0a0a0a;
+  --surface-floating-rgb: 10 10 10;
+  --text: #f4f4f5;
+  --text-rgb: 244 244 245;
+  --text-secondary: #a1a1aa;
+  --text-secondary-rgb: 161 161 170;
+  --text-tertiary: #8a8a92;
+  --text-tertiary-rgb: 138 138 146;
+  --border: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.2);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-fill: rgba(0, 0, 0, 0.92);
+  --primary: #2dd4bf;
+  --primary-rgb: 45 212 191;
+  --primary-hover: #14b8a6;
+  --primary-hover-rgb: 20 184 166;
+  --accent-surface: rgba(45, 212, 191, 0.14);
+  --accent-border: rgba(45, 212, 191, 0.32);
+  --success: #22c55e;
+  --success-rgb: 34 197 94;
+  --warning: #f59e0b;
+  --warning-rgb: 245 158 11;
+  --error: #f87171;
+  --error-rgb: 248 113 113;
+  --highlight: #fbbf24;
+  --highlight-rgb: 251 191 36;
+  --highlight-surface: rgba(251, 191, 36, 0.18);
+  --highlight-border: rgba(251, 191, 36, 0.45);
+  /* True black swallows box-shadow — elevation comes from border-strong instead. */
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow-md: none;
 }
 
 /* ─── Animations ─────────────────────────────────────────── */
 @keyframes page-fade-in {
   from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-@keyframes slide-up {
-  from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
@@ -64,7 +372,7 @@
 
 @keyframes reader-flash {
   0%   { background-color: transparent; }
-  15%  { background-color: rgba(13, 148, 136, 0.06); }
+  15%  { background-color: var(--accent-surface); }
   100% { background-color: transparent; }
 }
 
@@ -79,6 +387,41 @@
 
 .reader-highlight {
   animation: reader-flash 2s ease-out forwards;
+}
+
+/* ─── Focus ──────────────────────────────────────────────── */
+/* One shared ring for every focusable element, so nothing relies on a
+ * component remembering to add its own focus-visible class. */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Briefly disabled by ThemeTransitionGuard while `data-theme` is swapped —
+ * any `transition-colors`/`transition-all` element whose color comes from a
+ * `var()` custom property can otherwise get stuck mid-transition and never
+ * repaint to the new theme's value. See src/components/ThemeTransitionGuard.tsx. */
+.theme-switching,
+.theme-switching *,
+.theme-switching *::before,
+.theme-switching *::after {
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter,
+  .symbol-popup,
+  .reader-highlight {
+    animation: none !important;
+  }
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ─── Base ───────────────────────────────────────────────── */
@@ -193,6 +536,29 @@ a { color: inherit; text-decoration: none; }
     border: 1px solid var(--accent-border);
     background: var(--accent-surface);
     color: var(--accent-dim);
+  }
+
+  /* Riwayah badges — one shared class, coloured per-instance via inline
+   * custom properties (see src/components/quran/RiwayahBadge.tsx). Keeping
+   * light/dark pairs here (rather than swapping Tailwind classes) is what
+   * lets every riwayah keep exactly one colour across search cards, the
+   * Qira'at panel, the reader, Continue Reading, and the symbols UI. */
+  .riwayah-badge {
+    background-color: var(--rw-bg);
+    color: var(--rw-fg);
+    border-color: var(--rw-border);
+  }
+  [data-theme="dark"] .riwayah-badge {
+    background-color: var(--rw-bg-dark);
+    color: var(--rw-fg-dark);
+    border-color: var(--rw-border-dark);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .riwayah-badge {
+      background-color: var(--rw-bg-dark);
+      color: var(--rw-fg-dark);
+      border-color: var(--rw-border-dark);
+    }
   }
 
   /* Icon buttons */

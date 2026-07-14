@@ -75,3 +75,79 @@ class TafsirVerseResponse(BaseModel):
     # "fixture" | "production" | None — lets the UI show an unmistakable
     # "test content" banner; also None whenever available=False.
     content_environment: str | None = None
+
+
+# --- Riwayah (Quran reading transmission) support -------------------------
+# Additive only: none of the schemas above are modified. See
+# app/core/riwayat.py for the registry and app/services/riwayah_store.py
+# for the service layer these responses are built from.
+
+
+class RiwayahDefinitionOut(BaseModel):
+    id: str
+    display_name: str
+    short_name: str
+    qiraah_name: str
+    imam_name: str
+    narrator_name: str
+    text_dataset_id: str | None = None
+    audio_dataset_id: str | None = None
+    symbol_set_id: str
+    color_token: str
+    is_default: bool
+    is_enabled: bool
+
+
+class RiwayatListResponse(BaseModel):
+    riwayat: list[RiwayahDefinitionOut] = Field(default_factory=list)
+    default_riwayah_id: str
+
+
+class RiwayahAyahResponse(BaseModel):
+    surah: int
+    ayah: int
+    riwayah_id: str
+    available: bool
+    text_ar: str | None = None
+    text_ar_display: str | None = None
+    unavailable_reason: str | None = None
+
+
+class RiwayahReaderSurahResponse(BaseModel):
+    surah: int
+    riwayah_id: str
+    available: bool
+    name_en: str | None = None
+    name_ar: str | None = None
+    ayahs: list[RiwayahAyahResponse] = Field(default_factory=list)
+    unavailable_reason: str | None = None
+
+
+class ReadingVariantsResponse(BaseModel):
+    surah: int
+    ayah: int
+    canonical_riwayah_id: str
+    equivalent_riwayah_ids: list[str] = Field(default_factory=list)
+    has_reading_variants: bool
+
+
+class EquivalentReadingsResponse(BaseModel):
+    surah: int
+    ayah: int
+    displayed_riwayah_id: str
+    equivalent_riwayah_ids: list[str] = Field(default_factory=list)
+    comparison_complete: bool
+    note: str | None = None
+
+
+class RiwayahSymbolAvailabilityResponse(BaseModel):
+    riwayah_id: str
+    symbol_set_id: str | None = None
+    available: bool
+
+
+class AudioAvailabilityResponse(BaseModel):
+    riwayah_id: str
+    reciter_id: str | None = None
+    available: bool
+    reason: str | None = None

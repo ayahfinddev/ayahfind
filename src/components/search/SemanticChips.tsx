@@ -10,14 +10,18 @@ interface SemanticChipsProps {
   activeLabel?: string | null;
   baseDelay?: number;
   noStagger?: boolean;
+  /** Keeps this row a single compact line — the full topic pool (used by
+   * Discover More) is much larger than what belongs as a quick-prompt row. */
+  limit?: number;
 }
 
-export function SemanticChips({ onTopic, loading, activeLabel, baseDelay = 0, noStagger = false }: SemanticChipsProps) {
+export function SemanticChips({ onTopic, loading, activeLabel, baseDelay = 0, noStagger = false, limit }: SemanticChipsProps) {
+  const topics = limit ? SEARCH_TOPICS.slice(0, limit) : SEARCH_TOPICS;
   return (
-    <div className="space-y-2 pt-1">
-      <span className="block text-[11px] font-medium uppercase tracking-wider text-ink-subtle">Try asking</span>
-      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 hide-scrollbar sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
-        {SEARCH_TOPICS.map((topic, i) => (
+    <div className="space-y-1">
+      <span className="block text-[11px] font-medium uppercase tracking-wider text-text-tertiary">Try asking</span>
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 hide-scrollbar sm:mx-0 sm:flex-nowrap sm:overflow-x-auto sm:px-0 sm:pb-0">
+        {topics.map((topic, i) => (
           <motion.button
             key={topic.label}
             type="button"
@@ -29,10 +33,10 @@ export function SemanticChips({ onTopic, loading, activeLabel, baseDelay = 0, no
             whileTap={{ scale: 0.97 }}
             onClick={() => onTopic(topic)}
             className={cn(
-              "shrink-0 rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-all duration-150 disabled:opacity-50 sm:shrink",
+              "shrink-0 rounded-full border px-3.5 py-1 text-[13px] font-medium transition-colors duration-150 ease-out disabled:opacity-50 sm:shrink",
               activeLabel === topic.label
-                ? "border-accent-border bg-accent-surface text-accent-dim shadow-[0_0_0_3px_var(--accent-surface)]"
-                : "border-black/[0.08] bg-white text-ink-muted hover:border-accent-border/50 hover:bg-accent-surface/50 hover:text-accent-dim"
+                ? "border-accent-border bg-accent-surface text-primary-hover shadow-[0_0_0_3px_var(--accent-surface)]"
+                : "border-border bg-surface text-text-secondary hover:border-accent-border hover:bg-accent-surface hover:text-primary-hover"
             )}
           >
             {topic.label}

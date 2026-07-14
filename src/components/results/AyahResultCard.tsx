@@ -14,9 +14,13 @@ import {
   Volume2,
 } from "lucide-react";
 import { ConfidenceBadge } from "@/components/ui/ConfidenceBadge";
+import { ActionBar } from "@/components/ui/ActionBar";
 import { TafsirPanel } from "@/components/quran/TafsirPanel";
+import { QiraatPanel } from "@/components/quran/QiraatPanel";
+import { ReadingChips } from "@/components/quran/ReadingChips";
 import type { SearchCandidate } from "@/lib/types";
 import { useReciter } from "@/hooks/useReciter";
+import { useReadingVariants } from "@/hooks/useReadingVariants";
 import { highlightText } from "@/lib/highlight";
 import { displayArabicForResult } from "@/lib/quranDisplay";
 import { buildAyahAudioSources } from "@/lib/reciters";
@@ -49,6 +53,7 @@ export function AyahResultCard({
   );
   const playback = useAudioPlayback();
   const playing = playback.isActiveVerse(result.surah, result.ayah);
+  const readingVariants = useReadingVariants(result.surah, result.ayah);
   const togglePlay = () =>
     playback.toggleSingle(src, { surah: result.surah, ayah: result.ayah }, fallbackSrc);
   const readerHref = `/ayah/${result.surah}/${result.ayah}`;
@@ -89,20 +94,18 @@ export function AyahResultCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: noStagger ? 0 : index * 0.055, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       className={cn(
-        "group relative rounded-2xl bg-white p-5 transition-all duration-200 hover:-translate-y-0.5",
-        isWeak
-          ? "opacity-80 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_3px_10px_rgba(0,0,0,0.04)]"
-          : "shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.06)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.06),0_8px_24px_rgba(0,0,0,0.08)]"
+        "group relative rounded-xl border border-border bg-surface p-5 transition-shadow duration-150 ease-out hover:-translate-y-0.5",
+        isWeak ? "opacity-80 shadow-xs" : "shadow-sm hover:shadow-md"
       )}
     >
       {/* Subtle hover tint */}
-      <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-accent-surface/30 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+      <div className="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-br from-accent-surface/30 to-transparent opacity-0 transition-opacity duration-150 ease-out group-hover:opacity-100" />
 
       <div className="relative flex flex-col">
         {/* Header row */}
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[11px] font-medium uppercase tracking-wider text-ink-subtle">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-text-tertiary">
               Surah {result.surah} · Ayah {result.ayah}
             </p>
             <ConfidenceBadge
@@ -113,33 +116,41 @@ export function AyahResultCard({
           </div>
           <Link
             href={readerHref}
-            className="rounded-lg p-1.5 text-ink-subtle transition-colors hover:bg-canvas-card hover:text-accent-dim"
+            className="rounded-lg p-1.5 text-text-tertiary transition-colors duration-150 ease-out hover:bg-surface-secondary hover:text-primary-hover"
             aria-label="Open in reader"
           >
             <ExternalLink className="h-4 w-4" />
           </Link>
         </div>
 
-        {/* Arabic */}
+        {/* Arabic — the visually dominant element on this card */}
         <p
-          className="font-arabic mt-5 text-right text-[1.6rem] leading-loose text-ink"
+          className="font-arabic mt-5 text-right text-arabic-md text-text"
           dir="rtl"
         >
           {arabicDisplay}
         </p>
 
-        {/* Translation */}
+        {/* Reading chips — descriptive only, never a selector (see
+            ReadingChips docblock). */}
+        <ReadingChips
+          data={readingVariants.data}
+          isLoading={readingVariants.isLoading}
+          isError={readingVariants.isError}
+        />
+
+        {/* Translation — secondary to Arabic */}
         {result.translation_en && (
-          <p className="mt-3 text-[0.875rem] leading-relaxed text-ink-muted">
+          <p className="mt-3 text-body-sm text-text-secondary">
             {highlightText(result.translation_en, highlightQuery)}
           </p>
         )}
 
         {/* Actions */}
-        <div className="mt-4 flex flex-wrap items-center gap-1.5 border-t border-black/[0.05] pt-3.5">
+        <div className="mt-4 flex flex-wrap items-center gap-1.5 border-t border-border pt-3.5">
           <Link
             href={readerHref}
-            className="flex items-center gap-1.5 rounded-lg bg-accent-dim px-3 py-1.5 text-xs font-semibold text-white transition-all hover:brightness-105 hover:shadow-[0_2px_8px_rgba(13,148,136,0.3)]"
+            className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white transition-colors duration-150 ease-out hover:bg-primary-hover"
           >
             <BookOpen className="h-3.5 w-3.5" />
             Continue reading
@@ -148,45 +159,37 @@ export function AyahResultCard({
             type="button"
             onClick={togglePlay}
             className={cn(
-              "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all",
+              "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors duration-150 ease-out",
               playing
-                ? "bg-accent-surface text-accent-dim"
-                : "bg-canvas-card text-ink-muted hover:text-ink"
+                ? "bg-accent-surface text-primary-hover"
+                : "bg-surface-secondary text-text-secondary hover:text-text"
             )}
           >
             {playing ? <Volume2 className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
             {playing ? "Stop" : "Listen"}
           </button>
           <TafsirPanel surah={result.surah} ayah={result.ayah} variant="pill" />
-          <div className="ml-auto flex items-center gap-0.5">
-            <button
-              type="button"
-              onClick={() => toggle(result.surah, result.ayah)}
-              className={cn(
-                "rounded-lg p-1.5 transition-colors",
-                saved ? "text-accent-dim" : "text-ink-subtle hover:bg-canvas-card hover:text-ink"
-              )}
-              aria-label="Save"
-            >
-              <Bookmark className={cn("h-3.5 w-3.5", saved && "fill-current")} />
-            </button>
-            <button
-              type="button"
-              onClick={copyVerse}
-              className="rounded-lg p-1.5 text-ink-subtle transition-colors hover:bg-canvas-card hover:text-ink"
-              aria-label="Copy"
-            >
-              <Copy className="h-3.5 w-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={shareVerse}
-              className="rounded-lg p-1.5 text-ink-subtle transition-colors hover:bg-canvas-card hover:text-ink"
-              aria-label="Share"
-            >
-              <Share2 className="h-3.5 w-3.5" />
-            </button>
-          </div>
+          <QiraatPanel
+            surah={result.surah}
+            ayah={result.ayah}
+            data={readingVariants.data}
+            isLoading={readingVariants.isLoading}
+            isError={readingVariants.isError}
+          />
+          <ActionBar
+            className="ml-auto"
+            items={[
+              {
+                key: "bookmark",
+                icon: <Bookmark className={cn(saved && "fill-current")} />,
+                label: "Save",
+                onClick: () => toggle(result.surah, result.ayah),
+                active: saved,
+              },
+              { key: "copy", icon: <Copy />, label: "Copy", onClick: copyVerse },
+              { key: "share", icon: <Share2 />, label: "Share", onClick: shareVerse },
+            ]}
+          />
         </div>
       </div>
     </motion.article>

@@ -193,3 +193,25 @@ def prepare_transliteration_fields(text_ar: str, api_translit: str | None = None
     """
     simple = (api_translit or "").strip() or arabic_to_latin_transliteration(text_ar)
     return simple, normalize_transliteration(simple)
+
+
+_TRANSLITERATION_CACHE: dict[int, str] = {}
+
+
+def cached_transliteration(ayah_id: int, text_ar: str, surah: int, ayah: int) -> str:
+    """Memoized readable Latin transliteration for search matching.
+
+    The corpus's stored `transliteration` field is empty for the entire
+    dataset, so callers used to regenerate this from scratch on every single
+    request (see phonetic_search.py) — expensive, and never even attempted
+    by the lexical engine's prefilter (see lexical_search.py), which meant
+    pure-transliteration queries got zero lexical candidates. This computes
+    it once per ayah id and reuses it for the life of the process.
+    """
+    cached = _TRANSLITERATION_CACHE.get(ayah_id)
+    if cached is not None:
+        return cached
+    search_ar = arabic_for_search(text_ar, surah, ayah)
+    generated = arabic_to_latin_transliteration(search_ar) if search_ar else ""
+    _TRANSLITERATION_CACHE[ayah_id] = generated
+    return generated

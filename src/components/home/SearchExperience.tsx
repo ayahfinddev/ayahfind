@@ -2,16 +2,26 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Brain, ChevronDown, ChevronUp, Loader2, SearchX } from "lucide-react";
+import { Brain, ChevronDown, ChevronUp, SearchX } from "lucide-react";
 import { ContinueReadingCard } from "@/components/home/ContinueReadingCard";
+import { MushafVisual } from "@/components/home/MushafVisual";
+import { IslamicPatternBg } from "@/components/home/IslamicPatternBg";
+import { QuickActions } from "@/components/home/QuickActions";
+import { RecentSearchesCard } from "@/components/home/RecentSearchesCard";
+import { BookmarkedAyahsCard } from "@/components/home/BookmarkedAyahsCard";
+import { DailyReflectionCard } from "@/components/home/DailyReflectionCard";
+import { DiscoverMoreSection } from "@/components/home/DiscoverMoreSection";
 import { AISearchBar } from "@/components/search/AISearchBar";
 import { VoiceSearchModal } from "@/components/search/VoiceSearchModal";
 import { SemanticChips } from "@/components/search/SemanticChips";
 import { AyahResultCard } from "@/components/results/AyahResultCard";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
-import { useRouter } from "next/navigation";
+import { ContentCard } from "@/components/ui/ContentCard";
+import { useRouter, useSearchParams } from "next/navigation";
 import { searchUnified } from "@/lib/api";
 import { resolveTopicSearch } from "@/lib/resolveTopicSearch";
+import { useSearchHistory } from "@/hooks/useSearchHistory";
+import { getGreeting } from "@/lib/utils";
 import type { SearchTopic } from "@/lib/searchTopics";
 import type { SearchCandidate, SearchMode } from "@/lib/types";
 import { useAudioPlayback } from "@/contexts/AudioPlaybackContext";
@@ -34,13 +44,17 @@ export function SearchExperience() {
   const searchGeneration = useRef(0);
   const modeRef = useRef(mode);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { addQuery } = useSearchHistory();
 
   modeRef.current = mode;
   const { registerReset } = useSearchHome();
   const playback = useAudioPlayback();
   const [isMobile, setIsMobile] = useState(true);
+  const [greeting, setGreeting] = useState("");
   useEffect(() => {
     setIsMobile(window.innerWidth < 640);
+    setGreeting(getGreeting());
   }, []);
 
   const resetToLanding = useCallback(() => {
@@ -95,13 +109,7 @@ export function SearchExperience() {
       setWeakMatches(data.weak_matches ?? []);
       setNoMatchMessage(count === 0 && data.message ? data.message : null);
       setAiHint(data.intent_hint ?? data.normalized_query ?? null);
-      try {
-        const hist: string[] = JSON.parse(localStorage.getItem("ayahfind_history") || "[]");
-        const next = [trimmed, ...hist.filter((h) => h !== trimmed)].slice(0, 20);
-        localStorage.setItem("ayahfind_history", JSON.stringify(next));
-      } catch {
-        /* ignore */
-      }
+      addQuery(trimmed);
     } catch (e) {
       if (generation !== searchGeneration.current) return;
       console.error("[search] error:", e);
@@ -114,6 +122,13 @@ export function SearchExperience() {
         setLoading(false);
       }
     }
+  }, [addQuery]);
+
+  // Reopening a past search (from Recent Searches or /history) lands here as `?q=`.
+  useEffect(() => {
+    const q = searchParams.get("q");
+    if (q) void executeSearch(q, "button");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onBarSearch = useCallback(
@@ -182,34 +197,68 @@ export function SearchExperience() {
   });
 
   return (
-    <>
-      <header className="pb-5 pt-2 md:pt-4">
-        <motion.p
-          {...fade(0)}
-          className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-subtle"
+    <div className="space-y-0.5">
+      {/* Hero: greeting + tagline beside a balancing Mushaf visual */}
+      <div
+        className="relative grid h-[190px] items-center gap-2 overflow-hidden rounded-[20px] px-6 lg:grid-cols-[1fr_auto] lg:px-9"
+        style={{ background: "linear-gradient(135deg, #FDFBF7, #F3EBDA)" }}
+      >
+        {/* Warm ambient atmosphere — subtle, decorative only */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -z-10"
         >
-          AyahFind AI
-        </motion.p>
-        <motion.h1
-          {...slideUp(0.08)}
-          className="text-[1.75rem] font-bold leading-[1.2] tracking-tight text-ink sm:text-[2rem]"
-        >
-          Search the Qur&apos;an{" "}
-          <span className="text-gradient">&amp; Hadith</span>
-        </motion.h1>
-        <motion.p
-          {...fade(0.16)}
-          className="mt-2 text-[0.875rem] leading-relaxed text-ink-muted sm:mt-2.5"
-        >
-          Imperfect recitation, mixed languages, vague meanings — we still find what you meant.
-        </motion.p>
-      </header>
+          <IslamicPatternBg className="absolute inset-0 h-full w-full opacity-[0.05]" color="#2F6B46" />
+          <div
+            className="absolute -right-16 -top-16 h-72 w-72 rounded-full opacity-[0.22] blur-3xl"
+            style={{ background: "radial-gradient(circle, #D4AF37, transparent 70%)" }}
+          />
+          <div
+            className="absolute -left-10 top-6 h-52 w-52 rounded-full opacity-[0.12] blur-3xl"
+            style={{ background: "radial-gradient(circle, #2F6B46, transparent 70%)" }}
+          />
+        </div>
 
-      <motion.div {...slideUp(0.24)}>
-        <ContinueReadingCard />
-      </motion.div>
+        <header>
+          <motion.p
+            {...slideUp(0.08)}
+            className="flex items-center gap-2 font-serif text-[2.25rem] font-bold leading-tight text-text lg:text-[2.5rem]"
+          >
+            {greeting || "Assalamu Alaikum"}
+            <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6 shrink-0 text-[#2F6B46]" aria-hidden="true">
+              <path d="M12 2c-4 4-8 9-8 13a8 8 0 0016 0c0-4-4-9-8-13z" fill="currentColor" opacity="0.85" />
+            </svg>
+          </motion.p>
+          <motion.p
+            {...fade(0.16)}
+            className="mt-1.5 max-w-lg text-lg font-medium text-text-secondary"
+          >
+            Find, read and reflect on the words of Allah
+          </motion.p>
+        </header>
 
-      <motion.section {...slideUp(0.32)} className="space-y-1.5">
+        <motion.div
+          {...fade(0.2)}
+          className="relative hidden shrink-0 items-center justify-center sm:flex"
+        >
+          <div
+            aria-hidden="true"
+            className="absolute h-40 w-40 rounded-full opacity-80 blur-2xl"
+            style={{ background: "radial-gradient(circle, #F3E0A8, transparent 70%)" }}
+          />
+          {/* Botanical accents framing the Mushaf, never competing with it */}
+          <svg aria-hidden="true" className="absolute -right-6 -top-4 h-16 w-16 text-[#4f8f5f] opacity-[0.18]" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2c-4 4-8 9-8 13a8 8 0 0016 0c0-4-4-9-8-13z" />
+          </svg>
+          <svg aria-hidden="true" className="absolute -bottom-2 right-10 h-10 w-10 text-[#4f8f5f] opacity-[0.15]" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2c-4 4-8 9-8 13a8 8 0 0016 0c0-4-4-9-8-13z" />
+          </svg>
+          <MushafVisual className="relative h-24 w-24 lg:h-28 lg:w-28" />
+        </motion.div>
+      </div>
+
+      {/* Search — the dominant action on the page */}
+      <motion.section {...slideUp(0.16)} className="space-y-1">
         <AISearchBar
           value={query}
           onChange={setQuery}
@@ -225,8 +274,31 @@ export function SearchExperience() {
           activeLabel={activeTopic}
           baseDelay={isMobile ? 0 : 0.4}
           noStagger={isMobile}
+          limit={6}
         />
       </motion.section>
+
+      {/* Continue Reading (centerpiece) + Quick Actions */}
+      <motion.div {...slideUp(0.24)} className="grid gap-2 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <ContinueReadingCard />
+        </div>
+        <div className="lg:col-span-1">
+          <QuickActions />
+        </div>
+      </motion.div>
+
+      {/* Recent Searches, Bookmarks, Daily Reflection */}
+      <motion.div {...slideUp(0.32)} className="grid gap-2 lg:grid-cols-3">
+        <RecentSearchesCard onReopen={(q) => void executeSearch(q, "button")} />
+        <BookmarkedAyahsCard />
+        <DailyReflectionCard />
+      </motion.div>
+
+      {/* Discover More */}
+      <motion.div {...slideUp(0.4)}>
+        <DiscoverMoreSection />
+      </motion.div>
 
       {loading && (
         <motion.div
@@ -242,39 +314,47 @@ export function SearchExperience() {
       )}
 
       {error && (
-        <p className="mt-4 rounded-xl border border-red-300/40 bg-red-500/10 px-4 py-3 text-sm text-red-400 dark:border-red-400/20 dark:text-red-300">
+        <p className="mt-4 rounded-xl border border-error/40 bg-error/10 px-4 py-3 text-sm text-error">
           {error}
         </p>
       )}
 
-      {aiHint && !loading && results.length > 0 && (
-        <div className="mt-4 flex items-center gap-2.5 rounded-xl bg-white px-4 py-2.5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <Brain className="h-3.5 w-3.5 shrink-0 text-accent-dim" />
-          <span className="text-[13px] text-ink-muted">
-            AI matched your meaning
-            {aiHint && <span className="ml-1 text-ink-subtle">· {aiHint}</span>}
+      {aiHint && !loading && results.length > 0 && !aiHint.startsWith("multi_signal_fusion:") && (
+        <ContentCard elevation="surface" padding="sm" className="mt-4 flex items-center gap-2.5">
+          <Brain className="h-3.5 w-3.5 shrink-0 text-primary-hover" />
+          <span className="text-[13px] text-text-secondary">
+            {aiHint.startsWith("Showing results for") ? (
+              <span>{aiHint}</span>
+            ) : (
+              <>
+                AI matched your meaning
+                <span className="ml-1 text-text-tertiary">· {aiHint}</span>
+              </>
+            )}
           </span>
-        </div>
+        </ContentCard>
       )}
 
       {!loading && noMatchMessage && results.length === 0 && (
-        <motion.section
+        <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-6 rounded-2xl bg-white px-5 py-8 text-center shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.05)]"
+          className="mt-6"
         >
-          <SearchX className="mx-auto mb-3 h-10 w-10 text-ink-muted" />
-          <h2 className="text-lg font-semibold text-ink">
-            No confident match found
-          </h2>
-          <p className="mt-2 text-sm text-ink-muted">{noMatchMessage}</p>
-        </motion.section>
+          <ContentCard elevation="surface" padding="lg" className="text-center">
+            <SearchX className="mx-auto mb-3 h-10 w-10 text-text-secondary" />
+            <h2 className="text-lg font-semibold text-text">
+              No confident match found
+            </h2>
+            <p className="mt-2 text-sm text-text-secondary">{noMatchMessage}</p>
+          </ContentCard>
+        </motion.div>
       )}
 
       {!loading && results.length > 0 && (
         <section className="relative z-20 mt-6 space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs font-medium uppercase tracking-wider text-ink-subtle">
+            <h2 className="text-xs font-medium uppercase tracking-wider text-text-tertiary">
               {results.length} results
             </h2>
           </div>
@@ -295,7 +375,7 @@ export function SearchExperience() {
           <button
             type="button"
             onClick={() => setWeakOpen((o) => !o)}
-            className="flex w-full items-center justify-between rounded-xl bg-white px-4 py-3 text-left text-sm text-ink-muted shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-shadow hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+            className="flex w-full items-center justify-between rounded-xl bg-surface px-4 py-3 text-left text-sm text-text-secondary shadow-xs transition-shadow duration-150 ease-out hover:shadow-sm"
           >
             <span>
               Low confidence matches (below 55%)
@@ -331,6 +411,6 @@ export function SearchExperience() {
           onResult={onVoiceSearch}
         />
       )}
-    </>
+    </div>
   );
 }

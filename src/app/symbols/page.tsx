@@ -2,8 +2,22 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { Badge } from '@/components/ui/Badge';
 
 type Category = 'all' | 'waqf' | 'sajdah' | 'structure' | 'tajweed';
+/** Severity/role grouping for the detail badge — not a 1:1 mapping of the
+ * classical terminology's every nuance, but a coherent, theme-aware scale:
+ * strict rule, optional/lenient, preferred-but-flexible, pure structure,
+ * or a tajweed pronunciation note (reuses the --highlight token). */
+type BadgeTone = 'strict' | 'lenient' | 'preferred' | 'structural' | 'tajweed';
+
+const BADGE_TONE_CLASSES: Record<BadgeTone, string> = {
+  strict: 'border-error/30 bg-error/10 text-error',
+  lenient: 'border-success/30 bg-success/10 text-success',
+  preferred: 'border-warning/30 bg-warning/10 text-warning',
+  structural: 'border-border-strong bg-surface-secondary text-text-secondary',
+  tajweed: 'border-highlight-border bg-highlight-surface text-highlight',
+};
 
 interface FoundInEntry {
   label: string;
@@ -19,7 +33,7 @@ interface SymbolEntry {
   nameAr: string;
   category: Category;
   badgeText: string;
-  badgeStyle: string;
+  badgeTone: BadgeTone;
   meaning: string;
   guidance: string;
   foundIn: FoundInEntry[];
@@ -36,7 +50,7 @@ const SYMBOLS: SymbolEntry[] = [
     nameAr: 'وقف لازم',
     category: 'waqf',
     badgeText: 'Stopping required',
-    badgeStyle: 'bg-red-100 text-red-700',
+    badgeTone: 'strict',
     meaning:
       'A stopping point where the reader must pause before continuing. Continuing without stopping would distort or reverse the intended meaning of the verse. This is the strongest stopping mark in the Quran.',
     guidance:
@@ -60,7 +74,7 @@ const SYMBOLS: SymbolEntry[] = [
     nameAr: 'لا وقف',
     category: 'waqf',
     badgeText: 'Do not stop',
-    badgeStyle: 'bg-pink-100 text-pink-700',
+    badgeTone: 'strict',
     meaning:
       'Stopping here is discouraged or impermissible because it would sever a grammatical or semantic connection that the reader must carry across. The meaning flows continuously through this point.',
     guidance:
@@ -83,7 +97,7 @@ const SYMBOLS: SymbolEntry[] = [
     nameAr: 'وقف جائز',
     category: 'waqf',
     badgeText: 'Stopping optional',
-    badgeStyle: 'bg-green-100 text-green-700',
+    badgeTone: 'lenient',
     meaning:
       'Stopping is equally permissible and continuation is equally acceptable. Neither choice affects the intended meaning — the verse reads coherently in either case.',
     guidance:
@@ -106,7 +120,7 @@ const SYMBOLS: SymbolEntry[] = [
     nameAr: 'الوقف أولى',
     category: 'waqf',
     badgeText: 'Stopping preferred',
-    badgeStyle: 'bg-orange-100 text-orange-700',
+    badgeTone: 'preferred',
     meaning:
       'Stopping is the preferred and recommended option at this point. Continuing is not forbidden, but the reader who stops demonstrates better understanding of the verse\'s structure. The abbreviation stands for قيل الوقف عليه أولى.',
     guidance:
@@ -129,7 +143,7 @@ const SYMBOLS: SymbolEntry[] = [
     nameAr: 'الوصل أولى',
     category: 'waqf',
     badgeText: 'Continuation preferred',
-    badgeStyle: 'bg-blue-100 text-blue-700',
+    badgeTone: 'preferred',
     meaning:
       'The reader is advised to continue here rather than stop. Continuing is considered better for preserving the full sense and flow of the verse. The abbreviation stands for قيل الوصل أولى.',
     guidance:
@@ -152,7 +166,7 @@ const SYMBOLS: SymbolEntry[] = [
     nameAr: 'وقف مطلق',
     category: 'waqf',
     badgeText: 'Full stop',
-    badgeStyle: 'bg-red-100 text-red-700',
+    badgeTone: 'strict',
     meaning:
       'An absolute stopping point indicating a complete and definitive pause. The topic or statement is fully concluded here. The reader should stop and not continue in the same breath.',
     guidance:
@@ -175,7 +189,7 @@ const SYMBOLS: SymbolEntry[] = [
     nameAr: 'وقف مجوَّز',
     category: 'waqf',
     badgeText: 'Permitted, continue better',
-    badgeStyle: 'bg-yellow-100 text-yellow-700',
+    badgeTone: 'preferred',
     meaning:
       'Stopping is technically permitted here but continuing without stopping is the better choice. The mark indicates that stopping, while not ideal, will not misrepresent the verse.',
     guidance:
@@ -197,7 +211,7 @@ const SYMBOLS: SymbolEntry[] = [
     nameAr: 'وقف مرخَّص',
     category: 'waqf',
     badgeText: 'Stop only if necessary',
-    badgeStyle: 'bg-amber-100 text-amber-700',
+    badgeTone: 'preferred',
     meaning:
       'Stopping here is only a concession for practical necessity — such as extreme breathlessness. In normal circumstances the reader should continue. The mark indicates that stopping is grammatically difficult but physically understandable.',
     guidance:
@@ -219,7 +233,7 @@ const SYMBOLS: SymbolEntry[] = [
     nameAr: 'وقفة',
     category: 'waqf',
     badgeText: 'Brief pause, do not restart breath',
-    badgeStyle: 'bg-amber-100 text-amber-700',
+    badgeTone: 'preferred',
     meaning:
       'A very short pause that is shorter than a full stopping point but longer than a normal reading breath. The reader pauses briefly without fully stopping the breath or the flow of recitation.',
     guidance:
@@ -241,7 +255,7 @@ const SYMBOLS: SymbolEntry[] = [
     nameAr: 'علامة السجدة',
     category: 'sajdah',
     badgeText: 'Prostration recommended',
-    badgeStyle: 'bg-teal-100 text-teal-700',
+    badgeTone: 'tajweed',
     meaning:
       'This marks one of the 15 verses of prostration in the Quran. When a reader reaches this verse — in recitation or reading — it is recommended (in some opinions obligatory during prayer) to perform a prostration of recitation (sajdah al-tilawah).',
     guidance:
@@ -267,7 +281,7 @@ const SYMBOLS: SymbolEntry[] = [
     nameAr: 'فاصلة الآية',
     category: 'structure',
     badgeText: 'Verse boundary',
-    badgeStyle: 'bg-gray-100 text-gray-600',
+    badgeTone: 'structural',
     meaning:
       'This ornamental circle marks the end of a Quranic verse (ayah). It typically contains the verse number in certain mushaf editions. It visually separates verses and helps readers track their position in the text.',
     guidance:
@@ -288,7 +302,7 @@ const SYMBOLS: SymbolEntry[] = [
     nameAr: 'علامة الركوع',
     category: 'structure',
     badgeText: 'Thematic section boundary',
-    badgeStyle: 'bg-gray-100 text-gray-600',
+    badgeTone: 'structural',
     meaning:
       'Marks the beginning or end of a ruku — a thematic grouping of verses used primarily in the Hanafi tradition to denote units of approximately equal length for structuring daily recitation. A ruku typically contains between 5 and 10 verses.',
     guidance:
@@ -310,7 +324,7 @@ const SYMBOLS: SymbolEntry[] = [
     nameAr: 'علامة الحزب',
     category: 'structure',
     badgeText: 'Structural division',
-    badgeStyle: 'bg-gray-100 text-gray-600',
+    badgeTone: 'structural',
     meaning:
       'Marks the beginning of a hizb — one of the 60 equal portions of the Quran used for dividing the text for systematic daily recitation over one or two months. Each juz contains two ahzab.',
     guidance:
@@ -332,7 +346,7 @@ const SYMBOLS: SymbolEntry[] = [
     nameAr: 'شدَّة',
     category: 'tajweed',
     badgeText: 'Double this consonant',
-    badgeStyle: 'bg-teal-100 text-teal-700',
+    badgeTone: 'tajweed',
     meaning:
       'The shaddah indicates that a consonant is doubled — it is both a letter with a sukun and the same letter with a vowel. The letter must be pronounced twice in one sound, held slightly longer than a single consonant.',
     guidance:
@@ -355,7 +369,7 @@ const SYMBOLS: SymbolEntry[] = [
     nameAr: 'إمالة كبرى',
     category: 'tajweed',
     badgeText: 'Special pronunciation',
-    badgeStyle: 'bg-yellow-100 text-yellow-800',
+    badgeTone: 'tajweed',
     meaning:
       'This is the only word in the entire Quran where Imalah Kubra applies in the Hafs an Asim recitation. Imalah means "tilting" — the vowel sound is blended exactly halfway between a Fathah (ah) and a Kasrah (ee). The word مَجْرَاهَا in Surah Hud 11:41 is recited as "Maj-ray-ha" — matching the long "ay" sound in the English words "say", "day", or "may". Do not say a flat "Maj-ra-ha" and do not say a full "Maj-ree-ha" — the sound sits precisely 50% between the two.',
     guidance:
@@ -394,10 +408,10 @@ export default function SymbolsPage() {
     <div className="mx-auto max-w-3xl px-4 py-8 pb-28 md:pb-10">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-ink sm:text-3xl" style={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600 }}>
+        <h1 className="text-heading-lg text-text">
           Quranic symbols &amp; reading marks
         </h1>
-        <p className="mt-1.5 text-sm text-ink-muted">
+        <p className="mt-1.5 text-sm text-text-secondary">
           Tap any symbol to learn its name, meaning, and recitation guidance
         </p>
       </div>
@@ -411,10 +425,10 @@ export default function SymbolsPage() {
               setActiveTab(tab.id);
               setSelectedId(null);
             }}
-            className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all duration-150 ${
+            className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors duration-150 ease-out ${
               activeTab === tab.id
-                ? 'border-accent-dim bg-accent-surface text-accent-dim'
-                : 'border-border bg-white text-ink-muted hover:border-accent-dim/40 hover:text-ink'
+                ? 'border-accent-border bg-accent-surface text-primary-hover'
+                : 'border-border bg-surface text-text-secondary hover:border-accent-border hover:text-text'
             }`}
           >
             {tab.label}
@@ -428,20 +442,20 @@ export default function SymbolsPage() {
           <button
             key={sym.id}
             onClick={() => handleSelect(sym.id)}
-            className={`flex flex-col items-center gap-1 rounded-xl border p-2.5 pt-3 text-center transition-all duration-150 ${
+            className={`flex flex-col items-center gap-1 rounded-xl border p-2.5 pt-3 text-center transition-colors duration-150 ease-out ${
               selectedId === sym.id
-                ? 'border-accent-dim/60 bg-accent-surface shadow-sm'
-                : 'border-border bg-white hover:border-accent-dim/40 hover:bg-canvas-card'
+                ? 'border-accent-border bg-accent-surface shadow-sm'
+                : 'border-border bg-surface hover:border-accent-border hover:bg-surface-secondary'
             }`}
           >
             <span
-              className="font-arabic text-xl leading-none text-ink"
+              className="font-arabic text-xl leading-none text-text"
               dir="rtl"
               lang="ar"
             >
               {sym.glyph}
             </span>
-            <span className="mt-0.5 text-[10px] leading-tight text-ink-muted">{sym.gridLabel}</span>
+            <span className="mt-0.5 text-[10px] leading-tight text-text-secondary">{sym.gridLabel}</span>
           </button>
         ))}
       </div>
@@ -450,8 +464,8 @@ export default function SymbolsPage() {
       {selected ? (
         <DetailPanel symbol={selected} />
       ) : (
-        <div className="rounded-xl border border-dashed border-border bg-canvas-card px-6 py-10 text-center">
-          <p className="text-sm text-ink-subtle">Select a symbol above to explore its meaning</p>
+        <div className="rounded-xl border border-dashed border-border bg-surface-secondary px-6 py-10 text-center">
+          <p className="text-sm text-text-tertiary">Select a symbol above to explore its meaning</p>
         </div>
       )}
     </div>
@@ -460,27 +474,25 @@ export default function SymbolsPage() {
 
 function DetailPanel({ symbol }: { symbol: SymbolEntry }) {
   return (
-    <div className="rounded-xl border border-border bg-white shadow-sm">
+    <div className="rounded-xl border border-border bg-surface shadow-sm">
       {/* Top section */}
       <div className="flex items-start gap-4 border-b border-border p-5">
         {/* Glyph square */}
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-purple-50">
-          <span className="font-arabic text-3xl leading-none text-ink" dir="rtl" lang="ar">
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-accent-surface">
+          <span className="font-arabic text-3xl leading-none text-text" dir="rtl" lang="ar">
             {symbol.glyph}
           </span>
         </div>
 
         {/* Names + badge */}
         <div className="flex-1 pt-0.5">
-          <h2 className="text-base font-semibold text-ink">{symbol.nameEn}</h2>
-          <p className="font-arabic mt-0.5 text-sm text-teal-600" dir="rtl" lang="ar">
+          <h2 className="text-base font-semibold text-text">{symbol.nameEn}</h2>
+          <p className="font-arabic mt-0.5 text-sm text-primary-hover" dir="rtl" lang="ar">
             {symbol.nameAr}
           </p>
-          <span
-            className={`mt-2 inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${symbol.badgeStyle}`}
-          >
+          <Badge size="md" className={`mt-2 ${BADGE_TONE_CLASSES[symbol.badgeTone]}`}>
             {symbol.badgeText}
-          </span>
+          </Badge>
         </div>
       </div>
 
@@ -488,25 +500,25 @@ function DetailPanel({ symbol }: { symbol: SymbolEntry }) {
       <div className="space-y-5 p-5 text-sm">
         {/* Meaning */}
         <div>
-          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">
+          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-text-tertiary">
             Meaning
           </p>
-          <p className="leading-relaxed text-ink-muted">{symbol.meaning}</p>
+          <p className="leading-relaxed text-text-secondary">{symbol.meaning}</p>
         </div>
 
         {/* Reading Guidance */}
         <div>
-          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">
+          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-text-tertiary">
             Reading Guidance
           </p>
-          <div className="border-l-2 border-accent-dim/40 pl-3">
-            <p className="leading-relaxed text-ink-muted">{symbol.guidance}</p>
+          <div className="border-l-2 border-accent-border pl-3">
+            <p className="leading-relaxed text-text-secondary">{symbol.guidance}</p>
           </div>
         </div>
 
         {/* Found in */}
         <div>
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-text-tertiary">
             Found In
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -515,14 +527,14 @@ function DetailPanel({ symbol }: { symbol: SymbolEntry }) {
                 <Link
                   key={entry.label}
                   href={entry.href}
-                  className="rounded-lg border border-border bg-canvas-card px-2.5 py-1 text-xs text-accent-dim transition-colors hover:bg-accent-surface"
+                  className="rounded-lg border border-border bg-surface-secondary px-2.5 py-1 text-xs text-primary-hover transition-colors duration-150 ease-out hover:bg-accent-surface"
                 >
                   {entry.label}
                 </Link>
               ) : (
                 <span
                   key={entry.label}
-                  className="rounded-lg border border-border bg-canvas-card px-2.5 py-1 text-xs text-ink-muted"
+                  className="rounded-lg border border-border bg-surface-secondary px-2.5 py-1 text-xs text-text-secondary"
                 >
                   {entry.label}
                 </span>
@@ -533,12 +545,12 @@ function DetailPanel({ symbol }: { symbol: SymbolEntry }) {
 
         {/* Sources */}
         <div>
-          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-ink-subtle">
+          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-text-tertiary">
             Sources
           </p>
           <ul className="space-y-0.5">
             {symbol.sources.map((src) => (
-              <li key={src} className="text-xs italic text-ink-subtle">
+              <li key={src} className="text-xs italic text-text-tertiary">
                 {src}
               </li>
             ))}

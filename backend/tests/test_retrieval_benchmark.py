@@ -1,4 +1,13 @@
-"""Retrieval stability benchmark."""
+"""Retrieval stability benchmark for QuranSearchEngine.
+
+NOTE: QuranSearchEngine (quran_search_engine.py) is NOT wired into any
+live endpoint — POST /search/unified and /debug-search both use
+SearchService (search_service.py) instead. This suite is kept because
+QuranSearchEngine is still real, working code, but it is no longer the
+retrieval regression gate. For the live engine, see
+test_retrieval_regression.py, which runs the same style of benchmark
+(retrieval_benchmark_v2_cases.json) against SearchService.unified_search.
+"""
 from __future__ import annotations
 
 import json

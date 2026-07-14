@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isReader = pathname?.startsWith("/ayah");
+  const isHome = pathname === "/";
 
   return (
     <OnboardingGate>
@@ -20,8 +21,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div
             key={pathname}
             className={cn(
-              "page-enter mx-auto w-full px-4 py-6 pb-24 md:px-6 md:py-8 md:pb-8 lg:px-10",
-              isReader ? "max-w-4xl lg:max-w-5xl" : "max-w-3xl xl:max-w-4xl"
+              "page-enter mx-auto w-full px-4 pb-24 md:px-6 md:pb-8 lg:px-8",
+              isHome ? "py-1 md:py-1.5" : "py-6 md:py-8",
+              isHome
+                ? "max-w-4xl lg:max-w-6xl xl:max-w-[1280px]"
+                : isReader
+                  ? "max-w-4xl lg:max-w-5xl"
+                  : "max-w-3xl xl:max-w-4xl"
             )}
           >
             {children}

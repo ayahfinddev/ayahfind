@@ -13,6 +13,7 @@ from rapidfuzz import fuzz
 from app.core.arabic_text import (
     arabic_for_search,
     arabic_token_variants,
+    cached_transliteration,
     normalize_arabic,
     query_matches_basmala,
 )
@@ -24,6 +25,7 @@ from app.core.english_lexical_scoring import (
     expand_query_tokens,
     normalize_english,
     score_english_translation,
+    strip_intent_wrappers,
 )
 from app.core.phonetic import detect_script
 from app.core.retrieval_scoring import (
@@ -139,6 +141,7 @@ class LexicalSearchEngine:
 
     def _search_fallback_latin(self, query: str, rows: list[dict], top_k: int) -> list[tuple[int, float]]:
         idf_map = self._english_idf(rows)
+        query = strip_intent_wrappers(query)
         q_norm = normalize_english(query)
         content = english_content_tokens(q_norm)
         token_weights = {w: round(idf_map.get(w, 2.0), 3) for w in content[:16]}
@@ -158,6 +161,29 @@ class LexicalSearchEngine:
                 prefilter.append((row["id"], overlap))
         prefilter.sort(key=lambda x: x[1], reverse=True)
         candidate_ids = {aid for aid, _ in prefilter[:160]}
+
+        # Translation-overlap prefilter found little or nothing — a strong
+        # sign the query is itself romanized Arabic (transliteration), which
+        # shares no vocabulary with translation_en text at all. Without this,
+        # such queries got zero lexical candidates regardless of how exact
+        # the transliteration match was (transliteration/phonetic_latin were
+        # only ever checked *after* this gate, never used to pass it).
+        # Requires >=2 words: a single word (e.g. "zakat", "hypocrisy") is too
+        # ambiguous between "obscure English/transliterated topic term" and
+        # "transliteration phrase" — a broad fuzzy scan against 6,236 short
+        # phonetic skeletons produces noisy false-positive candidates for a
+        # single short word, which was outcompeting the correct topical verse.
+        if len(prefilter) < 40 and len(q_norm.split()) >= 2:
+            for row in rows:
+                translit_text = row.get("transliteration") or cached_transliteration(
+                    row["id"], row.get("text_ar") or "",
+                    int(row.get("surah_number", row.get("surah", 0))),
+                    int(row.get("ayah_number", row.get("ayah", 0))),
+                )
+                candidate_text = translit_text or (row.get("phonetic_latin") or "")
+                if candidate_text and fuzz.partial_ratio(q_lower, candidate_text.lower()) >= 55:
+                    candidate_ids.add(row["id"])
+
         if not candidate_ids and content_for_prefilter:
             for row in rows:
                 trans = row.get("translation_en") or ""
@@ -180,6 +206,12 @@ class LexicalSearchEngine:
 
             for field in ("transliteration", "phonetic_latin"):
                 text = row.get(field) or ""
+                if not text and field == "transliteration":
+                    text = cached_transliteration(
+                        row["id"], row.get("text_ar") or "",
+                        int(row.get("surah_number", row.get("surah", 0))),
+                        int(row.get("ayah_number", row.get("ayah", 0))),
+                    )
                 if not text:
                     continue
                 tl = text.lower()

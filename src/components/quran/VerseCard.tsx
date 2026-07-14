@@ -7,6 +7,8 @@ import type { AyahDetail } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { AnnotatedArabicText } from "@/components/quran/AnnotatedArabicText";
 import { TafsirPanel } from "@/components/quran/TafsirPanel";
+import { ReaderSection } from "@/components/ui/ReaderSection";
+import { ActionBar } from "@/components/ui/ActionBar";
 
 interface VerseCardProps {
   surah: number;
@@ -47,79 +49,52 @@ export function VerseCard(props: VerseCardProps) {
   };
 
   return (
-    <article
+    <ReaderSection
       id={`ayah-${ayah.ayah}`}
-      className={cn(
-        "reader-verse group scroll-mt-28 overflow-visible px-6 transition-all duration-200 md:px-10",
-        "py-12 md:py-14",
-        highlighted && "reader-highlight",
-        active
-          ? "is-active border-l-[3px] border-accent-dim pl-[21px] md:pl-[37px]"
-          : "border-l-[3px] border-transparent pl-[21px] md:pl-[37px]",
-        !active && "hover:bg-white/60"
-      )}
-    >
-      {/* Top row: verse ref + action icons */}
-      <div className="flex items-center justify-between gap-3">
+      active={active}
+      className={cn("reader-verse group scroll-mt-28", highlighted && "reader-highlight", !active && "hover:bg-surface-secondary/60")}
+      label={
         <button
           type="button"
           onClick={() => onSelectAyah(ayah.ayah)}
-          className="text-[11px] font-normal tracking-wide text-ink-subtle transition-colors hover:text-accent-dim"
+          className="text-xs font-normal tracking-wide text-text-tertiary transition-colors hover:text-primary-hover"
         >
           {surah}:{ayah.ayah}
         </button>
-
-        {/* Actions — appear on hover only */}
-        <div className="flex items-center gap-0.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
-          <button
-            type="button"
-            onClick={toggleListen}
-            className={cn(
-              "rounded-lg p-1.5 transition-colors",
-              playing ? "text-accent-dim" : "text-ink-subtle hover:bg-canvas-card hover:text-ink"
-            )}
-            aria-label={playing ? "Pause" : "Play"}
-          >
-            {playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
-          </button>
-          <button
-            type="button"
-            onClick={onToggleSave}
-            className={cn(
-              "rounded-lg p-1.5 transition-colors",
-              saved ? "text-accent-dim" : "text-ink-subtle hover:bg-canvas-card hover:text-ink"
-            )}
-            aria-label="Bookmark"
-          >
-            <Bookmark className={cn("h-3.5 w-3.5", saved && "fill-current")} />
-          </button>
-          <button
-            type="button"
-            onClick={copyVerse}
-            className="rounded-lg p-1.5 text-ink-subtle transition-colors hover:bg-canvas-card hover:text-ink"
-            aria-label="Copy"
-          >
-            <Copy className="h-3.5 w-3.5" />
-          </button>
-          <button
-            type="button"
-            onClick={shareVerse}
-            className="rounded-lg p-1.5 text-ink-subtle transition-colors hover:bg-canvas-card hover:text-ink"
-            aria-label="Share"
-          >
-            <Share2 className="h-3.5 w-3.5" />
-          </button>
+      }
+      actions={
+        <div className="flex items-center opacity-70 transition-opacity duration-150 ease-out group-hover:opacity-100 group-focus-within:opacity-100">
+          <ActionBar
+            items={[
+              {
+                key: "listen",
+                icon: playing ? <Pause /> : <Play />,
+                label: playing ? "Pause" : "Play",
+                onClick: toggleListen,
+                active: playing,
+              },
+              {
+                key: "bookmark",
+                icon: <Bookmark className={cn(saved && "fill-current")} />,
+                label: "Bookmark",
+                onClick: onToggleSave,
+                active: saved,
+              },
+              { key: "copy", icon: <Copy />, label: "Copy", onClick: copyVerse },
+              { key: "share", icon: <Share2 />, label: "Share", onClick: shareVerse },
+            ]}
+          />
         </div>
-      </div>
-
-      {/* Arabic */}
+      }
+    >
+      {/* Arabic — always the visually dominant element on this card */}
       {showArabic && (
         <p
           className={cn(
-            "reader-verse-arabic font-arabic break-words text-ink",
+            "reader-verse-arabic font-arabic break-words text-text",
             mode === "arabic"
-              ? "mt-5 text-center text-[2rem] leading-[2.35] md:text-[2.2rem] md:leading-[2.5]"
-              : "mt-6 text-right text-[1.8rem] leading-[2.3] md:text-[1.95rem] md:leading-[2.45]"
+              ? "mt-2 text-center text-arabic-lg"
+              : "mt-3 text-right text-arabic-md"
           )}
           dir="rtl"
           lang="ar"
@@ -128,14 +103,12 @@ export function VerseCard(props: VerseCardProps) {
         </p>
       )}
 
-      {/* Translation */}
+      {/* Translation — secondary to Arabic */}
       {showTranslation && ayah.translation_en && (
         <p
           className={cn(
-            "reader-verse-translation break-words text-ink-muted",
-            mode === "verse" || mode === "both"
-              ? "mt-5 text-[0.9rem] leading-[1.75] md:text-[0.9375rem]"
-              : "mt-4 text-base leading-relaxed md:text-lg"
+            "reader-verse-translation break-words text-text-secondary",
+            mode === "verse" || mode === "both" ? "mt-5 text-body-sm" : "mt-4 text-body"
           )}
         >
           {ayah.translation_en}
@@ -145,6 +118,6 @@ export function VerseCard(props: VerseCardProps) {
       <div className="mt-4">
         <TafsirPanel surah={surah} ayah={ayah.ayah} />
       </div>
-    </article>
+    </ReaderSection>
   );
 }

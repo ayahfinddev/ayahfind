@@ -52,12 +52,25 @@ class Settings(BaseSettings):
     audio_dir: Path = Field(default_factory=lambda: REPO_ROOT / "data" / "audio")
     mfcc_index_path: Path = Field(default_factory=lambda: REPO_ROOT / "vector_index" / "mfcc_bank.npz")
 
-    # Tafsir: off by default until a verified data/tafsir.db is actually
-    # present for the deploy (see docs/TAFSIR_INGESTION.md). The route/service
-    # also independently no-ops if the file is missing, so flipping this on
-    # without a db present degrades gracefully rather than erroring.
+    # Tafsir: off by default. In production (environment=="production"),
+    # tafsir is served live from the Quran Foundation Content API with a
+    # bounded in-memory cache — no committed database (see qf_tafsir_provider.py
+    # and docs/TAFSIR_INGESTION.md). In development/tests, a local fixture
+    # sqlite db is used instead (tafsir_db_path, see tafsir_store.py).
     tafsir_enabled: bool = False
     tafsir_db_path: Path = Field(default_factory=lambda: REPO_ROOT / "data" / "tafsir.db")
+
+    # Quran Foundation Content API (production tafsir source). Credentials
+    # are backend-only — never sent to or read by the frontend.
+    qf_client_id: str = ""
+    qf_client_secret: str = ""
+    qf_env: str = "production"  # "production" | "prelive" — selects the QF host pair
+    qf_request_timeout_seconds: float = 10.0
+
+    # Individual tafsir responses are cached in-memory for less than QF's
+    # 7-day cap (see docs/TAFSIR_INGESTION.md for the compliance rationale).
+    tafsir_cache_ttl_seconds: float = 6 * 24 * 3600
+    tafsir_cache_max_entries: int = 300  # 114 surahs x 2 approved sources, with headroom
 
     # JSON corpus is the default for beta deploys (no Postgres required).
     use_database: bool = False

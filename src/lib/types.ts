@@ -66,3 +66,15 @@ export interface TafsirResponse {
 export interface TafsirStatusResponse {
   enabled: boolean;
 }
+
+// --- Riwayah (Quran reading transmission) support -------------------------
+// Additive only. See src/lib/riwayat.ts for the registry/colour-theme and
+// backend/app/core/riwayat.py for the mirrored backend registry.
+
+export interface ReadingVariantsResponse {
+  surah: number;
+  ayah: number;
+  canonical_riwayah_id: string;
+  equivalent_riwayah_ids: string[];
+  has_reading_variants: boolean;
+}

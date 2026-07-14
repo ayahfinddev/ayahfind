@@ -107,6 +107,52 @@ def expand_query_tokens(tokens: list[str]) -> list[str]:
     return result
 
 
+_QUERY_STOP = frozenset(
+    _ULTRA_STOP
+    | {
+        "verse",
+        "verses",
+        "ayah",
+        "ayat",
+        "surah",
+        "sura",
+        "chapter",
+        "about",
+        "regarding",
+        "concerning",
+        "mentioning",
+        "mentions",
+        "mentioned",
+        "says",
+        "said",
+        "saying",
+        "tells",
+        "told",
+        "describes",
+        "describing",
+        "talks",
+        "talking",
+        "quran",
+        "allah",
+    }
+)
+
+_INTENT_WRAPPER_RE = re.compile(
+    r"^(?:(?:the\s+)?(?:verse|ayah|ayat|surah|sura|chapter)s?\s+"
+    r"(?:about|regarding|concerning|where|that|which|on|mentioning)\s+)"
+    r"|^(?:where\s+(?:allah|god|quran)\s+(?:says?|mentions?|describes?|tells?|talks?\s+about)\s+(?:about\s+)?)"
+    r"|^(?:(?:quran|quranic)\s+(?:verse|ayah|ayat)s?\s+(?:about|on|regarding|concerning)\s+)",
+    re.IGNORECASE,
+)
+
+
+def strip_intent_wrappers(query: str) -> str:
+    """Remove intent-wrapper prefixes so only the semantic concept remains."""
+    q = query.strip()
+    q = _INTENT_WRAPPER_RE.sub("", q).strip()
+    return q if q else query.strip()
+
+
 _PARAPHRASE_REPLACEMENTS = (
     ("ask permission", "seek exemption"),
     ("ask", "seek"),
@@ -144,12 +190,19 @@ def _paraphrase_hints(text: str) -> str:
     return t
 
 
-def english_content_tokens(text: str) -> list[str]:
-    """Discriminative tokens for IDF weighting (reduced stopword influence)."""
+def english_content_tokens(text: str, *, corpus: bool = False) -> list[str]:
+    """Discriminative tokens for IDF weighting.
+
+    For query text (corpus=False) uses the broader _QUERY_STOP list which
+    removes intent-wrapper words like 'verse', 'about', 'ayah'.
+    For corpus text (corpus=True) uses only _ULTRA_STOP so translation
+    words like 'about' still get indexed.
+    """
+    stop = _ULTRA_STOP if corpus else _QUERY_STOP
     return [
         w
         for w in _WORD.findall(normalize_english(text))
-        if len(w) > 2 and w not in _ULTRA_STOP
+        if len(w) > 2 and w not in stop
     ]
 
 
@@ -161,7 +214,7 @@ def build_english_idf(rows: list[dict]) -> dict[str, float]:
         if not trans:
             continue
         docs += 1
-        for tok in set(english_content_tokens(trans)):
+        for tok in set(english_content_tokens(trans, corpus=True)):
             df[tok] += 1
     if docs == 0:
         return {}
@@ -218,7 +271,7 @@ def score_english_translation(
     idf_map: dict[str, float],
 ) -> tuple[float, dict]:
     """Score English query against a translation with weighted content overlap."""
-    q_norm = normalize_english(query)
+    q_norm = normalize_english(strip_intent_wrappers(query))
     t_norm = normalize_english(translation)
     breakdown: dict = {}
     if not q_norm or not t_norm:

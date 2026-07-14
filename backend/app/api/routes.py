@@ -15,14 +15,24 @@ from fastapi.responses import JSONResponse
 from app.api.diagnostics import build_debug_search_payload, build_health_payload
 from app.api.errors import search_error_response, search_response_or_error
 from app.core.config import get_settings
+from app.core.riwayat import DEFAULT_RIWAYAH_ID, list_riwayat
 from app.models.schemas import (
+    AudioAvailabilityResponse,
     AyahDetail,
+    EquivalentReadingsResponse,
     ReaderSurahResponse,
+    ReadingVariantsResponse,
+    RiwayahAyahResponse,
+    RiwayahDefinitionOut,
+    RiwayahReaderSurahResponse,
+    RiwayahSymbolAvailabilityResponse,
+    RiwayatListResponse,
     SearchRequest,
     SearchResponse,
     TafsirEntryOut,
     TafsirVerseResponse,
 )
+from app.services import riwayah_store
 from app.services.quran_store import QuranStore
 from app.services.search_service import SearchService
 from app.services.tafsir_store import TafsirCorrupted, get_tafsir_store, html_to_plain_text
@@ -249,7 +259,7 @@ async def get_tafsir_status() -> dict:
     decide whether to render the Tafsir button at all, so it never shows a
     button that only leads to an "unavailable" dead end (see TafsirPanel)."""
     tafsir_store = get_tafsir_store()
-    enabled = await asyncio.to_thread(tafsir_store.available)
+    enabled = await tafsir_store.available()
     return {"enabled": enabled}
 
 
@@ -263,7 +273,7 @@ async def get_tafsir(surah: int, ayah: int, response: Response) -> TafsirVerseRe
 
     tafsir_store = get_tafsir_store()
     try:
-        rows = await asyncio.to_thread(tafsir_store.lookup, verse_key)
+        rows = await tafsir_store.lookup(verse_key)
     except TafsirCorrupted as e:
         logger.error("tafsir_corrupted verse_key=%s err=%s", verse_key, e)
         # headers= is required here (not response.headers) — FastAPI builds
@@ -345,4 +355,153 @@ async def reader_surah(surah: int) -> ReaderSurahResponse:
             )
             for a in ayahs
         ],
+    )
+
+
+# --- Riwayah (Quran reading transmission) support -------------------------
+# Additive only — none of the endpoints above are modified. Search stays
+# Hafs-first (see /search/unified); these endpoints let the reader,
+# Continue Reading, audio, and Qira'at panel become riwayah-aware without
+# touching retrieval/ranking. See app/core/riwayat.py and
+# app/services/riwayah_store.py.
+
+
+@router.get("/riwayat", response_model=RiwayatListResponse)
+async def list_riwayat_endpoint() -> RiwayatListResponse:
+    return RiwayatListResponse(
+        riwayat=[
+            RiwayahDefinitionOut(
+                id=r.id,
+                display_name=r.display_name,
+                short_name=r.short_name,
+                qiraah_name=r.qiraah_name,
+                imam_name=r.imam_name,
+                narrator_name=r.narrator_name,
+                text_dataset_id=r.text_dataset_id,
+                audio_dataset_id=r.audio_dataset_id,
+                symbol_set_id=r.symbol_set_id,
+                color_token=r.color_token,
+                is_default=r.is_default,
+                is_enabled=r.is_enabled,
+            )
+            for r in list_riwayat()
+        ],
+        default_riwayah_id=DEFAULT_RIWAYAH_ID,
+    )
+
+
+@router.get("/riwayat/{riwayah_id}/ayah/{surah}/{ayah}", response_model=RiwayahAyahResponse)
+async def get_riwayah_ayah(riwayah_id: str, surah: int, ayah: int, response: Response) -> RiwayahAyahResponse:
+    result = riwayah_store.get_ayah_text(surah, ayah, riwayah_id)
+    if not result.text_available:
+        # Not found is a real 404; a disabled/unavailable riwayah is a
+        # normal 200 with available=False so the UI can render a clear
+        # "dataset unavailable" state instead of treating it as an error.
+        if result.unavailable_reason == "ayah_not_found":
+            raise HTTPException(status_code=404, detail="Ayah not found")
+        response.headers["Cache-Control"] = "no-store"
+    return RiwayahAyahResponse(
+        surah=result.surah,
+        ayah=result.ayah,
+        riwayah_id=result.riwayah_id,
+        available=result.text_available,
+        text_ar=result.text_ar,
+        text_ar_display=result.text_ar_display,
+        unavailable_reason=result.unavailable_reason,
+    )
+
+
+@router.get("/riwayat/{riwayah_id}/reader/{surah}", response_model=RiwayahReaderSurahResponse)
+async def riwayah_reader_surah(riwayah_id: str, surah: int, response: Response) -> RiwayahReaderSurahResponse:
+    store = get_store()
+    meta = store.get_surah_meta(surah)
+    ayah_refs = store.get_surah_ayahs(surah)
+    if not ayah_refs:
+        raise HTTPException(status_code=404, detail="Surah not found")
+
+    ayahs: list[RiwayahAyahResponse] = []
+    any_available = False
+    unavailable_reason: str | None = None
+    for a in ayah_refs:
+        result = riwayah_store.get_ayah_text(surah, a.ayah_number, riwayah_id)
+        if result.text_available:
+            any_available = True
+        else:
+            unavailable_reason = result.unavailable_reason
+        ayahs.append(
+            RiwayahAyahResponse(
+                surah=result.surah,
+                ayah=result.ayah,
+                riwayah_id=result.riwayah_id,
+                available=result.text_available,
+                text_ar=result.text_ar,
+                text_ar_display=result.text_ar_display,
+                unavailable_reason=result.unavailable_reason,
+            )
+        )
+
+    if not any_available:
+        response.headers["Cache-Control"] = "no-store"
+
+    return RiwayahReaderSurahResponse(
+        surah=surah,
+        riwayah_id=riwayah_id,
+        available=any_available,
+        name_en=meta.name_en if meta else None,
+        name_ar=meta.name_ar if meta else None,
+        ayahs=ayahs,
+        unavailable_reason=None if any_available else unavailable_reason,
+    )
+
+
+@router.get("/reading-variants/{surah}/{ayah}", response_model=ReadingVariantsResponse)
+async def get_reading_variants(surah: int, ayah: int, response: Response) -> ReadingVariantsResponse:
+    store = get_store()
+    if store.get_by_ref(surah, ayah) is None:
+        raise HTTPException(status_code=404, detail="Ayah not found")
+    summary = riwayah_store.get_reading_variants(surah, ayah)
+    response.headers["Cache-Control"] = "no-store"  # honesty note evolves as datasets are added
+    return ReadingVariantsResponse(
+        surah=summary.surah,
+        ayah=summary.ayah,
+        canonical_riwayah_id=summary.canonical_riwayah_id,
+        equivalent_riwayah_ids=summary.equivalent_riwayah_ids,
+        has_reading_variants=summary.has_reading_variants,
+    )
+
+
+@router.get("/riwayat/{riwayah_id}/equivalent/{surah}/{ayah}", response_model=EquivalentReadingsResponse)
+async def get_equivalent_readings_endpoint(riwayah_id: str, surah: int, ayah: int) -> EquivalentReadingsResponse:
+    store = get_store()
+    if store.get_by_ref(surah, ayah) is None:
+        raise HTTPException(status_code=404, detail="Ayah not found")
+    result = riwayah_store.get_equivalent_readings(surah, ayah, riwayah_id)
+    return EquivalentReadingsResponse(
+        surah=result.surah,
+        ayah=result.ayah,
+        displayed_riwayah_id=result.displayed_riwayah_id,
+        equivalent_riwayah_ids=result.equivalent_riwayah_ids,
+        comparison_complete=result.comparison_complete,
+        note=result.note,
+    )
+
+
+@router.get("/riwayat/{riwayah_id}/symbols", response_model=RiwayahSymbolAvailabilityResponse)
+async def get_riwayah_symbols_endpoint(riwayah_id: str) -> RiwayahSymbolAvailabilityResponse:
+    result = riwayah_store.get_riwayah_symbols(riwayah_id)
+    return RiwayahSymbolAvailabilityResponse(
+        riwayah_id=result.riwayah_id,
+        symbol_set_id=result.symbol_set_id,
+        available=result.available,
+    )
+
+
+@router.get("/riwayat/{riwayah_id}/audio-availability", response_model=AudioAvailabilityResponse)
+async def get_audio_availability(riwayah_id: str, reciter_id: str | None = Query(default=None)) -> AudioAvailabilityResponse:
+    result = riwayah_store.get_available_audio(riwayah_id, reciter_id)
+    return AudioAvailabilityResponse(
+        riwayah_id=result.riwayah_id,
+        reciter_id=result.reciter_id,
+        available=result.available,
+        reason=result.reason,
     )

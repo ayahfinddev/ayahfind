@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, Loader2, RotateCcw, ScrollText } from "lucide-react";
+import { Loader2, RotateCcw, ScrollText } from "lucide-react";
 import { fetchTafsir } from "@/lib/api";
 import { getCachedTafsir, setCachedTafsir } from "@/lib/tafsirCache";
 import { useTafsirAvailability } from "@/contexts/TafsirAvailabilityContext";
 import type { TafsirEntry } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { ExpandablePanel } from "@/components/ui/ExpandablePanel";
+import { Tabs } from "@/components/ui/Tabs";
 
 interface TafsirPanelProps {
   surah: number;
@@ -20,6 +22,28 @@ interface TafsirPanelProps {
 }
 
 type Status = "idle" | "loading" | "loaded" | "empty" | "error";
+
+function TafsirEntryBody({ entry }: { entry: TafsirEntry }) {
+  return (
+    <div>
+      <p
+        className={cn(
+          "whitespace-pre-line text-sm leading-relaxed text-text",
+          entry.language === "ar" && "font-arabic text-right text-lg leading-loose"
+        )}
+        dir={entry.language === "ar" ? "rtl" : "ltr"}
+      >
+        {entry.text}
+      </p>
+      <p className="mt-3 text-xs text-text-tertiary">
+        {entry.source_title} — {entry.author}
+        {entry.verse_start !== entry.verse_end && (
+          <> · covers {entry.verse_start}–{entry.verse_end}</>
+        )}
+      </p>
+    </div>
+  );
+}
 
 /** Collapsed by default on every card it's placed on. Fetching and expanded
  * state are local to this instance and only activate once the user opens
@@ -64,116 +88,85 @@ export function TafsirPanel({ surah, ayah, variant = "link" }: TafsirPanelProps)
     }
   };
 
-  const toggle = () => {
-    const next = !open;
+  const handleOpenChange = (next: boolean) => {
     setOpen(next);
     if (next && status === "idle") load();
   };
 
-  const active = entries.find((e) => e.source_slug === activeSlug) ?? entries[0];
-
   if (!featureEnabled) return null;
 
   return (
-    <>
-      <button
-        type="button"
-        onClick={toggle}
-        aria-expanded={open}
-        aria-controls={`tafsir-panel-${surah}-${ayah}`}
-        className={
-          variant === "pill"
-            ? cn(
-                "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all",
-                open ? "bg-accent-surface text-accent-dim" : "bg-canvas-card text-ink-muted hover:text-ink"
-              )
-            : "flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium text-accent-dim transition-colors hover:bg-accent-surface"
-        }
-      >
-        {variant === "pill" ? (
-          <ScrollText className="h-3.5 w-3.5" />
+    <ExpandablePanel
+      open={open}
+      onOpenChange={handleOpenChange}
+      showChevron={variant === "link"}
+      trigger={
+        variant === "pill" ? (
+          <>
+            <ScrollText className="h-3.5 w-3.5" />
+            Tafsir
+          </>
         ) : (
-          <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", open && "rotate-180")} />
-        )}
-        Tafsir
-      </button>
+          "Tafsir"
+        )
+      }
+      triggerClassName={
+        variant === "pill"
+          ? cn(
+              "rounded-lg px-3 py-1.5 text-xs",
+              open ? "bg-accent-surface text-primary-hover" : "bg-surface-secondary text-text-secondary hover:text-text"
+            )
+          : "rounded-lg px-2.5 py-1 text-xs text-primary-hover hover:bg-accent-surface"
+      }
+    >
+      {status === "loading" && (
+        <div className="flex items-center gap-2 text-sm text-text-secondary">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Loading tafsir…
+        </div>
+      )}
 
-      {open && (
-        <div
-          id={`tafsir-panel-${surah}-${ayah}`}
-          className="mt-3 w-full rounded-xl border border-border bg-canvas-card px-4 py-3.5"
-        >
-          {status === "loading" && (
-            <div className="flex items-center gap-2 text-sm text-ink-muted">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Loading tafsir…
+      {status === "error" && (
+        <div className="flex items-center justify-between gap-3 text-sm text-text-secondary">
+          <span>Couldn&apos;t load tafsir.</span>
+          <button
+            type="button"
+            onClick={load}
+            className="flex items-center gap-1 font-medium text-primary-hover hover:opacity-80"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            Retry
+          </button>
+        </div>
+      )}
+
+      {status === "empty" && (
+        <p className="text-sm text-text-secondary">No tafsir available for this ayah yet.</p>
+      )}
+
+      {status === "loaded" && entries.length > 0 && (
+        <div>
+          {contentEnvironment === "fixture" && (
+            <div className="mb-3 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-xs font-medium text-warning">
+              Test fixture content — not verified tafsir
             </div>
           )}
 
-          {status === "error" && (
-            <div className="flex items-center justify-between gap-3 text-sm text-ink-muted">
-              <span>Couldn&apos;t load tafsir.</span>
-              <button
-                type="button"
-                onClick={load}
-                className="flex items-center gap-1 font-medium text-accent-dim hover:opacity-80"
-              >
-                <RotateCcw className="h-3.5 w-3.5" />
-                Retry
-              </button>
-            </div>
-          )}
-
-          {status === "empty" && (
-            <p className="text-sm text-ink-muted">No tafsir available for this ayah yet.</p>
-          )}
-
-          {status === "loaded" && active && (
-            <div>
-              {contentEnvironment === "fixture" && (
-                <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
-                  Test fixture content — not verified tafsir
-                </div>
-              )}
-
-              {entries.length > 1 && (
-                <div className="mb-3 flex flex-wrap gap-1.5">
-                  {entries.map((e) => (
-                    <button
-                      key={e.source_slug}
-                      type="button"
-                      onClick={() => setActiveSlug(e.source_slug)}
-                      className={cn(
-                        "af-segment",
-                        e.source_slug === activeSlug ? "af-segment-active" : "af-segment-inactive"
-                      )}
-                    >
-                      {e.source_title}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              <p
-                className={cn(
-                  "whitespace-pre-line text-sm leading-relaxed text-ink",
-                  active.language === "ar" && "font-arabic text-right text-lg leading-loose"
-                )}
-                dir={active.language === "ar" ? "rtl" : "ltr"}
-              >
-                {active.text}
-              </p>
-
-              <p className="mt-3 text-xs text-ink-subtle">
-                {active.source_title} — {active.author}
-                {active.verse_start !== active.verse_end && (
-                  <> · covers {active.verse_start}–{active.verse_end}</>
-                )}
-              </p>
-            </div>
+          {entries.length > 1 ? (
+            <Tabs
+              value={activeSlug ?? entries[0].source_slug}
+              onValueChange={setActiveSlug}
+              items={entries.map((e) => ({
+                id: e.source_slug,
+                label: e.source_title,
+                content: <TafsirEntryBody entry={e} />,
+              }))}
+            />
+          ) : (
+            <TafsirEntryBody entry={entries[0]} />
           )}
         </div>
       )}
-    </>
+    </ExpandablePanel>
   );
 }

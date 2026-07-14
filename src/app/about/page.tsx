@@ -1,6 +1,5 @@
-'use client';
+"use client";
 
-import { useEffect, useRef } from 'react';
 import {
   IconMessageCircle,
   IconClock,
@@ -10,167 +9,193 @@ import {
   IconArrowsRightLeft,
   IconTag,
   IconLink,
-} from '@tabler/icons-react';
+} from "@tabler/icons-react";
 
 const journeyItems = [
-  { q: 'What does this verse mean?', Icon: IconMessageCircle },
-  { q: 'Why was it revealed?', Icon: IconClock },
-  { q: 'What did the scholars say?', Icon: IconUser },
-  { q: 'What tafsir is available?', Icon: IconBooks },
-  { q: 'What hadith relate to it?', Icon: IconFeather },
+  { q: "What does this verse mean?", Icon: IconMessageCircle },
+  { q: "Why was it revealed?", Icon: IconClock },
+  { q: "What did the scholars say?", Icon: IconUser },
+  { q: "What tafsir is available?", Icon: IconBooks },
+  { q: "What hadith relate to it?", Icon: IconFeather },
   { q: "How is it recited in different qira'at?", Icon: IconArrowsRightLeft },
-  { q: 'What do these Quranic symbols mean?', Icon: IconTag },
-  { q: 'What other verses discuss this topic?', Icon: IconLink },
+  { q: "What do these Quranic symbols mean?", Icon: IconTag },
+  { q: "What other verses discuss this topic?", Icon: IconLink },
 ];
 
-export default function AboutPage() {
-  const containerRef = useRef<HTMLDivElement>(null);
+const gapTiles = [
+  { label: "To find an ayah", val: "One website" },
+  { label: "To read tafsir", val: "Another website" },
+  { label: "Why it was revealed", val: "Somewhere else" },
+  { label: "To compare qira'at", val: "Multiple sources" },
+  { label: "Related hadith", val: "Multiple collections" },
+];
 
-  useEffect(() => {
-    const elements = containerRef.current?.querySelectorAll('.fade-in');
-    elements?.forEach((el, i) => {
-      setTimeout(() => {
-        el.classList.add('show');
-      }, 60 + i * 50);
-    });
-  }, []);
+const principles = [
+  {
+    title: "Authenticity above everything",
+    desc: "Users should not have to worry whether the information is genuine. Every result traces back to an authentic Islamic source.",
+  },
+  {
+    title: "Sources always visible",
+    desc: "References are always clear. Knowledge is always traceable. Nothing is presented without attribution.",
+  },
+  {
+    title: "Retrieval, not generation",
+    desc: "AyahFind never generates Islamic content. AI is used only to improve retrieval. The scholarship belongs to the scholars.",
+  },
+];
 
+function Eyebrow({ children }: { children: string }) {
   return (
-    <>
-      <style>{`
-        .fade-in {
-          opacity: 0;
-          transform: translateY(10px);
-          transition: opacity 0.45s ease, transform 0.45s ease;
-        }
-        .fade-in.show {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      `}</style>
+    <div className="mb-2 text-xs font-medium uppercase tracking-[0.1em] text-text-tertiary">
+      {children}
+    </div>
+  );
+}
 
-      <div ref={containerRef} style={{ padding: '2.5rem 3.5rem', maxWidth: '780px', fontFamily: 'Inter, sans-serif', fontSize: '18px', color: '#1a1a18' }}>
+function SectionHeading({ children }: { children: React.ReactNode }) {
+  return <h2 className="mb-3 text-heading-sm leading-snug text-text">{children}</h2>;
+}
 
-        {/* Hero */}
-        <div className="fade-in" style={{ fontSize: '0.86rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#2a5c45', fontWeight: 500, marginBottom: '0.5rem' }}>AyahFind</div>
-        <h1 className="fade-in" style={{ fontFamily: 'Lora, serif', fontSize: '2.65rem', fontWeight: 400, lineHeight: 1.2, color: '#1a1a18', marginBottom: '0.75rem' }}>
-          Islamic knowledge should be <em style={{ fontStyle: 'italic', color: '#2a5c45' }}>easy to find.</em>
-        </h1>
-        <p className="fade-in" style={{ fontSize: '1.13rem', color: '#6a6a60', lineHeight: 1.75, maxWidth: '480px', marginBottom: '2rem' }}>
-          The knowledge exists. The problem is that it is scattered. AyahFind brings authentic Islamic sources together — so Muslims can retrieve, understand, and explore from one trusted place.
-        </p>
+export default function AboutPage() {
+  return (
+    <div className="mx-auto max-w-2xl px-6 py-10 text-body-sm text-text sm:px-10">
+      {/* Hero */}
+      <Eyebrow>AyahFind</Eyebrow>
+      <h1 className="mb-3 text-heading-lg leading-tight text-text">
+        Islamic knowledge should be <em className="italic text-primary-hover">easy to find.</em>
+      </h1>
+      <p className="mb-8 max-w-md text-body leading-relaxed text-text-secondary">
+        The knowledge exists. The problem is that it is scattered. AyahFind brings authentic
+        Islamic sources together — so Muslims can retrieve, understand, and explore from one
+        trusted place.
+      </p>
 
-        <div className="fade-in" style={{ height: '1px', background: '#e8e8e4', margin: '2rem 0' }} />
+      <hr className="my-8 border-border" />
 
-        {/* The Problem */}
-        <div className="fade-in" style={{ fontSize: '0.83rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9a9a90', fontWeight: 500, marginBottom: '0.5rem' }}>The problem</div>
-        <h2 className="fade-in" style={{ fontFamily: 'Lora, serif', fontSize: '1.78rem', fontWeight: 400, lineHeight: 1.3, color: '#1a1a18', marginBottom: '0.65rem' }}>
-          Islamic knowledge exists.<br /><em style={{ fontStyle: 'italic', color: '#2a5c45' }}>But it is hard to reach.</em>
-        </h2>
-        <p className="fade-in" style={{ fontSize: '1.09rem', color: '#5a5a52', lineHeight: 1.8, maxWidth: '500px' }}>
-          A Muslim who wants to learn often has to search across many different websites. The knowledge exists — but it is spread across the internet, with no guarantee the sources are authentic.
-        </p>
+      {/* The Problem */}
+      <Eyebrow>The problem</Eyebrow>
+      <SectionHeading>
+        Islamic knowledge exists.
+        <br />
+        <em className="italic text-primary-hover">But it is hard to reach.</em>
+      </SectionHeading>
+      <p className="max-w-md text-body leading-relaxed text-text-secondary">
+        A Muslim who wants to learn often has to search across many different websites. The
+        knowledge exists — but it is spread across the internet, with no guarantee the sources
+        are authentic.
+      </p>
 
-        <div className="fade-in" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', marginTop: '1rem' }}>
-          {[
-            { label: 'To find an ayah', val: 'One website' },
-            { label: 'To read tafsir', val: 'Another website' },
-            { label: 'Why it was revealed', val: 'Somewhere else' },
-            { label: "To compare qira'at", val: 'Multiple sources' },
-            { label: 'Related hadith', val: 'Multiple collections' },
-          ].map((tile) => (
-            <div key={tile.label} style={{ background: '#fff', border: '1px solid #e8e8e4', borderRadius: '8px', padding: '0.75rem 0.9rem' }}>
-              <div style={{ fontSize: '0.95rem', color: '#3a3a32', fontWeight: 500, marginBottom: '0.2rem' }}>{tile.label}</div>
-              <div style={{ fontSize: '0.95rem', color: '#9a9a90' }}>→ {tile.val}</div>
-            </div>
-          ))}
-        </div>
-
-        <div className="fade-in" style={{ marginTop: '1rem', padding: '0.9rem 1.1rem', background: '#f0f7f4', borderLeft: '2px solid #2a5c45', borderRadius: '0 8px 8px 0' }}>
-          <p style={{ fontFamily: 'Lora, serif', fontSize: '1.13rem', fontStyle: 'italic', color: '#2a5c45', lineHeight: 1.65 }}>
-            AyahFind exists to bring authentic Islamic knowledge together and make it accessible through retrieval.
-          </p>
-        </div>
-
-        <div className="fade-in" style={{ height: '1px', background: '#e8e8e4', margin: '2rem 0' }} />
-
-        {/* Where it started */}
-        <div className="fade-in" style={{ fontSize: '0.83rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9a9a90', fontWeight: 500, marginBottom: '0.5rem' }}>Where it started</div>
-        <h2 className="fade-in" style={{ fontFamily: 'Lora, serif', fontSize: '1.78rem', fontWeight: 400, lineHeight: 1.3, color: '#1a1a18', marginBottom: '0.65rem' }}>
-          Built for <em style={{ fontStyle: 'italic', color: '#2a5c45' }}>imperfect memory.</em>
-        </h2>
-        <p className="fade-in" style={{ fontSize: '1.09rem', color: '#5a5a52', lineHeight: 1.8, maxWidth: '500px' }}>
-          The original problem AyahFind solved was helping users find forgotten ayahs from imperfect memory. You remember a feeling, a fragment, a sound — not the exact words. That remains important. But it is only the beginning.
-        </p>
-        <div className="fade-in" style={{ fontSize: '1.59rem', color: '#2a5c45', direction: 'rtl', textAlign: 'right', lineHeight: 2, fontFamily: 'Lora, serif', margin: '1rem 0 0.15rem' }}>
-          لَا يُكَلِّفُ اللَّهُ نَفْسًا إِلَّا وُسْعَهَا
-        </div>
-        <p className="fade-in" style={{ fontSize: '0.92rem', color: '#aaa', textAlign: 'right' }}>Found by searching: &quot;Allah does not burden&quot; · Al-Baqarah 2:286</p>
-
-        <div className="fade-in" style={{ height: '1px', background: '#e8e8e4', margin: '2rem 0' }} />
-
-        {/* The Journey */}
-        <div className="fade-in" style={{ fontSize: '0.83rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9a9a90', fontWeight: 500, marginBottom: '0.5rem' }}>The journey</div>
-        <h2 className="fade-in" style={{ fontFamily: 'Lora, serif', fontSize: '1.78rem', fontWeight: 400, lineHeight: 1.3, color: '#1a1a18', marginBottom: '0.65rem' }}>
-          Finding the ayah is <em style={{ fontStyle: 'italic', color: '#2a5c45' }}>the starting point.</em>
-        </h2>
-        <p className="fade-in" style={{ fontSize: '1.09rem', color: '#5a5a52', lineHeight: 1.8, maxWidth: '500px' }}>
-          After finding a verse, a user should be able to keep learning — without leaving the platform.
-        </p>
-
-        <div className="fade-in" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem', marginTop: '1rem' }}>
-          {journeyItems.map(({ q, Icon }) => (
-            <div key={q} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.55rem 0.75rem', background: '#fff', border: '1px solid #e8e8e4', borderRadius: '7px', fontSize: '1.03rem', color: '#3a3a32' }}>
-              <Icon size={20} color="#2a5c45" style={{ flexShrink: 0 }} />
-              {q}
-            </div>
-          ))}
-        </div>
-
-        <p className="fade-in" style={{ fontSize: '1.09rem', color: '#5a5a52', lineHeight: 1.8, marginTop: '0.9rem' }}>All of these answers — from one place.</p>
-
-        <div className="fade-in" style={{ height: '1px', background: '#e8e8e4', margin: '2rem 0' }} />
-
-        {/* Principles */}
-        <div className="fade-in" style={{ fontSize: '0.83rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9a9a90', fontWeight: 500, marginBottom: '0.5rem' }}>Our principles</div>
-        <h2 className="fade-in" style={{ fontFamily: 'Lora, serif', fontSize: '1.78rem', fontWeight: 400, lineHeight: 1.3, color: '#1a1a18', marginBottom: '0.65rem' }}>
-          Authentic. <em style={{ fontStyle: 'italic', color: '#2a5c45' }}>Always traceable.</em>
-        </h2>
-
-        <div className="fade-in">
-          {[
-            { title: 'Authenticity above everything', desc: 'Users should not have to worry whether the information is genuine. Every result traces back to an authentic Islamic source.' },
-            { title: 'Sources always visible', desc: 'References are always clear. Knowledge is always traceable. Nothing is presented without attribution.' },
-            { title: 'Retrieval, not generation', desc: 'AyahFind never generates Islamic content. AI is used only to improve retrieval. The scholarship belongs to the scholars.' },
-          ].map((p, i, arr) => (
-            <div key={p.title} style={{ display: 'flex', gap: '0.85rem', alignItems: 'flex-start', padding: '0.85rem 0', borderBottom: i < arr.length - 1 ? '1px solid #f0f0ec' : 'none' }}>
-              <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#f0f7f4', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2a5c45', fontSize: '1.06rem', flexShrink: 0, marginTop: '1px' }}>✓</div>
-              <div>
-                <div style={{ fontSize: '1.06rem', fontWeight: 500, color: '#1a1a18', marginBottom: '0.15rem' }}>{p.title}</div>
-                <div style={{ fontSize: '1.0rem', color: '#7a7a70', lineHeight: 1.6 }}>{p.desc}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="fade-in" style={{ height: '1px', background: '#e8e8e4', margin: '2rem 0' }} />
-
-        {/* Mission */}
-        <div className="fade-in" style={{ fontSize: '0.83rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9a9a90', fontWeight: 500, marginBottom: '0.5rem' }}>The mission</div>
-        <h2 className="fade-in" style={{ fontFamily: 'Lora, serif', fontSize: '1.78rem', fontWeight: 400, lineHeight: 1.3, color: '#1a1a18', marginBottom: '0.65rem' }}>
-          Learning about Islam <em style={{ fontStyle: 'italic', color: '#2a5c45' }}>should be easier.</em>
-        </h2>
-
-        <div className="fade-in" style={{ background: '#2a5c45', borderRadius: '10px', padding: '1.3rem 1.5rem', marginBottom: '3rem' }}>
-          <p style={{ fontFamily: 'Lora, serif', fontSize: '1.18rem', fontStyle: 'italic', color: '#c8e6d8', lineHeight: 1.75 }}>
-            The mission is to help Muslims retrieve, connect, and explore the knowledge of their religion from one trusted place.
-          </p>
-          <span style={{ display: 'block', marginTop: '0.65rem', fontSize: '0.98rem', color: '#6aaa88' }}>
-            Finding Islamic knowledge should be easier. Accessing authentic sources should be easier.
-          </span>
-        </div>
-
+      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+        {gapTiles.map((tile) => (
+          <div key={tile.label} className="rounded-lg border border-border bg-surface p-3">
+            <div className="mb-0.5 text-sm font-medium text-text">{tile.label}</div>
+            <div className="text-sm text-text-tertiary">→ {tile.val}</div>
+          </div>
+        ))}
       </div>
-    </>
+
+      <div className="mt-4 rounded-r-lg border-l-2 border-primary bg-accent-surface px-4 py-3.5">
+        <p className="text-body italic leading-relaxed text-primary-hover">
+          AyahFind exists to bring authentic Islamic knowledge together and make it accessible
+          through retrieval.
+        </p>
+      </div>
+
+      <hr className="my-8 border-border" />
+
+      {/* Where it started */}
+      <Eyebrow>Where it started</Eyebrow>
+      <SectionHeading>
+        Built for <em className="italic text-primary-hover">imperfect memory.</em>
+      </SectionHeading>
+      <p className="max-w-md text-body leading-relaxed text-text-secondary">
+        The original problem AyahFind solved was helping users find forgotten ayahs from
+        imperfect memory. You remember a feeling, a fragment, a sound — not the exact words.
+        That remains important. But it is only the beginning.
+      </p>
+      <p
+        className="mt-4 text-right font-arabic text-2xl leading-loose text-primary-hover"
+        dir="rtl"
+        lang="ar"
+      >
+        لَا يُكَلِّفُ اللَّهُ نَفْسًا إِلَّا وُسْعَهَا
+      </p>
+      <p className="text-right text-xs text-text-tertiary">
+        Found by searching: &quot;Allah does not burden&quot; · Al-Baqarah 2:286
+      </p>
+
+      <hr className="my-8 border-border" />
+
+      {/* The Journey */}
+      <Eyebrow>The journey</Eyebrow>
+      <SectionHeading>
+        Finding the ayah is <em className="italic text-primary-hover">the starting point.</em>
+      </SectionHeading>
+      <p className="max-w-md text-body leading-relaxed text-text-secondary">
+        After finding a verse, a user should be able to keep learning — without leaving the
+        platform.
+      </p>
+
+      <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {journeyItems.map(({ q, Icon }) => (
+          <div
+            key={q}
+            className="flex items-center gap-2.5 rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-text"
+          >
+            <Icon size={20} className="shrink-0 text-primary-hover" />
+            {q}
+          </div>
+        ))}
+      </div>
+
+      <p className="mt-4 text-body leading-relaxed text-text-secondary">
+        All of these answers — from one place.
+      </p>
+
+      <hr className="my-8 border-border" />
+
+      {/* Principles */}
+      <Eyebrow>Our principles</Eyebrow>
+      <SectionHeading>
+        Authentic. <em className="italic text-primary-hover">Always traceable.</em>
+      </SectionHeading>
+
+      <div>
+        {principles.map((p, i) => (
+          <div
+            key={p.title}
+            className={`flex items-start gap-3.5 py-3.5 ${i < principles.length - 1 ? "border-b border-border" : ""}`}
+          >
+            <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-surface text-primary-hover">
+              ✓
+            </div>
+            <div>
+              <div className="mb-0.5 font-medium text-text">{p.title}</div>
+              <div className="text-sm leading-relaxed text-text-secondary">{p.desc}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <hr className="my-8 border-border" />
+
+      {/* Mission */}
+      <Eyebrow>The mission</Eyebrow>
+      <SectionHeading>
+        Learning about Islam <em className="italic text-primary-hover">should be easier.</em>
+      </SectionHeading>
+
+      <div className="mb-12 rounded-xl bg-primary px-6 py-5">
+        <p className="text-body italic leading-relaxed text-white/90">
+          The mission is to help Muslims retrieve, connect, and explore the knowledge of their
+          religion from one trusted place.
+        </p>
+        <span className="mt-2.5 block text-sm text-white/70">
+          Finding Islamic knowledge should be easier. Accessing authentic sources should be
+          easier.
+        </span>
+      </div>
+    </div>
   );
 }

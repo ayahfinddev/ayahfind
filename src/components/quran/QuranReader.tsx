@@ -16,6 +16,7 @@ import { buildSurahAudioQueue, queueIndexForAyah } from "@/lib/readerAudio";
 import { getSurahEntry } from "@/lib/quranNavigation";
 import { prepareReaderAyahs, showsBismillahHeader } from "@/lib/quranDisplay";
 import { cn } from "@/lib/utils";
+import { ContentCard } from "@/components/ui/ContentCard";
 import type { AyahDetail } from "@/lib/types";
 
 interface QuranReaderProps {
@@ -95,7 +96,7 @@ export function QuranReader({
       const s = nextSurah ?? surah;
       setFocusAyah(nextAyah);
       setHighlightAyah(nextAyah);
-      saveProgress(s, nextAyah, getSurahEntry(s)?.en ?? surahNameEn);
+      saveProgress(s, nextAyah, getSurahEntry(s)?.en ?? surahNameEn, { reciterId, readingMode: mode });
       if (s !== surah) {
         if (playback.mode !== "idle") playback.stop();
         router.push(`/ayah/${s}/${nextAyah}`);
@@ -112,11 +113,12 @@ export function QuranReader({
         });
       }, 50);
     },
-    [router, surah, surahNameEn, saveProgress, playback]
+    [router, surah, surahNameEn, saveProgress, playback, reciterId, mode]
   );
 
   useEffect(() => {
-    saveProgress(surah, focusAyah, surahNameEn);
+    saveProgress(surah, focusAyah, surahNameEn, { reciterId, readingMode: mode });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [surah, focusAyah, surahNameEn, saveProgress]);
 
   useEffect(() => {
@@ -150,12 +152,12 @@ export function QuranReader({
 
   const surahNav = useMemo(
     () => (
-      <div className="mb-6 flex items-center justify-between gap-2">
+      <div className="mb-4 flex items-center justify-between gap-2">
         {prevSurah ? (
           <button
             type="button"
             onClick={() => goAyah(1, prevSurah)}
-            className="flex max-w-[48%] items-center gap-1 rounded-xl bg-white px-3 py-1.5 text-xs font-medium text-ink-muted shadow-[0_1px_3px_rgba(0,0,0,0.05)] transition-all hover:text-ink hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
+            className="flex max-w-[48%] items-center gap-1 rounded-lg bg-surface px-3 py-1.5 text-xs font-medium text-text-secondary shadow-xs transition-all hover:text-text hover:shadow-sm"
           >
             <ChevronLeft className="h-4 w-4 shrink-0" />
             <span className="truncate">Previous: {prevSurahName ?? `Surah ${prevSurah}`}</span>
@@ -167,7 +169,7 @@ export function QuranReader({
           <button
             type="button"
             onClick={() => goAyah(1, nextSurah)}
-            className="flex max-w-[48%] items-center gap-1 rounded-xl bg-white px-3 py-1.5 text-xs font-medium text-ink-muted shadow-[0_1px_3px_rgba(0,0,0,0.05)] transition-all hover:text-ink hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
+            className="flex max-w-[48%] items-center gap-1 rounded-lg bg-surface px-3 py-1.5 text-xs font-medium text-text-secondary shadow-xs transition-all hover:text-text hover:shadow-sm"
           >
             <span className="truncate">Next: {nextSurahName ?? `Surah ${nextSurah}`}</span>
             <ChevronRight className="h-4 w-4 shrink-0" />
@@ -216,15 +218,13 @@ export function QuranReader({
         audioActive={playback.mode !== "idle"}
       />
 
-      <div className="reader-body pt-5 md:pt-6">
+      {/* Reading flow: Surah nav → Bismillah (if applicable) → verses,
+       * all inside one ContentCard so it reads as one continuous rhythm. */}
+      <div className="reader-body pt-4 md:pt-5">
         {surahNav}
-        <p className="mb-6 text-center text-xs tracking-wide text-ink-subtle">
-          {displayAyahs.length} ayahs in this surah
-        </p>
 
-        {showsBismillahHeader(surah) && <BismillahHeader />}
-
-        <div className="reader-verses overflow-visible rounded-2xl bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04),0_6px_24px_rgba(0,0,0,0.05)]">
+        <ContentCard elevation="surface" padding="sm" className="reader-verses overflow-visible !p-0">
+          {showsBismillahHeader(surah) && <BismillahHeader />}
           {displayAyahs.map((a, i) => (
               <VerseCard
                 key={a.ayah}
@@ -241,7 +241,7 @@ export function QuranReader({
                 isLast={i === displayAyahs.length - 1}
               />
             ))}
-        </div>
+        </ContentCard>
       </div>
     </div>
   );

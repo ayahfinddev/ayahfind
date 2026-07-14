@@ -46,16 +46,16 @@ export function TilawahBar() {
         visible ? "translate-y-0" : "translate-y-full"
       )}
     >
-      <div className="tilawah-bar relative border-t border-glass-border bg-glass-fill backdrop-blur-xl md:pb-safe">
+      <div className="tilawah-bar relative border-t border-border-strong bg-surface-floating backdrop-blur-xl md:pb-safe">
         <TilawahProgress />
 
         <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-2.5 lg:max-w-5xl">
           {/* Ayah reference */}
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-semibold text-ink">
+            <p className="truncate text-xs font-semibold text-text">
               {surahName}
             </p>
-            <p className="truncate text-[11px] text-ink-muted">
+            <p className="truncate text-[11px] text-text-secondary">
               Ayah {ayahLabel}
             </p>
           </div>
@@ -76,7 +76,7 @@ export function TilawahBar() {
             <button
               type="button"
               onClick={playing ? pause : resume}
-              className="rounded-full bg-accent-dim p-2 text-canvas shadow-sm transition-colors hover:brightness-110 active:brightness-95"
+              className="rounded-full bg-primary p-2 text-white shadow-sm transition-colors hover:bg-primary-hover active:brightness-95"
               aria-label={playing ? "Pause" : "Play"}
             >
               {playing ? (

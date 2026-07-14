@@ -114,7 +114,7 @@ export function VoiceSearchModal({
           className="fixed inset-0 z-40 pointer-events-none"
         >
           <motion.div
-            className="pointer-events-none absolute inset-0 bg-glass-fill backdrop-blur-xl"
+            className="pointer-events-none absolute inset-0 bg-surface-floating/95 backdrop-blur-xl"
             aria-hidden
           />
           <motion.div
@@ -124,33 +124,33 @@ export function VoiceSearchModal({
             transition={{ type: "spring", stiffness: 400, damping: 32 }}
             className="pointer-events-auto fixed inset-x-4 top-[8%] z-50 mx-auto max-w-lg"
           >
-            <motion.div className="islamic-grid relative overflow-hidden rounded-3xl border border-glass-border bg-canvas p-8 shadow-glow-lg">
+            <motion.div className="islamic-grid relative overflow-hidden rounded-3xl border border-border-strong bg-background p-8 shadow-md">
               <button
                 type="button"
                 onClick={handleClose}
-                className="absolute right-4 top-4 rounded-full p-2 text-ink-muted hover:bg-canvas-elevated hover:text-ink"
+                className="absolute right-4 top-4 rounded-full p-2 text-text-secondary hover:bg-surface-elevated hover:text-text"
                 aria-label="Close"
               >
                 <X className="h-5 w-5" />
               </button>
 
-              <p className="mb-2 text-center text-sm font-medium uppercase tracking-widest text-ink-muted">
+              <p className="mb-2 text-center text-sm font-medium uppercase tracking-widest text-text-secondary">
                 {listening ? "Listening" : "Voice search"}
               </p>
               {notice && (
                 <div
                   role="status"
-                  className="mb-4 rounded-xl border border-amber-300/70 bg-amber-50 px-4 py-3 text-center text-sm leading-relaxed text-amber-950"
+                  className="mb-4 rounded-xl border border-warning/40 bg-warning/10 px-4 py-3 text-center text-sm leading-relaxed text-warning"
                 >
                   {notice}
                 </div>
               )}
-              <h2 className="mb-4 text-center text-xl font-semibold text-ink">
+              <h2 className="mb-4 text-center text-xl font-semibold text-text">
                 Recite or speak — mistakes are OK
               </h2>
 
               <div
-                className="relative mx-auto mb-6 flex w-full max-w-sm rounded-full border border-border-strong bg-canvas-card p-1"
+                className="relative mx-auto mb-6 flex w-full max-w-sm rounded-full border border-border-strong bg-surface-secondary p-1"
                 role="tablist"
                 aria-label="Recognition language"
               >
@@ -169,14 +169,14 @@ export function VoiceSearchModal({
                       className={cn(
                         "relative z-0 flex min-h-[2.25rem] flex-1 items-center justify-center rounded-full px-3 py-2 text-xs font-semibold transition-colors duration-200 ease-out",
                         selected
-                          ? "text-canvas"
-                          : "text-ink-muted hover:text-ink"
+                          ? "text-white"
+                          : "text-text-secondary hover:text-text"
                       )}
                     >
                       {selected && (
                         <motion.span
                           layoutId="voice-lang-pill"
-                          className="absolute inset-0 rounded-full bg-accent-dim shadow-sm"
+                          className="absolute inset-0 rounded-full bg-primary-hover shadow-sm"
                           transition={{ type: "spring", stiffness: 520, damping: 36 }}
                           aria-hidden
                         />
@@ -195,19 +195,19 @@ export function VoiceSearchModal({
                   whileTap={{ scale: 0.94 }}
                   onClick={() => (listening ? stop(true) : void start())}
                   disabled={!supported}
-                  className="relative flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent-dim shadow-[0_4px_24px_rgba(13,148,136,0.35)] disabled:opacity-40"
+                  className="relative flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary-hover shadow-[0_4px_24px_var(--accent-border)] disabled:opacity-40"
                 >
                   {listening && (
                     <motion.span
-                      className="absolute inset-0 rounded-full border-2 border-accent/60"
+                      className="absolute inset-0 rounded-full border-2 border-primary/60"
                       animate={{ scale: [1, 1.35], opacity: [0.6, 0] }}
                       transition={{ duration: 1.5, repeat: Infinity }}
                     />
                   )}
                   {listening ? (
-                    <MicOff className="h-10 w-10 text-canvas" />
+                    <MicOff className="h-10 w-10 text-white" />
                   ) : (
-                    <Mic className="h-10 w-10 text-canvas" />
+                    <Mic className="h-10 w-10 text-white" />
                   )}
                 </motion.button>
               </div>
@@ -215,14 +215,14 @@ export function VoiceSearchModal({
               <WaveformVisualizer active={listening} className="mb-4" />
 
               {status && !error && (
-                <p className="mb-2 text-center text-xs text-ink-muted">{status}</p>
+                <p className="mb-2 text-center text-xs text-text-secondary">{status}</p>
               )}
 
-              <div className="min-h-[4.5rem] rounded-xl bg-canvas-elevated p-4 text-center">
+              <div className="min-h-[4.5rem] rounded-xl bg-surface-elevated p-4 text-center">
                 {error ? (
-                  <p className="text-sm text-red-400">{error}</p>
+                  <p className="text-sm text-error">{error}</p>
                 ) : (
-                  <p className="font-arabic text-lg text-ink-muted" dir="auto">
+                  <p className="font-arabic text-lg text-text-secondary" dir="auto">
                     {displayText ||
                       (notice
                         ? "Type your search below"
@@ -234,7 +234,7 @@ export function VoiceSearchModal({
               </div>
 
               <div className="mt-4">
-                <label className="mb-1 block text-xs text-ink-muted">
+                <label className="mb-1 block text-xs text-text-secondary">
                   {notice ? "Search by typing" : "Or type what you said (if voice fails)"}
                 </label>
                 <input
@@ -243,17 +243,17 @@ export function VoiceSearchModal({
                   onChange={(e) => setManualText(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && canSearch && handleSearch()}
                   placeholder="e.g. fa inama al usri yusra"
-                  className="w-full rounded-xl border border-glass-border bg-canvas-elevated px-4 py-3 text-sm text-ink outline-none focus:border-accent-border"
+                  className="w-full rounded-xl border border-border-strong bg-surface-elevated px-4 py-3 text-sm text-text outline-none focus:border-accent-border"
                 />
               </div>
 
-              <p className="mt-3 text-center text-xs text-ink-subtle">
+              <p className="mt-3 text-center text-xs text-text-tertiary">
                 Tap the mic to stop — we search automatically. Typed search always works.
               </p>
 
               {speechDiagnostics && (
                 <pre
-                  className="mt-3 max-h-32 overflow-auto rounded-lg border border-dashed border-amber-400/60 bg-amber-50/80 p-2 text-left text-[10px] leading-snug text-amber-950"
+                  className="mt-3 max-h-32 overflow-auto rounded-lg border border-dashed border-warning/50 bg-warning/10 p-2 text-left text-[10px] leading-snug text-warning"
                   aria-label="Voice recognition diagnostics (development only)"
                 >
                   {`[dev] SpeechRecognition.onerror\n  error: ${speechDiagnostics.code}\n  message: ${speechDiagnostics.message ?? "(none)"}\n  browser: ${speechDiagnostics.browserLabel}\n  detail: ${speechDiagnostics.debugMessage}`}
@@ -264,7 +264,7 @@ export function VoiceSearchModal({
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="flex-1 rounded-xl border border-black/[0.08] bg-canvas-card py-3 text-sm font-medium text-ink-muted transition-colors hover:bg-canvas-card hover:text-ink"
+                  className="flex-1 rounded-xl border border-border-strong bg-surface-secondary py-3 text-sm font-medium text-text-secondary transition-colors duration-150 ease-out hover:text-text"
                 >
                   Cancel
                 </button>
@@ -272,7 +272,7 @@ export function VoiceSearchModal({
                   type="button"
                   onClick={handleSearch}
                   disabled={!canSearch}
-                  className="flex-1 rounded-xl bg-accent-dim py-3 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(13,148,136,0.25)] transition-all hover:brightness-105 disabled:opacity-40"
+                  className="flex-1 rounded-xl bg-primary py-3 text-sm font-semibold text-white shadow-xs transition-colors duration-150 ease-out hover:bg-primary-hover disabled:opacity-40"
                 >
                   Search
                 </button>

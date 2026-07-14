@@ -1,0 +1,213 @@
+{
+  "description": "Data-driven concept/synonym lexicon for meaning-first search. Each concept lists trigger aliases (used to detect that a query is 'about' this concept), broader scoring keywords (used to score candidate verses once a concept is matched), canonical anchor verses (near-guaranteed top results when the concept fires), and exclusion substrings (disqualify verses whose translation signals the opposite theme). Extend this file to add concept coverage — no code changes needed.",
+  "concepts": [
+    {
+      "id": "patience",
+      "label": "Patience (sabr)",
+      "aliases": ["patience", "patient", "sabr", "perseverance", "steadfast", "endure"],
+      "keywords": ["patient", "patience", "persevere", "steadfast", "endure", "sabr", "trial", "hardship", "afflict", "adversity", "bear"],
+      "anchors": [[2, 153], [2, 155], [3, 200], [103, 3]],
+      "exclusions": ["impatient", "haste", "rushed"]
+    },
+    {
+      "id": "gratitude",
+      "label": "Gratitude (shukr)",
+      "aliases": ["gratitude", "grateful", "thankful", "thanks", "shukr"],
+      "keywords": ["grateful", "gratitude", "thank", "thanks", "thankful", "shukr", "blessing", "blessings", "appreciate", "appreciation"],
+      "anchors": [[14, 7], [2, 152], [31, 12], [55, 13]],
+      "exclusions": ["ungrateful", "ingratitude", "hell", "hellfire", "jahannam", "disbelievers", "disbeliever", "punishment", "punish", "torment", "fire", "blaze", "chastise", "wrath", "wretched", "damned", "blazing", "flames", "scourge", "chastisement"]
+    },
+    {
+      "id": "mercy",
+      "label": "Mercy (rahma)",
+      "aliases": ["mercy", "merciful", "compassion", "rahma", "rahim"],
+      "keywords": ["mercy", "merciful", "compassion", "compassionate", "kind", "kindness", "rahma", "rahim", "beneficent", "clement"],
+      "anchors": [[1, 1], [7, 156], [6, 12], [39, 53]],
+      "exclusions": ["merciless", "punish", "torment", "hell", "jahannam", "wrath"]
+    },
+    {
+      "id": "forgiveness",
+      "label": "Forgiveness and repentance (tawbah)",
+      "aliases": ["forgiveness", "forgive", "pardon", "repent", "repentance", "tawbah"],
+      "keywords": ["forgive", "forgave", "forgiveness", "pardon", "repent", "repentance", "tawbah", "sin", "sins"],
+      "anchors": [[39, 53], [3, 135], [66, 8], [2, 222]],
+      "exclusions": ["unforgiving", "punish", "torment", "hell"]
+    },
+    {
+      "id": "trust",
+      "label": "Trust in Allah (tawakkul)",
+      "aliases": ["trust", "tawakkul", "rely", "reliance", "depend"],
+      "keywords": ["trust", "rely", "relied", "depend", "sufficient", "guardian", "protector", "tawakkul"],
+      "anchors": [[3, 159], [65, 3]],
+      "exclusions": ["betray", "deceive", "despair"]
+    },
+    {
+      "id": "hardship_ease",
+      "label": "Hardship and ease",
+      "aliases": ["hardship", "ease", "relief", "trial", "trials"],
+      "keywords": ["hardship", "difficulty", "ease", "relief", "trial", "trials", "afflict", "burden", "usri", "yusra"],
+      "anchors": [[94, 5], [94, 6], [2, 286]],
+      "exclusions": []
+    },
+    {
+      "id": "charity",
+      "label": "Charity (sadaqah)",
+      "aliases": ["charity", "give", "sadaqah", "poor", "needy", "alms"],
+      "keywords": ["charity", "give", "gave", "poor", "needy", "orphan", "spend", "wealth", "alms", "sadaqah"],
+      "anchors": [[2, 261], [107, 7]],
+      "exclusions": ["withhold", "stingy", "miser"]
+    },
+    {
+      "id": "prayer",
+      "label": "Prayer (salah)",
+      "aliases": ["prayer", "pray", "salah", "salat", "worship"],
+      "keywords": ["prayer", "pray", "prostrat", "bow", "worship", "salah", "salat"],
+      "anchors": [[2, 238], [20, 14]],
+      "exclusions": ["neglect", "abandon prayer"]
+    },
+    {
+      "id": "fear_and_sadness",
+      "label": "Fear and grief (khawf wa huzn)",
+      "aliases": ["sadness", "grief", "anxiety", "khawf", "huzn", "sorrow", "grieve", "grieving"],
+      "keywords": ["fear", "afraid", "grief", "grieve", "grieving", "sorrow", "sorrowful", "anxiety", "distress", "worry", "khawf", "huzn"],
+      "anchors": [[10, 62], [2, 38], [2, 62], [13, 28], [2, 112], [2, 262]],
+      "exclusions": []
+    },
+    {
+      "id": "hellfire",
+      "label": "Hellfire (jahannam)",
+      "aliases": ["hell", "hellfire", "jahannam"],
+      "keywords": ["hell", "hellfire", "fire", "jahannam", "blaze", "burning", "flames", "fuel", "torment", "chastise"],
+      "anchors": [[2, 24], [104, 6]],
+      "exclusions": []
+    },
+    {
+      "id": "provision",
+      "label": "Provision (rizq)",
+      "aliases": ["provision", "rizq", "sustenance", "livelihood"],
+      "keywords": ["provision", "provide", "provided", "rizq", "sustenance", "livelihood", "sufficient", "wealth"],
+      "anchors": [[13, 26], [65, 3], [51, 58]],
+      "exclusions": []
+    },
+    {
+      "id": "children",
+      "label": "Children and offspring",
+      "aliases": ["children", "offspring", "dhurriyyah"],
+      "keywords": ["children", "offspring", "sons", "daughters", "child", "dhurriyyah"],
+      "anchors": [[18, 46], [8, 28], [64, 15]],
+      "exclusions": []
+    },
+    {
+      "id": "parents",
+      "label": "Parents",
+      "aliases": ["parents", "parent"],
+      "keywords": ["parents", "parent", "mother", "father"],
+      "anchors": [[17, 23]],
+      "exclusions": []
+    },
+    {
+      "id": "punishment",
+      "label": "Punishment and torment",
+      "aliases": ["punishment", "torment", "chastisement"],
+      "keywords": ["punishment", "torment", "chastise", "chastisement", "penalty", "doom"],
+      "anchors": [],
+      "exclusions": []
+    },
+    {
+      "id": "judgement_day",
+      "label": "Judgement and resurrection",
+      "aliases": ["judgement", "judgment", "resurrection", "hereafter", "qiyamah"],
+      "keywords": ["judgement", "judgment", "resurrection", "hereafter", "qiyamah", "reckoning", "last day"],
+      "anchors": [[99, 1], [21, 47], [19, 95], [81, 1]],
+      "exclusions": []
+    },
+    {
+      "id": "zakat",
+      "label": "Zakat (obligatory alms)",
+      "aliases": ["zakat", "zakah"],
+      "keywords": ["zakat", "zakah", "alms"],
+      "anchors": [[2, 43], [2, 110], [9, 60]],
+      "exclusions": []
+    },
+    {
+      "id": "marriage",
+      "label": "Marriage",
+      "aliases": ["marriage", "marry", "spouse", "wedlock"],
+      "keywords": ["marriage", "marry", "spouse", "wife", "husband", "mate", "wedlock"],
+      "anchors": [[30, 21], [4, 3]],
+      "exclusions": []
+    },
+    {
+      "id": "inheritance",
+      "label": "Inheritance",
+      "aliases": ["inheritance", "inherit"],
+      "keywords": ["inheritance", "inherit", "heir", "bequest"],
+      "anchors": [[4, 11], [4, 7]],
+      "exclusions": []
+    },
+    {
+      "id": "fasting",
+      "label": "Fasting",
+      "aliases": ["fasting", "fast"],
+      "keywords": ["fasting", "fast", "ramadan", "sawm"],
+      "anchors": [[2, 183], [2, 185]],
+      "exclusions": []
+    },
+    {
+      "id": "justice",
+      "label": "Justice",
+      "aliases": ["justice", "injustice", "unjust"],
+      "keywords": ["justice", "just", "fair", "equity", "injustice", "unjust"],
+      "anchors": [[16, 90], [4, 58], [4, 135]],
+      "exclusions": []
+    },
+    {
+      "id": "hypocrisy",
+      "label": "Hypocrisy",
+      "aliases": ["hypocrisy", "hypocrite", "hypocrites"],
+      "keywords": ["hypocrisy", "hypocrite", "hypocrites", "hypocritical"],
+      "anchors": [[63, 1], [4, 145]],
+      "exclusions": []
+    },
+    {
+      "id": "knowledge",
+      "label": "Knowledge",
+      "aliases": ["knowledge"],
+      "keywords": ["knowledge", "knowing", "knew", "wisdom", "learn"],
+      "anchors": [[20, 114], [58, 11]],
+      "exclusions": []
+    },
+    {
+      "id": "orphans",
+      "label": "Orphans",
+      "aliases": ["orphan", "orphans"],
+      "keywords": ["orphan", "orphans"],
+      "anchors": [[4, 2], [93, 9], [2, 220]],
+      "exclusions": []
+    },
+    {
+      "id": "backbiting",
+      "label": "Backbiting",
+      "aliases": ["backbiting", "backbite"],
+      "keywords": ["backbite", "backbiting", "gossip", "slander"],
+      "anchors": [[49, 12]],
+      "exclusions": []
+    },
+    {
+      "id": "modesty",
+      "label": "Modesty and lowering the gaze",
+      "aliases": ["modesty", "gaze"],
+      "keywords": ["gaze", "modesty", "private parts", "vision"],
+      "anchors": [[24, 30], [24, 31]],
+      "exclusions": []
+    },
+    {
+      "id": "usury",
+      "label": "Usury (riba)",
+      "aliases": ["usury", "riba"],
+      "keywords": ["usury", "riba", "interest"],
+      "anchors": [[2, 275], [2, 278], [3, 130]],
+      "exclusions": []
+    }
+  ]
+}

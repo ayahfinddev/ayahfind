@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { ReaderReciterSelect } from "@/components/quran/ReaderReciterSelect";
 import { ReadingModeToggle } from "@/components/quran/ReadingModeToggle";
+import { IconButton } from "@/components/ui/IconButton";
 import type { ReadingMode } from "@/hooks/useReadingMode";
 import { formatReaderMeta } from "@/lib/surahMeta";
 import { cn } from "@/lib/utils";
@@ -67,68 +68,67 @@ export function ReaderTopBar({
   };
 
   return (
-    <header className="reader-top-bar sticky top-safe z-40 -mx-4 border-b border-black/[0.06] bg-white/95 px-4 backdrop-blur-xl md:-mx-6 md:px-6 lg:-mx-10 lg:px-10">
+    <header className="reader-top-bar sticky top-safe z-40 -mx-4 border-b border-border bg-surface/95 px-4 backdrop-blur-xl md:-mx-6 md:px-6 lg:-mx-10 lg:px-10">
 
       {/* Row 1 — title + controls */}
-      <div className="flex items-center gap-2 py-3">
-        <Link href="/" className="af-icon-btn shrink-0 !text-ink-muted" aria-label="Back">
+      <div className="flex items-center gap-2 py-2.5">
+        <Link href="/" className="af-icon-btn h-9 w-9 shrink-0 text-text-secondary" aria-label="Back">
           <ArrowLeft className="h-4 w-4" />
         </Link>
 
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[13px] font-semibold text-ink">{nameEn}</p>
-          <p className="truncate text-[11px] text-ink-subtle">{formatReaderMeta(surah, ayah, nameEn)}</p>
+          <p className="truncate text-sm font-semibold text-text">{nameEn}</p>
+          <p className="truncate text-xs text-text-tertiary">{formatReaderMeta(surah, ayah, nameEn)}</p>
         </div>
 
-        <div className="flex shrink-0 items-center gap-0">
+        <div className="hide-scrollbar flex max-w-[60vw] shrink-0 items-center gap-0 overflow-x-auto sm:max-w-none">
           {onOpenNavigator && (
-            <button type="button" onClick={onOpenNavigator} className="af-icon-btn" aria-label="Navigator" title="Navigate (N)">
-              <ListTree className="h-4 w-4" />
-            </button>
+            <IconButton size="sm" onClick={onOpenNavigator} aria-label="Navigator" title="Navigate (N)">
+              <ListTree />
+            </IconButton>
           )}
-          <button type="button" disabled={!canPrevSurah} onClick={onPrevSurah}
-            className={cn("af-icon-btn", !canPrevSurah && "pointer-events-none opacity-25")} aria-label="Prev surah">
-            <ChevronsLeft className="h-4 w-4" />
-          </button>
-          <button type="button" disabled={!canPrev} onClick={onPrevAyah}
-            className={cn("af-icon-btn", !canPrev && "pointer-events-none opacity-25")} aria-label="Prev ayah">
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button type="button" disabled={!canNext} onClick={onNextAyah}
-            className={cn("af-icon-btn", !canNext && "pointer-events-none opacity-25")} aria-label="Next ayah">
-            <ChevronRight className="h-4 w-4" />
-          </button>
-          <button type="button" disabled={!canNextSurah} onClick={onNextSurah}
-            className={cn("af-icon-btn", !canNextSurah && "pointer-events-none opacity-25")} aria-label="Next surah">
-            <ChevronsRight className="h-4 w-4" />
-          </button>
+          <IconButton size="sm" disabled={!canPrevSurah} onClick={onPrevSurah} aria-label="Prev surah">
+            <ChevronsLeft />
+          </IconButton>
+          <IconButton size="sm" disabled={!canPrev} onClick={onPrevAyah} aria-label="Prev ayah">
+            <ChevronLeft />
+          </IconButton>
+          <IconButton size="sm" disabled={!canNext} onClick={onNextAyah} aria-label="Next ayah">
+            <ChevronRight />
+          </IconButton>
+          <IconButton size="sm" disabled={!canNextSurah} onClick={onNextSurah} aria-label="Next surah">
+            <ChevronsRight />
+          </IconButton>
           {showInlinePlayback && onSkipPrev && (
-            <button type="button" onClick={onSkipPrev} className="af-icon-btn" aria-label="Prev in recitation">
-              <SkipBack className="h-4 w-4" />
-            </button>
+            <IconButton size="sm" onClick={onSkipPrev} aria-label="Prev in recitation">
+              <SkipBack />
+            </IconButton>
           )}
           {showInlinePlayback && onListenSurah && <ReaderReciterSelect />}
           {onListenSurah && (
-            <button type="button" onClick={onListenSurah}
-              className={cn("af-icon-btn", isPlaying ? "!text-accent-dim" : "hover:!text-accent-dim")}
-              aria-label={isPlaying ? "Pause" : "Play from here"}>
-              {isPlaying ? <Pause className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-            </button>
+            <IconButton
+              size="sm"
+              onClick={onListenSurah}
+              active={isPlaying}
+              aria-label={isPlaying ? "Pause" : "Play from here"}
+            >
+              {isPlaying ? <Pause /> : <Volume2 />}
+            </IconButton>
           )}
           {showInlinePlayback && onSkipNext && (
-            <button type="button" onClick={onSkipNext} className="af-icon-btn" aria-label="Next in recitation">
-              <SkipForward className="h-4 w-4" />
-            </button>
+            <IconButton size="sm" onClick={onSkipNext} aria-label="Next in recitation">
+              <SkipForward />
+            </IconButton>
           )}
-          <Link href="/settings" className="af-icon-btn" aria-label="Settings">
+          <Link href="/settings" className="af-icon-btn h-9 w-9" aria-label="Settings">
             <Settings className="h-4 w-4" />
           </Link>
         </div>
       </div>
 
       {/* Row 2 — ayah counter + jump */}
-      <div className="flex flex-wrap items-center gap-2 border-t border-black/[0.05] py-2">
-        <span className="text-[11px] font-medium text-ink-subtle" aria-live="polite">
+      <div className="flex flex-wrap items-center gap-2 border-t border-border py-2">
+        <span className="text-xs font-medium text-text-tertiary" aria-live="polite">
           {ayah} of {totalAyahs}
         </span>
         {onJumpAyah && (
@@ -142,21 +142,21 @@ export function ReaderTopBar({
               value={jumpValue}
               onChange={(e) => setJumpValue(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && commitJump()}
-              className="w-12 rounded-lg border border-black/[0.08] bg-canvas px-2 py-0.5 text-center text-xs text-ink focus:border-accent-border focus:outline-none"
+              className="w-12 rounded-lg border border-border-strong bg-background px-2 py-0.5 text-center text-xs text-text focus:border-accent-border focus:outline-none"
             />
             <button type="button" onClick={commitJump}
-              className="rounded-lg bg-accent-dim px-2.5 py-0.5 text-xs font-semibold text-white transition-colors hover:brightness-105">
+              className="rounded-lg bg-primary px-2.5 py-0.5 text-xs font-semibold text-white transition-colors hover:bg-primary-hover">
               Go
             </button>
           </div>
         )}
-        <span className="ml-auto hidden text-[11px] text-ink-subtle sm:inline">Surah {surah}</span>
+        <span className="ml-auto hidden text-xs text-text-tertiary sm:inline">Surah {surah}</span>
       </div>
 
       {/* Row 3 — reading mode + translation credit */}
-      <div className="flex flex-col gap-2 border-t border-black/[0.05] py-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-2 border-t border-border py-2 sm:flex-row sm:items-center sm:justify-between">
         <ReadingModeToggle mode={mode} onChange={onModeChange} />
-        <span className="text-[11px] text-ink-subtle">Sahih International</span>
+        <span className="text-xs text-text-tertiary">Sahih International</span>
       </div>
     </header>
   );

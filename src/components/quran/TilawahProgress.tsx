@@ -12,9 +12,9 @@ export function TilawahProgress() {
   const pct = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="absolute inset-x-0 top-0 h-[2px] bg-canvas-elevated">
+    <div className="absolute inset-x-0 top-0 h-[2px] bg-surface-secondary">
       <div
-        className="h-full bg-accent transition-[width] duration-200 ease-linear"
+        className="h-full bg-primary transition-[width] duration-200 ease-linear"
         style={{ width: `${pct}%` }}
       />
     </div>

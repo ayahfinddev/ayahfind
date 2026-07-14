@@ -11,7 +11,7 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 import { useReciter } from "@/hooks/useReciter";
-import { buildAyahAudioSources } from "@/lib/reciters";
+import { buildAyahAudioSources, getReciterById } from "@/lib/reciters";
 
 /** Stop playback when leaving search/reader routes — never keep audio in the background. */
 function shouldStopPlaybackOnRouteChange(prev: string | null, next: string): boolean {
@@ -42,6 +42,10 @@ interface AudioPlaybackContextValue {
   activeAyah: AyahRef | null;
   currentTime: number;
   duration: number;
+  /** Set when audio fell back to Alafasy because the selected reciter's file was unavailable. */
+  fallbackWarning: string | null;
+  /** Call this from standalone players when they silently fall back to the default reciter. */
+  notifyFallback: (reciterName: string) => void;
   playSingle: (src: string, ref?: AyahRef, fallbackSrc?: string) => void;
   playQueue: (items: QueueItem[], startIndex: number) => void;
   toggleSingle: (src: string, ref?: AyahRef, fallbackSrc?: string) => void;
@@ -64,16 +68,15 @@ function attachPlaybackHandlers(
   fallbackSrc: string | undefined,
   onEnded: () => void,
   onFailed: () => void,
-  onPlaying: () => void
+  onPlaying: () => void,
+  onFallback?: () => void
 ) {
   let triedFallback = false;
   audio.onended = onEnded;
   audio.onerror = () => {
     if (!triedFallback && fallbackSrc && audio.src !== fallbackSrc) {
       triedFallback = true;
-      if (process.env.NODE_ENV === "development") {
-        console.debug("[AyahFind audio] fallback", { from: primarySrc, to: fallbackSrc });
-      }
+      onFallback?.();
       audio.src = fallbackSrc;
       void audio.play().then(onPlaying).catch(onFailed);
       return;
@@ -97,6 +100,17 @@ export function AudioPlaybackProvider({ children }: { children: ReactNode }) {
   const [activeAyah, setActiveAyah] = useState<AyahRef | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [fallbackWarning, setFallbackWarning] = useState<string | null>(null);
+  const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showFallbackWarning = useCallback((reciterName: string) => {
+    if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
+    setFallbackWarning(reciterName);
+    fallbackTimerRef.current = setTimeout(() => {
+      setFallbackWarning(null);
+      fallbackTimerRef.current = null;
+    }, 4000);
+  }, []);
 
   const clearAudioListeners = useCallback((a: HTMLAudioElement) => {
     a.onended = null;
@@ -129,6 +143,11 @@ export function AudioPlaybackProvider({ children }: { children: ReactNode }) {
     setActiveAyah(null);
     setCurrentTime(0);
     setDuration(0);
+    if (fallbackTimerRef.current) {
+      clearTimeout(fallbackTimerRef.current);
+      fallbackTimerRef.current = null;
+    }
+    setFallbackWarning(null);
   }, [clearAudioListeners]);
 
   const playAtQueueIndex = useCallback(
@@ -161,13 +180,14 @@ export function AudioPlaybackProvider({ children }: { children: ReactNode }) {
         item.fallbackSrc,
         () => playAtQueueIndex(index + 1),
         () => playAtQueueIndex(index + 1),
-        () => setPlaying(true)
+        () => setPlaying(true),
+        () => showFallbackWarning(getReciterById(reciterId).name)
       );
 
       audio.src = item.src;
       void audio.play().then(() => setPlaying(true)).catch(() => stop());
     },
-    [stop, clearAudioListeners, attachTimingListeners]
+    [stop, clearAudioListeners, attachTimingListeners, reciterId, showFallbackWarning]
   );
 
   const playQueue = useCallback(
@@ -193,12 +213,15 @@ export function AudioPlaybackProvider({ children }: { children: ReactNode }) {
       const audio = new Audio(src);
       audioRef.current = audio;
       attachTimingListeners(audio);
-      attachPlaybackHandlers(audio, src, fallbackSrc, () => stop(), () => stop(), () =>
-        setPlaying(true)
+      attachPlaybackHandlers(
+        audio, src, fallbackSrc,
+        () => stop(), () => stop(),
+        () => setPlaying(true),
+        () => showFallbackWarning(getReciterById(reciterId).name)
       );
       void audio.play().then(() => setPlaying(true)).catch(() => stop());
     },
-    [stop, attachTimingListeners]
+    [stop, attachTimingListeners, reciterId, showFallbackWarning]
   );
 
   const pause = useCallback(() => {
@@ -343,6 +366,8 @@ export function AudioPlaybackProvider({ children }: { children: ReactNode }) {
         activeAyah,
         currentTime,
         duration,
+        fallbackWarning,
+        notifyFallback: showFallbackWarning,
         playSingle,
         playQueue,
         toggleSingle,
@@ -357,6 +382,15 @@ export function AudioPlaybackProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
+      {fallbackWarning && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="pointer-events-none fixed left-1/2 top-4 z-[100] -translate-x-1/2 rounded-full border border-glass-border bg-glass-fill px-4 py-2 text-center text-xs font-medium text-ink shadow-md backdrop-blur-sm"
+        >
+          {fallbackWarning} unavailable — playing Mishary Alafasy
+        </div>
+      )}
     </AudioPlaybackContext.Provider>
   );
 }

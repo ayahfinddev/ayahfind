@@ -5,7 +5,10 @@ empty result).
 
 Builds an isolated tafsir.db from the same fixtures as
 test_tafsir_ingestion.py — independent of whatever data/tafsir.db currently
-contains on disk.
+contains on disk. Both TafsirStore.available()/.lookup() are async (to
+match the QF-backed production provider's interface — see
+test_qf_tafsir_provider.py for that one), so every call here goes through
+the `_run()` helper.
 """
 
 from __future__ import annotations
@@ -27,9 +30,13 @@ from data_pipeline.tafsir_schema import CONTENT_ENV_FIXTURE, CONTENT_ENV_PRODUCT
 
 from app.api import routes as routes_module  # noqa: E402
 from app.core.config import Settings  # noqa: E402
-from app.services.tafsir_store import TafsirCorrupted, TafsirStore  # noqa: E402
+from app.services.tafsir_store import TafsirCorrupted, TafsirStore, get_tafsir_store  # noqa: E402
 
 FIXTURES = ROOT / "data_pipeline" / "fixtures" / "tafsir_sample.json"
+
+
+def _run(coro):
+    return asyncio.run(coro)
 
 
 def _build_db(tmp_path: Path, *, content_environment: str) -> Path:
@@ -65,7 +72,7 @@ def enabled_store(tafsir_db) -> TafsirStore:
 
 
 def test_lookup_single_ayah_returns_both_sources(enabled_store):
-    rows = enabled_store.lookup("1:1")
+    rows = _run(enabled_store.lookup("1:1"))
     slugs = {r.source_slug for r in rows}
     assert slugs == {"ibn_kathir_en", "saadi_ar"}
     for r in rows:
@@ -73,26 +80,26 @@ def test_lookup_single_ayah_returns_both_sources(enabled_store):
 
 
 def test_lookup_grouped_ayah_returns_full_range(enabled_store):
-    rows = enabled_store.lookup("2:3")
+    rows = _run(enabled_store.lookup("2:3"))
     ik = next(r for r in rows if r.source_slug == "ibn_kathir_en")
     assert ik.verse_start == "2:1"
     assert ik.verse_end == "2:5"
 
 
 def test_lookup_missing_ayah_returns_empty(enabled_store):
-    assert enabled_store.lookup("2:6") == []
+    assert _run(enabled_store.lookup("2:6")) == []
 
 
 def test_lookup_disabled_returns_empty_even_with_data_present(tafsir_db):
     disabled = TafsirStore(settings=Settings(tafsir_enabled=False, tafsir_db_path=tafsir_db))
-    assert disabled.lookup("1:1") == []
-    assert disabled.available() is False
+    assert _run(disabled.lookup("1:1")) == []
+    assert _run(disabled.available()) is False
 
 
 def test_lookup_missing_db_file_is_unavailable_not_error(tmp_path):
     store = TafsirStore(settings=Settings(tafsir_enabled=True, tafsir_db_path=tmp_path / "nope.db"))
-    assert store.available() is False
-    assert store.lookup("1:1") == []
+    assert _run(store.available()) is False
+    assert _run(store.lookup("1:1")) == []
 
 
 def test_lookup_corrupted_db_raises_not_silently_empty(tmp_path):
@@ -104,7 +111,7 @@ def test_lookup_corrupted_db_raises_not_silently_empty(tmp_path):
 
     store = TafsirStore(settings=Settings(tafsir_enabled=True, tafsir_db_path=bad_path))
     with pytest.raises(TafsirCorrupted):
-        store.lookup("1:1")
+        _run(store.lookup("1:1"))
 
 
 def test_unapproved_source_makes_store_unavailable(tmp_path):
@@ -133,15 +140,11 @@ def test_unapproved_source_makes_store_unavailable(tmp_path):
     tmp_db.rename(final_path)
 
     store = TafsirStore(settings=Settings(tafsir_enabled=True, tafsir_db_path=final_path))
-    assert store.available() is False
-    assert store.lookup("1:1") == []
+    assert _run(store.available()) is False
+    assert _run(store.lookup("1:1")) == []
 
 
 # ─── Route layer ────────────────────────────────────────────────────────
-
-
-def _run(coro):
-    return asyncio.run(coro)
 
 
 def test_route_valid_ayah(monkeypatch, enabled_store):
@@ -255,28 +258,30 @@ def test_route_corrupted_response_is_not_cached(monkeypatch, tmp_path):
     assert exc_info.value.headers.get("Cache-Control") == "no-store"
 
 
-# ─── Production/fixture safety guard ─────────────────────────────────────
+# ─── Production/fixture safety guard (sqlite store itself) ──────────────
 
 
 def test_fixture_content_refused_when_environment_is_production(tafsir_db):
-    """The hard guarantee from point 4: a fixture-tagged db must never be
-    servable when settings.environment == 'production', even with the
-    feature flag on."""
+    """The hard guarantee: a fixture-tagged db must never be servable when
+    settings.environment == 'production', even with the feature flag on.
+    (In real usage get_tafsir_store() wouldn't construct a TafsirStore at
+    all when environment=="production" — see the factory tests below — but
+    the sqlite class keeps this guard itself too, defense in depth.)"""
     store = TafsirStore(settings=Settings(tafsir_enabled=True, tafsir_db_path=tafsir_db, environment="production"))
-    assert store.available() is False
-    assert store.lookup("1:1") == []
+    assert _run(store.available()) is False
+    assert _run(store.lookup("1:1")) == []
 
 
 def test_production_content_environment_serves_normally(production_tafsir_db):
     store = TafsirStore(settings=Settings(tafsir_enabled=True, tafsir_db_path=production_tafsir_db, environment="production"))
-    assert store.available() is True
-    assert store.lookup("1:1") != []
+    assert _run(store.available()) is True
+    assert _run(store.lookup("1:1")) != []
     assert store.content_environment == "production"
 
 
 def test_fixture_content_serves_normally_in_development(tafsir_db):
     store = TafsirStore(settings=Settings(tafsir_enabled=True, tafsir_db_path=tafsir_db, environment="development"))
-    assert store.available() is True
+    assert _run(store.available()) is True
     assert store.content_environment == "fixture"
 
 
@@ -301,3 +306,30 @@ def test_status_endpoint_false_when_fixture_in_production(monkeypatch, tafsir_db
     monkeypatch.setattr(routes_module, "get_tafsir_store", lambda: store)
     result = _run(routes_module.get_tafsir_status())
     assert result == {"enabled": False}
+
+
+# ─── get_tafsir_store() factory — picks the provider by environment ─────
+
+
+def test_factory_returns_sqlite_store_for_development(monkeypatch):
+    monkeypatch.setattr("app.services.tafsir_store._sqlite_singleton", None)
+    monkeypatch.setattr("app.services.tafsir_store._qf_singleton", None)
+    monkeypatch.setattr(
+        "app.services.tafsir_store.get_settings",
+        lambda: Settings(environment="development"),
+    )
+    store = get_tafsir_store()
+    assert isinstance(store, TafsirStore)
+
+
+def test_factory_returns_qf_provider_for_production(monkeypatch):
+    monkeypatch.setattr("app.services.tafsir_store._sqlite_singleton", None)
+    monkeypatch.setattr("app.services.tafsir_store._qf_singleton", None)
+    monkeypatch.setattr(
+        "app.services.tafsir_store.get_settings",
+        lambda: Settings(environment="production"),
+    )
+    store = get_tafsir_store()
+    from app.services.qf_tafsir_provider import QFTafsirProvider
+
+    assert isinstance(store, QFTafsirProvider)

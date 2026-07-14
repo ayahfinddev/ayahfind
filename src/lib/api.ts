@@ -1,4 +1,10 @@
-import type { ReaderResponse, SearchResponse, TafsirResponse, TafsirStatusResponse } from "./types";
+import type {
+  ReaderResponse,
+  ReadingVariantsResponse,
+  SearchResponse,
+  TafsirResponse,
+  TafsirStatusResponse,
+} from "./types";
 import { getClientApiBase } from "./apiConfig";
 
 const API_BASE = getClientApiBase();
@@ -35,6 +41,12 @@ export async function fetchTafsir(surah: number, ayah: number): Promise<TafsirRe
 export async function fetchTafsirStatus(): Promise<TafsirStatusResponse> {
   const res = await fetch(`${API_BASE}/api/v1/tafsir/status`);
   if (!res.ok) return { enabled: false };
+  return res.json();
+}
+
+export async function fetchReadingVariants(surah: number, ayah: number): Promise<ReadingVariantsResponse> {
+  const res = await fetch(`${API_BASE}/api/v1/reading-variants/${surah}/${ayah}`);
+  if (!res.ok) throw new Error("Failed to load reading variants");
   return res.json();
 }
 

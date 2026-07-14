@@ -1,34 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Clock } from "lucide-react";
+import { useSearchHistory } from "@/hooks/useSearchHistory";
+import { ListRow } from "@/components/ui/ListRow";
 
 export default function HistoryPage() {
-  const [items, setItems] = useState<string[]>([]);
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("ayahfind_history");
-      setItems(raw ? JSON.parse(raw) : []);
-    } catch {
-      setItems([]);
-    }
-  }, []);
+  const { history } = useSearchHistory();
 
   return (
     <div className="px-1 pt-8 sm:px-5">
-      <h1 className="text-2xl font-bold text-ink">History</h1>
-      <p className="mt-1 text-sm text-ink-muted">Recent searches</p>
-      {items.length === 0 ? (
-        <div className="mt-12 flex flex-col items-center text-ink-subtle">
+      <h1 className="text-2xl font-bold text-text">History</h1>
+      <p className="mt-1 text-sm text-text-secondary">Recent searches</p>
+      {history.length === 0 ? (
+        <div className="mt-12 flex flex-col items-center text-text-tertiary">
           <Clock className="mb-3 h-10 w-10 opacity-40" />
           <p className="text-sm">Your search history will appear here.</p>
         </div>
       ) : (
         <ul className="mt-6 space-y-2">
-          {items.map((q) => (
-            <li key={q} className="glass-panel px-4 py-3 text-sm text-ink-muted">
-              {q}
+          {history.map((q) => (
+            <li key={q}>
+              <ListRow
+                icon={<Clock className="h-4 w-4" />}
+                title={q}
+                href={`/?q=${encodeURIComponent(q)}`}
+              />
             </li>
           ))}
         </ul>

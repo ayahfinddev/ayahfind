@@ -56,7 +56,7 @@ export default function OnboardingPage() {
             className="flex flex-col items-center text-center"
           >
             <motion.div
-              className="mb-8 flex h-24 w-24 items-center justify-center rounded-3xl bg-white ring-1 ring-accent-border shadow-[0_2px_12px_rgba(13,148,136,0.12)]"
+              className="mb-8 flex h-24 w-24 items-center justify-center rounded-3xl bg-surface ring-1 ring-accent-border shadow-[0_2px_12px_var(--accent-border)]"
               animate={{ scale: [1, 1.03, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
@@ -73,7 +73,7 @@ export default function OnboardingPage() {
           <span
             key={i}
             className={`h-1.5 rounded-full transition-all ${
-              i === step ? "w-8 bg-accent-dim" : "w-1.5 bg-black/10"
+              i === step ? "w-8 bg-primary-hover" : "w-1.5 bg-border-strong"
             }`}
           />
         ))}
@@ -82,7 +82,7 @@ export default function OnboardingPage() {
       <button
         type="button"
         onClick={() => (step < slides.length - 1 ? setStep(step + 1) : finish())}
-        className="w-full rounded-2xl bg-accent-dim py-4 font-semibold text-white shadow-[0_2px_12px_rgba(13,148,136,0.25)] transition-all hover:brightness-105"
+        className="w-full rounded-2xl bg-primary py-4 font-semibold text-white shadow-[0_2px_12px_var(--accent-border)] transition-colors duration-150 ease-out hover:bg-primary-hover"
       >
         {step < slides.length - 1 ? "Continue" : "Begin searching"}
       </button>

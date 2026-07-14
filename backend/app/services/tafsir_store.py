@@ -1,17 +1,26 @@
 """
-Tafsir lookup — isolated sqlite store, decoupled from the search corpus and
-the dormant SQLAlchemy Ayah/Surah models (backend/app/db).
+Tafsir lookup — dev/test backend only. In production, tafsir is served
+live from the Quran Foundation Content API instead (see
+qf_tafsir_provider.py) — no committed database, per the licensing/caching
+constraints documented in docs/TAFSIR_INGESTION.md. get_tafsir_store() at
+the bottom of this file is the single entry point routes.py uses; it picks
+between this sqlite store and the QF-backed provider based on
+settings.environment, so routes.py never needs to know which one it got —
+both expose the same async available()/lookup()/content_environment shape.
+
+This sqlite implementation is decoupled from the search corpus and the
+dormant SQLAlchemy Ayah/Surah models (backend/app/db), used only for local
+development and tests against data_pipeline/fixtures/tafsir_sample.json
+(see docs/TAFSIR_INGESTION.md).
 
 Connection handling: every lookup opens a short-lived, read-only sqlite3
 connection via a `file:...?mode=ro` URI and closes it before returning.
 No connection is stored on the store or reused across requests/threads —
 for a store this small (a couple of tiny tables, sub-millisecond queries)
 that's simpler and safer than a shared connection or a pool, and it keeps
-failure modes local to a single request.
-
-Because sqlite3 is blocking, routes must call into this from a worker
-thread (e.g. `await asyncio.to_thread(store.lookup, verse_key)`), never
-directly on the event loop.
+failure modes local to a single request. The public available()/lookup()
+methods are async wrappers (via asyncio.to_thread) purely so the interface
+matches the QF-backed provider — the sqlite work itself is still sync.
 
 A cheap, cached-per-process sanity check gates every lookup:
   - schema version matches
@@ -22,7 +31,7 @@ A cheap, cached-per-process sanity check gates every lookup:
     db can never accidentally serve real users.
 This is NOT a full integrity scan — that's the ingestion script's job (see
 data_pipeline/tafsir_integrity.py, run before a build is ever allowed to
-replace data/tafsir.db).
+replace a tafsir db).
 
 The sanity check also logs one structured summary line the first time it
 runs per process (enabled/disabled, db present/missing, content type,
@@ -39,11 +48,11 @@ Failures are split into two kinds on purpose (see routes.py):
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 import sqlite3
 from dataclasses import dataclass
-from functools import lru_cache
 from pathlib import Path
 
 from app.core.config import Settings, get_settings
@@ -187,7 +196,19 @@ class TafsirStore:
         self._sane = True
         return True
 
-    def available(self) -> bool:
+    async def available(self) -> bool:
+        """Async to match the QF-backed provider's interface (routes.py
+        calls this without caring which implementation it got) — the
+        sqlite work itself still runs on a worker thread, never the event
+        loop directly."""
+        return await asyncio.to_thread(self._available_sync)
+
+    async def lookup(self, verse_key: str) -> list[TafsirEntryRow]:
+        """[] if disabled/missing/no entries for this verse_key. Raises
+        TafsirCorrupted if the db is enabled+present but the query fails."""
+        return await asyncio.to_thread(self._lookup_sync, verse_key)
+
+    def _available_sync(self) -> bool:
         if not self._settings.tafsir_enabled:
             if not self._sanity_checked:
                 self._sanity_checked = True
@@ -195,10 +216,8 @@ class TafsirStore:
             return False
         return self._check_sanity()
 
-    def lookup(self, verse_key: str) -> list[TafsirEntryRow]:
-        """[] if disabled/missing/no entries for this verse_key. Raises
-        TafsirCorrupted if the db is enabled+present but the query fails."""
-        if not self.available():
+    def _lookup_sync(self, verse_key: str) -> list[TafsirEntryRow]:
+        if not self._available_sync():
             return []
 
         path = self._settings.tafsir_db_path
@@ -244,6 +263,28 @@ class TafsirStore:
         ]
 
 
-@lru_cache
-def get_tafsir_store() -> TafsirStore:
-    return TafsirStore()
+_sqlite_singleton: TafsirStore | None = None
+_qf_singleton = None  # type: ignore[var-annotated]  # QFTafsirProvider, imported lazily below
+
+
+def get_tafsir_store():
+    """Single entry point routes.py uses. Picks the provider based on
+    settings.environment — "production" gets the live Quran Foundation
+    provider (qf_tafsir_provider.py, no committed database); anything else
+    (development, tests) gets this sqlite store against a local fixture db.
+    Imports QFTafsirProvider lazily to avoid a circular import (that module
+    imports TafsirEntryRow from this one)."""
+    settings = get_settings()
+
+    if settings.environment == "production":
+        global _qf_singleton
+        if _qf_singleton is None:
+            from app.services.qf_tafsir_provider import QFTafsirProvider
+
+            _qf_singleton = QFTafsirProvider(settings)
+        return _qf_singleton
+
+    global _sqlite_singleton
+    if _sqlite_singleton is None:
+        _sqlite_singleton = TafsirStore(settings)
+    return _sqlite_singleton

@@ -1,0 +1,1693 @@
+{
+  "description": "Expanded retrieval benchmark (v2) — validates against the live SearchService engine",
+  "cases": [
+    {
+      "id": "voice_56_75_waqiah",
+      "query": "فلا اقسم بمواقع النجوم",
+      "target": [
+        56,
+        75
+      ],
+      "top_k": 8,
+      "category": "voice_arabic_stt"
+    },
+    {
+      "id": "famous_2_257_ar",
+      "query": "الله ولي الذين امنوا",
+      "target": [
+        2,
+        257
+      ],
+      "top_k": 5,
+      "category": "famous_arabic"
+    },
+    {
+      "id": "famous_112_1_translit",
+      "query": "qul huwallahu ahad",
+      "target": [
+        112,
+        1
+      ],
+      "top_k": 5,
+      "category": "famous_transliteration"
+    },
+    {
+      "id": "famous_1_5_translit",
+      "query": "iyyaka nabudu wa iyyaka nastain",
+      "target": [
+        1,
+        5
+      ],
+      "top_k": 5,
+      "category": "famous_transliteration"
+    },
+    {
+      "id": "obscure_94_5_ar",
+      "query": "فإن مع العسر يسرا",
+      "target": [
+        94,
+        5
+      ],
+      "top_k": 8,
+      "category": "obscure_arabic"
+    },
+    {
+      "id": "partial_2_286_translit",
+      "query": "la yukallifu nafsan illa wusaha",
+      "target": [
+        2,
+        286
+      ],
+      "top_k": 8,
+      "category": "partial_transliteration"
+    },
+    {
+      "id": "spelling_75_36_garbled",
+      "query": "ayahsabul insanu ayyutraka suda",
+      "target": [
+        75,
+        36
+      ],
+      "top_k": 8,
+      "category": "spelling_transliteration"
+    },
+    {
+      "id": "no_harakat_17_32",
+      "query": "ولا تقربوا الزنا",
+      "target": [
+        17,
+        32
+      ],
+      "top_k": 8,
+      "category": "no_harakat"
+    },
+    {
+      "id": "alef_variant_2_201",
+      "query": "ربنا اتنا في الدنيا حسنة",
+      "target": [
+        2,
+        201
+      ],
+      "top_k": 8,
+      "category": "mixed_arabic"
+    },
+    {
+      "id": "english_zina",
+      "query": "do not approach zina",
+      "target": [
+        17,
+        32
+      ],
+      "top_k": 8,
+      "category": "english"
+    },
+    {
+      "id": "english_burden",
+      "query": "not burden a soul",
+      "target": [
+        2,
+        286
+      ],
+      "top_k": 8,
+      "category": "english"
+    },
+    {
+      "id": "basmala_phrase_multi",
+      "query": "بسم الله الرحمن الرحيم",
+      "target": null,
+      "min_results": 2,
+      "top_k": 10,
+      "category": "repeated_phrase"
+    },
+    {
+      "id": "arabic_partial_2_255",
+      "query": "ولي الذين امنوا يخرجهم",
+      "target": [
+        2,
+        257
+      ],
+      "top_k": 10,
+      "category": "partial_arabic"
+    },
+    {
+      "id": "ar_exact_la_khawf",
+      "query": "لا خوف عليهم",
+      "category": "exact_arabic",
+      "target": [
+        10,
+        62
+      ]
+    },
+    {
+      "id": "ar_exact_zina",
+      "query": "ولا تقربوا الزنا",
+      "category": "exact_arabic",
+      "target": [
+        17,
+        32
+      ]
+    },
+    {
+      "id": "ar_exact_qatl_nafs",
+      "query": "ولا تقتلوا النفس",
+      "category": "exact_arabic",
+      "targets": [
+        [
+          17,
+          33
+        ],
+        [
+          6,
+          151
+        ]
+      ]
+    },
+    {
+      "id": "ar_exact_hasbuna",
+      "query": "حسبنا الله",
+      "category": "exact_arabic",
+      "target": [
+        3,
+        173
+      ]
+    },
+    {
+      "id": "ar_exact_wa_aiddu",
+      "query": "وأعدوا لهم",
+      "category": "exact_arabic",
+      "target": [
+        8,
+        60
+      ]
+    },
+    {
+      "id": "ar_exact_tadabbur",
+      "query": "أفلا يتدبرون القرآن",
+      "category": "exact_arabic",
+      "targets": [
+        [
+          47,
+          24
+        ],
+        [
+          4,
+          82
+        ]
+      ]
+    },
+    {
+      "id": "ar_exact_basmala",
+      "query": "بسم الله الرحمن الرحيم",
+      "category": "exact_arabic",
+      "target": [
+        1,
+        1
+      ]
+    },
+    {
+      "id": "ar_exact_qul_huwa",
+      "query": "قل هو الله احد",
+      "category": "exact_arabic",
+      "target": [
+        112,
+        1
+      ]
+    },
+    {
+      "id": "ar_exact_iyyaka",
+      "query": "اياك نعبد واياك نستعين",
+      "category": "exact_arabic",
+      "target": [
+        1,
+        5
+      ]
+    },
+    {
+      "id": "ar_exact_yusr_1",
+      "query": "فان مع العسر يسرا",
+      "category": "exact_arabic",
+      "target": [
+        94,
+        5
+      ]
+    },
+    {
+      "id": "ar_exact_yusr_2",
+      "query": "ان مع العسر يسرا",
+      "category": "exact_arabic",
+      "target": [
+        94,
+        6
+      ]
+    },
+    {
+      "id": "ar_exact_la_tahsabanna",
+      "query": "ولا تحسبن الله غافلا عما يعمل الظالمون",
+      "category": "exact_arabic",
+      "target": [
+        14,
+        42
+      ]
+    },
+    {
+      "id": "ar_exact_udunee",
+      "query": "ادعوني استجب لكم",
+      "category": "exact_arabic",
+      "target": [
+        40,
+        60
+      ]
+    },
+    {
+      "id": "ar_exact_maa_sabireen",
+      "query": "ان الله مع الصابرين",
+      "category": "exact_arabic",
+      "targets": [
+        [
+          2,
+          153
+        ],
+        [
+          8,
+          66
+        ]
+      ]
+    },
+    {
+      "id": "ar_exact_la_ikraha",
+      "query": "لا اكراه في الدين",
+      "category": "exact_arabic",
+      "target": [
+        2,
+        256
+      ]
+    },
+    {
+      "id": "ar_exact_kullu_nafs",
+      "query": "كل نفس ذائقة الموت",
+      "category": "exact_arabic",
+      "targets": [
+        [
+          3,
+          185
+        ],
+        [
+          21,
+          35
+        ],
+        [
+          29,
+          57
+        ]
+      ]
+    },
+    {
+      "id": "ar_exact_rahmati",
+      "query": "ورحمتي وسعت كل شيء",
+      "category": "exact_arabic",
+      "target": [
+        7,
+        156
+      ]
+    },
+    {
+      "id": "ar_exact_khalaqtul_jinn",
+      "query": "وما خلقت الجن والانس الا ليعبدون",
+      "category": "exact_arabic",
+      "target": [
+        51,
+        56
+      ]
+    },
+    {
+      "id": "ar_exact_salat_tanha",
+      "query": "ان الصلاة تنهى عن الفحشاء والمنكر",
+      "category": "exact_arabic",
+      "target": [
+        29,
+        45
+      ]
+    },
+    {
+      "id": "ar_exact_man_qatala",
+      "query": "من قتل نفسا بغير نفس",
+      "category": "exact_arabic",
+      "target": [
+        5,
+        32
+      ]
+    },
+    {
+      "id": "ar_exact_karramna",
+      "query": "ولقد كرمنا بني آدم",
+      "category": "exact_arabic",
+      "target": [
+        17,
+        70
+      ]
+    },
+    {
+      "id": "ar_exact_zidni_ilma",
+      "query": "وقل رب زدني علما",
+      "category": "exact_arabic",
+      "target": [
+        20,
+        114
+      ]
+    },
+    {
+      "id": "translit_bismillah",
+      "query": "bismillah hir rahman nir raheem",
+      "category": "exact_transliteration",
+      "target": [
+        1,
+        1
+      ]
+    },
+    {
+      "id": "translit_alhamdu",
+      "query": "alhamdu lillahi rabbil alameen",
+      "category": "exact_transliteration",
+      "target": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "translit_maliki",
+      "query": "maliki yawmid deen",
+      "category": "exact_transliteration",
+      "target": [
+        1,
+        4
+      ]
+    },
+    {
+      "id": "translit_ihdinas",
+      "query": "ihdinas siratal mustaqeem",
+      "category": "exact_transliteration",
+      "target": [
+        1,
+        6
+      ]
+    },
+    {
+      "id": "translit_kursi",
+      "query": "allahu la ilaha illa huwal hayyul qayyum",
+      "category": "exact_transliteration",
+      "target": [
+        2,
+        255
+      ]
+    },
+    {
+      "id": "translit_lakum_qisas",
+      "query": "wa lakum fil qisasi hayah",
+      "category": "exact_transliteration",
+      "target": [
+        2,
+        179
+      ]
+    },
+    {
+      "id": "translit_rabbana_la_tuakhidhna",
+      "query": "rabbana la tu-akhidhna in nasina aw akhtana",
+      "category": "exact_transliteration",
+      "target": [
+        2,
+        286
+      ]
+    },
+    {
+      "id": "translit_falaq",
+      "query": "qul auzu birabbil falaq",
+      "category": "exact_transliteration",
+      "target": [
+        113,
+        1
+      ]
+    },
+    {
+      "id": "translit_naas",
+      "query": "qul auzu birabbin naas",
+      "category": "exact_transliteration",
+      "target": [
+        114,
+        1
+      ]
+    },
+    {
+      "id": "translit_kawthar",
+      "query": "inna aatainakal kawthar",
+      "category": "exact_transliteration",
+      "target": [
+        108,
+        1
+      ]
+    },
+    {
+      "id": "translit_lam_yalid",
+      "query": "lam yalid wa lam yulad",
+      "category": "exact_transliteration",
+      "target": [
+        112,
+        3
+      ]
+    },
+    {
+      "id": "translit_kufuwan",
+      "query": "wa lam yakul lahu kufuwan ahad",
+      "category": "exact_transliteration",
+      "target": [
+        112,
+        4
+      ]
+    },
+    {
+      "id": "translit_nasr",
+      "query": "idha jaa nasrullahi wal fath",
+      "category": "exact_transliteration",
+      "target": [
+        110,
+        1
+      ]
+    },
+    {
+      "id": "en_exact_burden_soul",
+      "query": "Allah does not burden a soul beyond what it can bear",
+      "category": "exact_english",
+      "target": [
+        2,
+        286
+      ]
+    },
+    {
+      "id": "en_exact_hardship_ease",
+      "query": "with hardship comes ease",
+      "category": "exact_english",
+      "targets": [
+        [
+          94,
+          5
+        ],
+        [
+          94,
+          6
+        ]
+      ]
+    },
+    {
+      "id": "en_exact_best_planner",
+      "query": "Allah is the best of planners",
+      "category": "exact_english",
+      "targets": [
+        [
+          3,
+          54
+        ],
+        [
+          8,
+          30
+        ]
+      ]
+    },
+    {
+      "id": "en_exact_no_compulsion",
+      "query": "there is no compulsion in religion",
+      "category": "exact_english",
+      "target": [
+        2,
+        256
+      ]
+    },
+    {
+      "id": "en_exact_with_patient",
+      "query": "Allah is with those who are patient",
+      "category": "exact_english",
+      "targets": [
+        [
+          2,
+          153
+        ],
+        [
+          8,
+          66
+        ]
+      ]
+    },
+    {
+      "id": "en_exact_save_one_life",
+      "query": "whoever saves one life it is as if he saved all mankind",
+      "category": "exact_english",
+      "target": [
+        5,
+        32
+      ]
+    },
+    {
+      "id": "en_exact_jugular_vein",
+      "query": "We are nearer to him than his jugular vein",
+      "category": "exact_english",
+      "target": [
+        50,
+        16
+      ]
+    },
+    {
+      "id": "en_exact_call_upon_me",
+      "query": "call upon Me, I will respond to you",
+      "category": "exact_english",
+      "target": [
+        40,
+        60
+      ]
+    },
+    {
+      "id": "en_exact_mercy_encompasses",
+      "query": "My mercy encompasses all things",
+      "category": "exact_english",
+      "target": [
+        7,
+        156
+      ]
+    },
+    {
+      "id": "en_exact_prayer_prevents",
+      "query": "prayer prevents immorality and wrongdoing",
+      "category": "exact_english",
+      "target": [
+        29,
+        45
+      ]
+    },
+    {
+      "id": "en_exact_found_you_lost",
+      "query": "He found you lost and guided you",
+      "category": "exact_english",
+      "target": [
+        93,
+        7
+      ]
+    },
+    {
+      "id": "en_exact_expand_breast",
+      "query": "did We not expand for you your breast",
+      "category": "exact_english",
+      "target": [
+        94,
+        1
+      ]
+    },
+    {
+      "id": "en_exact_remember_me",
+      "query": "remember Me, I will remember you",
+      "category": "exact_english",
+      "target": [
+        2,
+        152
+      ]
+    },
+    {
+      "id": "en_exact_good_tidings_patient",
+      "query": "give good tidings to the patient",
+      "category": "exact_english",
+      "target": [
+        2,
+        155
+      ]
+    },
+    {
+      "id": "en_exact_change_condition",
+      "query": "Allah does not change the condition of a people until they change what is in themselves",
+      "category": "exact_english",
+      "target": [
+        13,
+        11
+      ]
+    },
+    {
+      "id": "en_exact_no_soul_knows_tomorrow",
+      "query": "no soul knows what it will earn tomorrow",
+      "category": "exact_english",
+      "target": [
+        31,
+        34
+      ]
+    },
+    {
+      "id": "en_exact_wealth_children_adornment",
+      "query": "wealth and children are the adornment of worldly life",
+      "category": "exact_english",
+      "target": [
+        18,
+        46
+      ]
+    },
+    {
+      "id": "en_exact_recite_iqra",
+      "query": "read in the name of your Lord who created",
+      "category": "exact_english",
+      "target": [
+        96,
+        1
+      ]
+    },
+    {
+      "id": "vague_dont_despair",
+      "query": "where Allah says don't despair",
+      "category": "vague_meaning",
+      "target": [
+        39,
+        53
+      ]
+    },
+    {
+      "id": "vague_anxiety",
+      "query": "verse about anxiety",
+      "category": "vague_meaning",
+      "target": [
+        13,
+        28
+      ]
+    },
+    {
+      "id": "vague_mountains_moving",
+      "query": "that ayah about mountains moving",
+      "category": "vague_meaning",
+      "target": [
+        27,
+        88
+      ]
+    },
+    {
+      "id": "vague_earth_spread_out",
+      "query": "the earth spread out",
+      "category": "vague_meaning",
+      "target": [
+        79,
+        30
+      ]
+    },
+    {
+      "id": "vague_allah_loves_repent",
+      "query": "Allah loves those who repent",
+      "category": "vague_meaning",
+      "target": [
+        2,
+        222
+      ]
+    },
+    {
+      "id": "vague_dont_burden_soul",
+      "query": "don't burden a soul",
+      "category": "vague_meaning",
+      "target": [
+        2,
+        286
+      ]
+    },
+    {
+      "id": "vague_musa_stick",
+      "query": "Musa throws his stick",
+      "category": "vague_meaning",
+      "target": [
+        20,
+        20
+      ]
+    },
+    {
+      "id": "vague_trumpet_blown",
+      "query": "the trumpet will be blown",
+      "category": "vague_meaning",
+      "target": [
+        39,
+        68
+      ]
+    },
+    {
+      "id": "vague_oceans_dont_mix",
+      "query": "where the oceans don't mix",
+      "category": "vague_meaning",
+      "targets": [
+        [
+          55,
+          19
+        ],
+        [
+          55,
+          20
+        ]
+      ]
+    },
+    {
+      "id": "vague_expand_provision",
+      "query": "Allah expands provision",
+      "category": "vague_meaning",
+      "target": [
+        13,
+        26
+      ]
+    },
+    {
+      "id": "vague_fear_and_sadness",
+      "query": "fear and sadness",
+      "category": "vague_meaning",
+      "targets": [
+        [
+          10,
+          62
+        ],
+        [
+          2,
+          38
+        ],
+        [
+          2,
+          62
+        ]
+      ]
+    },
+    {
+      "id": "vague_ibrahim_resurrection",
+      "query": "where Ibrahim asked about resurrection",
+      "category": "vague_meaning",
+      "target": [
+        2,
+        260
+      ]
+    },
+    {
+      "id": "vague_left_to_say_we_believe",
+      "query": "people think they will be left to say we believe",
+      "category": "vague_meaning",
+      "target": [
+        29,
+        2
+      ]
+    },
+    {
+      "id": "vague_patience",
+      "query": "verse about patience",
+      "category": "vague_meaning",
+      "targets": [
+        [
+          2,
+          153
+        ],
+        [
+          103,
+          3
+        ]
+      ]
+    },
+    {
+      "id": "vague_parents_old",
+      "query": "parents getting old",
+      "category": "vague_meaning",
+      "target": [
+        17,
+        23
+      ]
+    },
+    {
+      "id": "vague_save_one_life",
+      "query": "whoever saves one life",
+      "category": "vague_meaning",
+      "target": [
+        5,
+        32
+      ]
+    },
+    {
+      "id": "vague_comfort_believers",
+      "query": "the verse where Allah comforts believers",
+      "category": "vague_meaning",
+      "target": [
+        3,
+        139
+      ]
+    },
+    {
+      "id": "vague_hearts_rest",
+      "query": "hearts find rest in the remembrance of Allah",
+      "category": "vague_meaning",
+      "target": [
+        13,
+        28
+      ]
+    },
+    {
+      "id": "vague_lose_hope_mercy",
+      "query": "don't lose hope in Allah's mercy",
+      "category": "vague_meaning",
+      "target": [
+        39,
+        53
+      ]
+    },
+    {
+      "id": "vague_closer_than_vein",
+      "query": "Allah is closer to you than your jugular vein",
+      "category": "vague_meaning",
+      "target": [
+        50,
+        16
+      ]
+    },
+    {
+      "id": "vague_worldly_life_play",
+      "query": "the reality of this worldly life is play and amusement",
+      "category": "vague_meaning",
+      "target": [
+        57,
+        20
+      ]
+    },
+    {
+      "id": "vague_wealth_children_test",
+      "query": "wealth and children are a test",
+      "category": "vague_meaning",
+      "targets": [
+        [
+          8,
+          28
+        ],
+        [
+          64,
+          15
+        ]
+      ]
+    },
+    {
+      "id": "vague_every_soul_death",
+      "query": "each soul will taste death",
+      "category": "vague_meaning",
+      "targets": [
+        [
+          3,
+          185
+        ],
+        [
+          21,
+          35
+        ],
+        [
+          29,
+          57
+        ]
+      ]
+    },
+    {
+      "id": "vague_night_of_power",
+      "query": "night of power better than a thousand months",
+      "category": "vague_meaning",
+      "target": [
+        97,
+        3
+      ]
+    },
+    {
+      "id": "vague_quran_ramadan",
+      "query": "the Quran was revealed in the month of Ramadan",
+      "category": "vague_meaning",
+      "target": [
+        2,
+        185
+      ]
+    },
+    {
+      "id": "vague_fasting_prescribed",
+      "query": "fasting was prescribed for those before you",
+      "category": "vague_meaning",
+      "target": [
+        2,
+        183
+      ]
+    },
+    {
+      "id": "vague_atoms_weight_good",
+      "query": "whoever does an atom's weight of good will see it",
+      "category": "vague_meaning",
+      "target": [
+        99,
+        7
+      ]
+    },
+    {
+      "id": "vague_earth_shakes",
+      "query": "on that day the earth will shake",
+      "category": "vague_meaning",
+      "target": [
+        99,
+        1
+      ]
+    },
+    {
+      "id": "vague_sun_folded_up",
+      "query": "the sun will be folded up",
+      "category": "vague_meaning",
+      "target": [
+        81,
+        1
+      ]
+    },
+    {
+      "id": "vague_scales_justice",
+      "query": "scales will be set up for justice",
+      "category": "vague_meaning",
+      "target": [
+        21,
+        47
+      ]
+    },
+    {
+      "id": "vague_resurrected_alone",
+      "query": "everyone will be resurrected alone",
+      "category": "vague_meaning",
+      "target": [
+        19,
+        95
+      ]
+    },
+    {
+      "id": "vague_trumpet_terrified",
+      "query": "the trumpet is blown and all will be terrified",
+      "category": "vague_meaning",
+      "target": [
+        27,
+        87
+      ]
+    },
+    {
+      "id": "vague_light_heavens_earth",
+      "query": "Allah is the light of the heavens and earth",
+      "category": "vague_meaning",
+      "target": [
+        24,
+        35
+      ]
+    },
+    {
+      "id": "vague_belong_to_allah",
+      "query": "we belong to Allah and to Him we return",
+      "category": "vague_meaning",
+      "target": [
+        2,
+        156
+      ]
+    },
+    {
+      "id": "story_musa_snake",
+      "query": "Musa snake",
+      "category": "story",
+      "target": [
+        20,
+        20
+      ]
+    },
+    {
+      "id": "story_nuh_flood",
+      "query": "Nuh flood",
+      "category": "story",
+      "target": [
+        11,
+        44
+      ]
+    },
+    {
+      "id": "story_yusuf_prison",
+      "query": "Yusuf prison",
+      "category": "story",
+      "target": [
+        12,
+        36
+      ]
+    },
+    {
+      "id": "story_maryam_childbirth",
+      "query": "Maryam childbirth",
+      "category": "story",
+      "target": [
+        19,
+        23
+      ]
+    },
+    {
+      "id": "story_ibrahim_fire",
+      "query": "Ibrahim fire",
+      "category": "story",
+      "target": [
+        21,
+        69
+      ]
+    },
+    {
+      "id": "story_yunus_whale",
+      "query": "Yunus whale",
+      "category": "story",
+      "target": [
+        37,
+        142
+      ]
+    },
+    {
+      "id": "story_musa_khidr",
+      "query": "Musa and Khidr servant of Allah",
+      "category": "story",
+      "target": [
+        18,
+        65
+      ]
+    },
+    {
+      "id": "story_people_of_cave",
+      "query": "the people of the cave",
+      "category": "story",
+      "target": [
+        18,
+        9
+      ]
+    },
+    {
+      "id": "story_adam_forbidden_tree",
+      "query": "Adam and the forbidden tree",
+      "category": "story",
+      "target": [
+        2,
+        35
+      ]
+    },
+    {
+      "id": "story_iblis_refuses",
+      "query": "Iblis refuses to prostrate",
+      "category": "story",
+      "target": [
+        2,
+        34
+      ]
+    },
+    {
+      "id": "story_queen_of_sheba",
+      "query": "the Queen of Sheba and Sulaiman",
+      "category": "story",
+      "target": [
+        27,
+        23
+      ]
+    },
+    {
+      "id": "story_gog_magog",
+      "query": "Dhul Qarnayn and Gog and Magog",
+      "category": "story",
+      "target": [
+        18,
+        94
+      ]
+    },
+    {
+      "id": "story_zakariyya_son",
+      "query": "Zakariyya asks for a son",
+      "category": "story",
+      "target": [
+        19,
+        4
+      ]
+    },
+    {
+      "id": "story_ibrahim_sacrifice",
+      "query": "the slaughtering of Ibrahim's son",
+      "category": "story",
+      "target": [
+        37,
+        102
+      ]
+    },
+    {
+      "id": "story_salih_camel",
+      "query": "the she-camel of Salih",
+      "category": "story",
+      "target": [
+        7,
+        73
+      ]
+    },
+    {
+      "id": "story_lut_destruction",
+      "query": "the destruction of the people of Lut",
+      "category": "story",
+      "target": [
+        11,
+        82
+      ]
+    },
+    {
+      "id": "story_golden_calf",
+      "query": "the golden calf of Bani Israel",
+      "category": "story",
+      "target": [
+        20,
+        88
+      ]
+    },
+    {
+      "id": "story_two_sons_of_adam",
+      "query": "the story of the two sons of Adam",
+      "category": "story",
+      "target": [
+        5,
+        27
+      ]
+    },
+    {
+      "id": "story_ant_valley",
+      "query": "the ant warns other ants about Sulaiman's army",
+      "category": "story",
+      "target": [
+        27,
+        18
+      ]
+    },
+    {
+      "id": "story_hoopoe_bird",
+      "query": "the hoopoe bird brings news to Sulaiman",
+      "category": "story",
+      "target": [
+        27,
+        22
+      ]
+    },
+    {
+      "id": "story_elephant",
+      "query": "the people of the elephant",
+      "category": "story",
+      "target": [
+        105,
+        1
+      ]
+    },
+    {
+      "id": "story_spider_web",
+      "query": "the spider's web",
+      "category": "story",
+      "target": [
+        29,
+        41
+      ]
+    },
+    {
+      "id": "story_bee_inspired",
+      "query": "the bee and its inspiration",
+      "category": "story",
+      "target": [
+        16,
+        68
+      ]
+    },
+    {
+      "id": "story_maryam_told_not_to_grieve",
+      "query": "where Maryam is told not to grieve",
+      "category": "story",
+      "target": [
+        19,
+        24
+      ]
+    },
+    {
+      "id": "story_ruined_town_resurrection",
+      "query": "the man who asks how Allah will resurrect a ruined town",
+      "category": "story",
+      "target": [
+        2,
+        259
+      ]
+    },
+    {
+      "id": "topic_marriage",
+      "query": "marriage",
+      "category": "topic",
+      "target": [
+        30,
+        21
+      ]
+    },
+    {
+      "id": "topic_patience",
+      "query": "patience",
+      "category": "topic",
+      "targets": [
+        [
+          2,
+          153
+        ],
+        [
+          103,
+          3
+        ]
+      ]
+    },
+    {
+      "id": "topic_charity",
+      "query": "charity",
+      "category": "topic",
+      "target": [
+        2,
+        261
+      ]
+    },
+    {
+      "id": "topic_inheritance",
+      "query": "inheritance",
+      "category": "topic",
+      "target": [
+        4,
+        11
+      ]
+    },
+    {
+      "id": "topic_fasting",
+      "query": "fasting",
+      "category": "topic",
+      "target": [
+        2,
+        183
+      ]
+    },
+    {
+      "id": "topic_zakat",
+      "query": "zakat",
+      "category": "topic",
+      "target": [
+        2,
+        43
+      ]
+    },
+    {
+      "id": "topic_justice",
+      "query": "justice",
+      "category": "topic",
+      "target": [
+        16,
+        90
+      ]
+    },
+    {
+      "id": "topic_hypocrisy",
+      "query": "hypocrisy",
+      "category": "topic",
+      "target": [
+        63,
+        1
+      ]
+    },
+    {
+      "id": "topic_gratitude",
+      "query": "gratitude",
+      "category": "topic",
+      "target": [
+        14,
+        7
+      ]
+    },
+    {
+      "id": "topic_parents",
+      "query": "parents",
+      "category": "topic",
+      "target": [
+        17,
+        23
+      ]
+    },
+    {
+      "id": "topic_knowledge",
+      "query": "knowledge",
+      "category": "topic",
+      "target": [
+        20,
+        114
+      ]
+    },
+    {
+      "id": "topic_repentance",
+      "query": "repentance",
+      "category": "topic",
+      "targets": [
+        [
+          39,
+          53
+        ],
+        [
+          66,
+          8
+        ]
+      ]
+    },
+    {
+      "id": "topic_provision",
+      "query": "provision",
+      "category": "topic",
+      "target": [
+        65,
+        3
+      ]
+    },
+    {
+      "id": "topic_mercy",
+      "query": "mercy",
+      "category": "topic",
+      "target": [
+        7,
+        156
+      ]
+    },
+    {
+      "id": "topic_hellfire",
+      "query": "hellfire",
+      "category": "topic",
+      "target": [
+        2,
+        24
+      ]
+    },
+    {
+      "id": "topic_paradise",
+      "query": "paradise",
+      "category": "topic",
+      "target": [
+        2,
+        25
+      ]
+    },
+    {
+      "id": "topic_usury",
+      "query": "usury interest riba",
+      "category": "topic",
+      "target": [
+        2,
+        275
+      ]
+    },
+    {
+      "id": "topic_backbiting",
+      "query": "backbiting",
+      "category": "topic",
+      "target": [
+        49,
+        12
+      ]
+    },
+    {
+      "id": "topic_lowering_gaze",
+      "query": "lowering the gaze modesty",
+      "category": "topic",
+      "target": [
+        24,
+        30
+      ]
+    },
+    {
+      "id": "topic_orphans",
+      "query": "orphans",
+      "category": "topic",
+      "target": [
+        4,
+        2
+      ]
+    },
+    {
+      "id": "cmd_lower_gaze",
+      "query": "lower your gaze",
+      "category": "command",
+      "target": [
+        24,
+        30
+      ]
+    },
+    {
+      "id": "cmd_be_good_to_parents",
+      "query": "be good to your parents",
+      "category": "command",
+      "target": [
+        17,
+        23
+      ]
+    },
+    {
+      "id": "cmd_dont_despair_mercy",
+      "query": "do not despair of Allah's mercy",
+      "category": "command",
+      "target": [
+        39,
+        53
+      ]
+    },
+    {
+      "id": "cmd_dont_kill_children_poverty",
+      "query": "do not kill your children out of fear of poverty",
+      "category": "command",
+      "target": [
+        17,
+        31
+      ]
+    },
+    {
+      "id": "cmd_full_measure_weight",
+      "query": "give full measure and weight",
+      "category": "command",
+      "target": [
+        17,
+        35
+      ]
+    },
+    {
+      "id": "cmd_dont_follow_no_knowledge",
+      "query": "do not follow that of which you have no knowledge",
+      "category": "command",
+      "target": [
+        17,
+        36
+      ]
+    },
+    {
+      "id": "cmd_consult_them",
+      "query": "consult them in the matter",
+      "category": "command",
+      "target": [
+        3,
+        159
+      ]
+    },
+    {
+      "id": "cmd_stand_firm_justice",
+      "query": "stand firm for justice even against yourselves",
+      "category": "command",
+      "target": [
+        4,
+        135
+      ]
+    },
+    {
+      "id": "mixed_sabr_patience",
+      "query": "sabr patience",
+      "category": "mixed",
+      "targets": [
+        [
+          2,
+          153
+        ],
+        [
+          103,
+          3
+        ]
+      ]
+    },
+    {
+      "id": "mixed_jannah_rivers",
+      "query": "jannah rivers",
+      "category": "mixed",
+      "target": [
+        47,
+        15
+      ]
+    },
+    {
+      "id": "mixed_ayah_tawakkul",
+      "query": "ayah about tawakkul",
+      "category": "mixed",
+      "targets": [
+        [
+          3,
+          159
+        ],
+        [
+          65,
+          3
+        ]
+      ]
+    },
+    {
+      "id": "mixed_khawf_huzn",
+      "query": "khawf and huzn fear and grief",
+      "category": "mixed",
+      "targets": [
+        [
+          10,
+          62
+        ],
+        [
+          2,
+          38
+        ],
+        [
+          2,
+          62
+        ]
+      ]
+    },
+    {
+      "id": "mixed_rizq_provision",
+      "query": "rizq provision expanding",
+      "category": "mixed",
+      "target": [
+        13,
+        26
+      ]
+    },
+    {
+      "id": "mixed_jahannam_fire",
+      "query": "jahannam hellfire fuel",
+      "category": "mixed",
+      "target": [
+        2,
+        24
+      ]
+    },
+    {
+      "id": "broken_ar_la_takhaf",
+      "query": "لا تخاف",
+      "category": "broken_arabic",
+      "target": [
+        20,
+        77
+      ]
+    },
+    {
+      "id": "broken_ar_sama_inshaqqat",
+      "query": "السماء انشقت",
+      "category": "broken_arabic",
+      "target": [
+        84,
+        1
+      ]
+    },
+    {
+      "id": "broken_en_mountins",
+      "query": "verse about mountins moving like clouds",
+      "category": "broken_english",
+      "target": [
+        27,
+        88
+      ]
+    },
+    {
+      "id": "broken_en_dont_despair_noapos",
+      "query": "dont despair of allahs mercy",
+      "category": "broken_english",
+      "target": [
+        39,
+        53
+      ]
+    },
+    {
+      "id": "broken_en_musa_throw_snake",
+      "query": "musa throw stick becoming snake",
+      "category": "broken_english",
+      "targets": [
+        [
+          20,
+          20
+        ],
+        [
+          7,
+          107
+        ],
+        [
+          26,
+          32
+        ]
+      ]
+    },
+    {
+      "id": "broken_en_trumpet_judgement",
+      "query": "trumpet blown day of judgement",
+      "category": "broken_english",
+      "target": [
+        39,
+        68
+      ]
+    },
+    {
+      "id": "broken_en_earth_spred",
+      "query": "earth spred out flat",
+      "category": "broken_english",
+      "target": [
+        79,
+        30
+      ]
+    },
+    {
+      "id": "broken_en_parants_old",
+      "query": "parants getting old take care",
+      "category": "broken_english",
+      "target": [
+        17,
+        23
+      ]
+    },
+    {
+      "id": "broken_en_burden_missing_dont",
+      "query": "burden soul more than it can bear",
+      "category": "broken_english",
+      "target": [
+        2,
+        286
+      ]
+    },
+    {
+      "id": "broken_en_oceans_dont_mix_barrier",
+      "query": "oceans that dont mix barrier",
+      "category": "broken_english",
+      "targets": [
+        [
+          55,
+          19
+        ],
+        [
+          55,
+          20
+        ],
+        [
+          25,
+          53
+        ]
+      ]
+    },
+    {
+      "id": "broken_en_saves_all_humanity",
+      "query": "whoever saves one life saves all humanity",
+      "category": "broken_english",
+      "target": [
+        5,
+        32
+      ]
+    },
+    {
+      "id": "broken_en_hearts_rest_missing_words",
+      "query": "hearts find rest remembrance allah",
+      "category": "broken_english",
+      "target": [
+        13,
+        28
+      ]
+    }
+  ]
+}

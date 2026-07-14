@@ -179,14 +179,14 @@ export function SymbolPopup({ target, onClose }: SymbolPopupProps) {
       role="dialog"
       aria-label={`${data.nameEn} — Quranic symbol`}
       style={{ top, left, width: POPUP_WIDTH }}
-      className="symbol-popup fixed z-[200] overflow-hidden rounded-xl border border-border bg-white shadow-[0_4px_24px_rgba(0,0,0,0.12)] dark:bg-canvas-elevated dark:border-glass-border dark:shadow-[0_4px_24px_rgba(0,0,0,0.5)]"
+      className="symbol-popup fixed z-[200] overflow-hidden rounded-xl border border-border-strong bg-surface-floating shadow-md"
     >
       {/* Header */}
-      <div className="flex items-center gap-3 border-b border-border px-4 py-3 dark:border-glass-border">
+      <div className="flex items-center gap-3 border-b border-border-strong px-4 py-3">
         {/* Glyph + traditional form */}
         <div className="flex shrink-0 flex-col items-center gap-0.5">
           <span
-            className="font-arabic text-2xl leading-none text-amber-500"
+            className="font-arabic text-2xl leading-none text-highlight"
             dir="rtl"
             lang="ar"
             aria-hidden="true"
@@ -195,7 +195,7 @@ export function SymbolPopup({ target, onClose }: SymbolPopupProps) {
           </span>
           {data.traditional !== data.glyph && (
             <span
-              className="font-arabic text-[0.65rem] leading-none text-ink-muted"
+              className="font-arabic text-caption leading-none text-text-secondary"
               dir="rtl"
               lang="ar"
             >
@@ -205,9 +205,9 @@ export function SymbolPopup({ target, onClose }: SymbolPopupProps) {
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold leading-tight text-ink">{data.nameEn}</p>
+          <p className="text-sm font-semibold leading-tight text-text">{data.nameEn}</p>
           <p
-            className="font-arabic text-xs leading-tight text-teal-600 dark:text-accent-dim"
+            className="font-arabic text-xs leading-tight text-primary-hover"
             dir="rtl"
             lang="ar"
           >
@@ -219,7 +219,7 @@ export function SymbolPopup({ target, onClose }: SymbolPopupProps) {
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="shrink-0 rounded p-1 text-ink-muted transition-colors hover:bg-canvas-elevated hover:text-ink dark:hover:bg-canvas-card"
+          className="shrink-0 rounded p-1 text-text-secondary transition-colors hover:bg-surface-elevated hover:text-text"
         >
           <X className="h-3.5 w-3.5" />
         </button>
@@ -227,17 +227,17 @@ export function SymbolPopup({ target, onClose }: SymbolPopupProps) {
 
       {/* Body */}
       <div className="space-y-2.5 px-4 py-3 text-xs leading-relaxed">
-        <p className="text-ink-muted">{data.explanation}</p>
+        <p className="text-text-secondary">{data.explanation}</p>
 
         <div>
-          <p className="font-medium text-ink">Guidance</p>
-          <p className="mt-0.5 text-ink-muted">{data.guidance}</p>
+          <p className="font-medium text-text">Guidance</p>
+          <p className="mt-0.5 text-text-secondary">{data.guidance}</p>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="border-t border-border px-4 py-2 dark:border-glass-border">
-        <p className="text-[10px] italic leading-snug text-ink-subtle">{SOURCE}</p>
+      <div className="border-t border-border-strong px-4 py-2">
+        <p className="text-caption italic leading-snug text-text-tertiary">{SOURCE}</p>
       </div>
     </div>
   );
