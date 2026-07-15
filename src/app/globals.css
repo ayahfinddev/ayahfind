@@ -7,8 +7,8 @@
 /* ─── Design tokens ──────────────────────────────────────── */
 /* Semantic layer — source of truth. Themes below only ever override these. */
 :root {
-  --background: #f7f4ed;
-  --background-rgb: 247 244 237;
+  --background: #f8f6f0;
+  --background-rgb: 248 246 240;
   --surface: #fffdf8;
   --surface-rgb: 255 253 248;
   --surface-secondary: #f0ece0;
@@ -25,7 +25,7 @@
   --text-tertiary: #8a8f89;
   --text-tertiary-rgb: 138 143 137;
 
-  --border: #e7e1d6;
+  --border: #e8e3d7;
   --border-strong: #d8d0c2;
   --glass-border: rgba(23, 36, 29, 0.08);
   --glass-fill: rgba(247, 244, 237, 0.95);
@@ -440,6 +440,17 @@
   animation: page-fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+@keyframes stagger-fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Homepage dashboard sections fade up in sequence on first paint — pair
+ * with an inline `animationDelay` per section (see SearchExperience.tsx). */
+.stagger-item {
+  animation: stagger-fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 .symbol-popup {
   animation: symbol-popup-in 0.14s ease-out both;
   transform-origin: top center;
@@ -472,7 +483,8 @@
 @media (prefers-reduced-motion: reduce) {
   .page-enter,
   .symbol-popup,
-  .reader-highlight {
+  .reader-highlight,
+  .stagger-item {
     animation: none !important;
   }
   *,
@@ -567,7 +579,7 @@ a { color: inherit; text-decoration: none; }
 
   /* Search glow */
   .search-glow:focus-within {
-    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15), var(--shadow-md);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.15), var(--shadow-md);
   }
 
   /* Gradient text accent */
@@ -629,5 +641,11 @@ a { color: inherit; text-decoration: none; }
   .af-icon-btn:hover {
     background: var(--card);
     color: var(--ink);
+  }
+
+  /* Primary CTA press feedback — pairs with the plain <Link> buttons that
+   * can't take framer-motion's whileTap without becoming client components. */
+  .btn-press {
+    @apply transition-transform duration-150 ease-out active:scale-[0.97];
   }
 }

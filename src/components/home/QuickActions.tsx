@@ -29,13 +29,13 @@ export function QuickActions() {
   ];
 
   return (
-    <ContentCard elevation="surface" padding="sm" className="h-full rounded-2xl p-3.5">
-      <h2 className="mb-2 text-base font-semibold text-text">Quick Actions</h2>
+    <ContentCard elevation="surface" padding="sm" interactive className="h-full rounded-2xl border-l-2 border-l-primary/25 p-3.5">
+      <h2 className="mb-2 text-base font-bold text-text">Quick Actions</h2>
       <div className="grid grid-cols-3 gap-1.5">
         {actions.map(({ label, icon: Icon, href, fg }) => (
           <Link key={label} href={href} className="group flex flex-col items-center gap-1.5 rounded-xl p-1.5 text-center transition-colors duration-150 ease-out hover:bg-surface-secondary">
             <span
-              className="flex h-11 w-11 items-center justify-center rounded-xl"
+              className="flex h-11 w-11 items-center justify-center rounded-xl transition-transform duration-200 ease-out group-hover:-rotate-6 group-hover:scale-110"
               style={{ backgroundColor: `${fg}20`, color: fg }}
             >
               <Icon className="h-5 w-5" />

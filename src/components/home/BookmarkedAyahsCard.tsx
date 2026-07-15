@@ -45,9 +45,9 @@ export function BookmarkedAyahsCard() {
   }, [visible.map((b) => `${b.surah}:${b.ayah}`).join(",")]);
 
   return (
-    <ContentCard elevation="surface" padding="sm" className="h-full rounded-2xl p-3.5">
+    <ContentCard elevation="surface" padding="sm" interactive className="h-full rounded-2xl border-l-2 border-l-primary/30 p-3.5">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-base font-semibold text-text">Bookmarked Ayahs</h2>
+        <h2 className="text-base font-bold text-text">Bookmarked Ayahs</h2>
         <Link href="/bookmarks" className="text-xs font-medium text-primary-hover hover:underline">
           View all
         </Link>

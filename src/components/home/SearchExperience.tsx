@@ -8,6 +8,9 @@ import { RecentSearchesCard } from "@/components/home/RecentSearchesCard";
 import { BookmarkedAyahsCard } from "@/components/home/BookmarkedAyahsCard";
 import { DailyReflectionCard } from "@/components/home/DailyReflectionCard";
 import { DiscoverMoreSection } from "@/components/home/DiscoverMoreSection";
+import { MushafVisual } from "@/components/home/MushafVisual";
+import { BotanicalLeaves } from "@/components/home/BotanicalLeaves";
+import { IslamicPatternBg } from "@/components/home/IslamicPatternBg";
 import { AISearchBar } from "@/components/search/AISearchBar";
 import { VoiceSearchModal } from "@/components/search/VoiceSearchModal";
 import { SemanticChips } from "@/components/search/SemanticChips";
@@ -23,9 +26,6 @@ import type { SearchTopic } from "@/lib/searchTopics";
 import type { SearchCandidate, SearchMode } from "@/lib/types";
 import { useAudioPlayback } from "@/contexts/AudioPlaybackContext";
 import { useSearchHome } from "@/contexts/SearchHomeContext";
-
-const MUSHAF_URL = "https://images.pexels.com/photos/14743719/pexels-photo-14743719.jpeg";
-const LEAVES_URL = "https://images.pexels.com/photos/17085794/pexels-photo-17085794.jpeg";
 
 type SearchSource = "button" | "enter" | "voice";
 
@@ -184,9 +184,20 @@ export function SearchExperience() {
 
   return (
     <>
-    <div className="space-y-3">
-      {/* Hero: greeting + search on the left, Mushaf + leaves on the right */}
+    <div className="space-y-2.5">
+      {/* Hero: greeting + search on the left, floating Mushaf illustration on the right */}
       <div className="relative overflow-hidden rounded-2xl">
+        {/* Extremely faint girih lattice + warm gold glow — felt, not noticed */}
+        <IslamicPatternBg
+          className="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-[0.02]"
+          color="var(--primary)"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-10 -top-16 -z-10 h-72 w-72 rounded-full opacity-40 blur-3xl"
+          style={{ background: "radial-gradient(circle, var(--highlight), transparent 70%)" }}
+        />
+
         <div className="mb-1 flex items-center justify-end">
           {/* No auth system exists yet — bell only, no avatar/name/sign-in
            * fabricated. Wire the rest of the account cluster in once real
@@ -200,8 +211,8 @@ export function SearchExperience() {
           </button>
         </div>
         <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
-          <div className="relative z-10">
-            <h1 className="flex items-center gap-2 text-[26px] font-semibold text-text">
+          <div className="relative z-10 stagger-item">
+            <h1 className="flex items-center gap-2.5 text-[28px] font-semibold tracking-tight text-text">
               {greeting || "Assalamu Alaikum"}
               <span aria-hidden="true">🌿</span>
             </h1>
@@ -209,7 +220,7 @@ export function SearchExperience() {
               Find, read and reflect on the words of Allah
             </p>
 
-            <div className="mt-2 max-w-[750px]">
+            <div className="mt-2.5 max-w-[750px]">
               <AISearchBar
                 value={query}
                 onChange={setQuery}
@@ -226,38 +237,27 @@ export function SearchExperience() {
             </div>
           </div>
 
-          {/* Mushaf on a rehal, framed by soft botanical leaves — real photos (Pexels, free license) */}
-          <div className="relative hidden shrink-0 items-center justify-center lg:flex">
-            <div
-              aria-hidden="true"
-              className="absolute h-52 w-52 rounded-full opacity-60 blur-3xl"
-              style={{ background: "radial-gradient(circle, var(--gold, #F3E0A8), transparent 70%)" }}
-            />
-            <div
-              className="relative h-52 w-52 overflow-hidden rounded-2xl"
+          {/* Floating Mushaf-on-a-rehal illustration — not a photo, not a card:
+           * an SVG with its own transparent background, faded at the edges
+           * with a mask so it blends into the page rather than sitting in a
+           * box. Botanical leaves sit tucked behind/beside it. Sized as a
+           * normal (non-overflowing) grid child, not an absolute overlay, so
+           * it can never introduce page scroll. */}
+          <div className="relative hidden shrink-0 lg:block lg:h-[218px] lg:w-[190px]">
+            <BotanicalLeaves className="absolute -inset-x-4 -inset-y-2 h-[calc(100%+1rem)] w-[calc(100%+2rem)] opacity-40 blur-[1.5px]" />
+            <MushafVisual
+              className="absolute inset-0 h-full w-full"
               style={{
-                maskImage: "radial-gradient(ellipse 78% 78% at center, black 60%, transparent 100%)",
-                WebkitMaskImage: "radial-gradient(ellipse 78% 78% at center, black 60%, transparent 100%)",
-                filter: "drop-shadow(0 10px 24px rgba(0,0,0,0.18))",
+                maskImage: "radial-gradient(ellipse 74% 76% at 52% 54%, black 60%, transparent 100%)",
+                WebkitMaskImage: "radial-gradient(ellipse 74% 76% at 52% 54%, black 60%, transparent 100%)",
               }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={MUSHAF_URL} alt="A Qur'an resting on a wooden stand" className="h-full w-full object-cover" />
-            </div>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={LEAVES_URL}
-              alt=""
-              aria-hidden="true"
-              className="pointer-events-none absolute -right-10 top-1/2 h-60 w-36 -translate-y-1/2 rotate-6 object-cover opacity-[0.16]"
-              style={{ maskImage: "linear-gradient(to left, black, transparent)", WebkitMaskImage: "linear-gradient(to left, black, transparent)" }}
             />
           </div>
         </div>
       </div>
 
       {/* Continue Reading (2/3) + Quick Actions (1/3) */}
-      <div className="grid gap-3 lg:grid-cols-3">
+      <div className="stagger-item grid gap-3 lg:grid-cols-3" style={{ animationDelay: "60ms" }}>
         <div className="lg:col-span-2">
           <ContinueReadingCard />
         </div>
@@ -267,14 +267,16 @@ export function SearchExperience() {
       </div>
 
       {/* Recent Searches, Bookmarked Ayahs, Daily Reflection */}
-      <div className="grid gap-3 lg:grid-cols-3">
+      <div className="stagger-item grid gap-3 lg:grid-cols-3" style={{ animationDelay: "120ms" }}>
         <RecentSearchesCard onReopen={(q) => void executeSearch(q, "button")} />
         <BookmarkedAyahsCard />
         <DailyReflectionCard />
       </div>
 
       {/* Discover */}
-      <DiscoverMoreSection />
+      <div className="stagger-item" style={{ animationDelay: "180ms" }}>
+        <DiscoverMoreSection />
+      </div>
     </div>
 
     {/* Search results — always mounted (even when empty) so resultsRef is

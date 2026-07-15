@@ -83,7 +83,7 @@ export function DiscoverMoreSection() {
   return (
     <div>
       <div className="mb-2 flex items-center justify-between">
-        <h2 className="text-base font-semibold text-text">Explore by Topic</h2>
+        <h2 className="text-base font-bold text-text">Explore by Topic</h2>
         <div className="flex items-center gap-2">
           <span className="text-xs font-medium text-primary-hover">View all</span>
           <IconButton size="sm" aria-label="Refresh suggestions" onClick={() => setRefreshKey((k) => k + 1)}>
@@ -99,22 +99,25 @@ export function DiscoverMoreSection() {
               key={card.label}
               href={`/ayah/${card.surah}/${card.ayah}`}
               onClick={() => recordEngagement(card.label)}
-              className="group relative block h-24 overflow-hidden rounded-xl shadow-sm transition-transform duration-150 ease-out hover:-translate-y-0.5"
+              className="group relative block h-24 overflow-hidden rounded-xl shadow-sm ring-1 ring-black/5 transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-lg"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={image}
                 alt=""
                 aria-hidden="true"
-                className="h-full w-full object-cover transition-transform duration-200 ease-out group-hover:scale-105"
-                style={{ filter: "saturate(0.82) contrast(1.04) brightness(0.97)" }}
+                className="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-110"
+                style={{ filter: "saturate(0.88) contrast(1.08) brightness(0.96)" }}
               />
               <span
                 className="absolute inset-0"
-                style={{ background: "linear-gradient(to top, var(--image-overlay) 0%, transparent 75%)" }}
+                style={{ background: "linear-gradient(to top, var(--image-overlay) 0%, rgba(0,0,0,0.05) 55%, transparent 78%)" }}
               />
               <span className="absolute inset-x-0 bottom-0 p-3">
-                <span className="block text-[10px] font-medium uppercase tracking-wide text-white/70">
+                <span
+                  className="mb-0.5 inline-block rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-white/90"
+                  style={{ background: "rgba(255,255,255,0.16)", backdropFilter: "blur(2px)" }}
+                >
                   {SOURCE_LABEL[card.source]}
                 </span>
                 <span className="block truncate text-sm font-semibold capitalize text-white">{card.label}</span>

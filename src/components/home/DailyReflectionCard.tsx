@@ -75,23 +75,28 @@ export function DailyReflectionCard() {
   };
 
   return (
-    <ContentCard elevation="surface" padding="sm" className="relative flex h-full flex-col overflow-hidden rounded-2xl p-3.5">
+    <ContentCard elevation="surface" padding="sm" interactive className="relative flex h-full flex-col overflow-hidden rounded-2xl border-l-2 p-3.5" style={{ borderLeftColor: "var(--highlight-border)" }}>
       <span
         aria-hidden="true"
         className="absolute inset-x-0 top-0 h-[2px]"
         style={{ background: "linear-gradient(90deg, transparent, var(--highlight), transparent)" }}
       />
-      <h2 className="mb-1.5 flex items-center gap-2 text-base font-semibold text-text">
+      <h2 className="mb-1.5 flex items-center gap-2 text-base font-bold text-text">
         <Sun className="h-4.5 w-4.5" style={{ color: "var(--highlight)" }} />
         Daily Verse
       </h2>
 
       <div className="flex-1">
-        <p className="text-center font-arabic text-[1.35rem] leading-relaxed text-text" dir="rtl" lang="ar">
+        <p className="text-center font-arabic text-[1.45rem] leading-relaxed text-text" dir="rtl" lang="ar">
           {ayah.text_ar}
         </p>
+        <span
+          aria-hidden="true"
+          className="mx-auto my-1 block h-px w-16"
+          style={{ background: "linear-gradient(90deg, transparent, var(--highlight-border), transparent)" }}
+        />
         {ayah.translation_en && (
-          <p className="mt-1.5 text-center text-sm text-text-secondary">{ayah.translation_en}</p>
+          <p className="line-clamp-3 text-center text-sm text-text-secondary">{ayah.translation_en}</p>
         )}
         <p className="mt-1 text-center text-xs text-text-tertiary">
           — {surahName} ({ref.surah}:{ref.ayah})
@@ -132,7 +137,7 @@ export function DailyReflectionCard() {
         </div>
         <Link
           href={href}
-          className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-primary px-3.5 text-xs font-semibold text-white transition-colors duration-150 ease-out hover:bg-primary-hover"
+          className="btn-press inline-flex h-8 items-center gap-1.5 rounded-lg bg-primary px-3.5 text-xs font-semibold text-white transition-colors duration-150 ease-out hover:bg-primary-hover"
         >
           Read Context
           <ArrowRight className="h-3.5 w-3.5" />
