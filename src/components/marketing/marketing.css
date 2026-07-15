@@ -1,0 +1,23 @@
+/* Marketing-homepage-only styles. Imported by MarketingPage.tsx; class
+ * names are prefixed/scoped so nothing leaks meaningfully into /search
+ * (which never renders these class names). */
+
+/* Static version of the app's .search-glow focus ring, for the demo bar. */
+.search-glow-static {
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.15), var(--shadow-md);
+}
+
+@keyframes demo-caret-blink {
+  0%, 45% { opacity: 1; }
+  50%, 95% { opacity: 0; }
+}
+
+.demo-caret {
+  animation: demo-caret-blink 1.1s steps(1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-caret {
+    animation: none;
+  }
+}

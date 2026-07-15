@@ -37,7 +37,7 @@ export default function OnboardingPage() {
     if (typeof window !== "undefined") {
       localStorage.setItem("ayahfind_onboarded", "1");
     }
-    router.push("/");
+    router.push("/search");
   };
 
   return (

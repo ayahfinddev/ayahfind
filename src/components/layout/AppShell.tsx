@@ -10,7 +10,14 @@ import { cn } from "@/lib/utils";
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isReader = pathname?.startsWith("/ayah");
-  const isHome = pathname === "/";
+  // The search dashboard now lives at /search; "/" is the marketing
+  // homepage, which renders chrome-free (no sidebar/bottom nav, no
+  // onboarding redirect, no Tilawah bar) and owns its own layout.
+  const isHome = pathname === "/search";
+
+  if (pathname === "/") {
+    return <>{children}</>;
+  }
 
   return (
     <OnboardingGate>

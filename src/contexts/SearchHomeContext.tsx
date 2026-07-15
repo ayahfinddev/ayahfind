@@ -51,7 +51,7 @@ export function useSearchNavClick() {
   const ctx = useContext(SearchHomeContext);
 
   return (href: string, e: MouseEvent<HTMLAnchorElement>) => {
-    if (href !== "/" || pathname !== "/" || !ctx) return;
+    if (href !== "/search" || pathname !== "/search" || !ctx) return;
     e.preventDefault();
     ctx.goToSearchHome();
   };

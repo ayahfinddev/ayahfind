@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { fetchTafsirStatus } from "@/lib/api";
 
 /** Fetched once per app session, shared by every VerseCard so the Tafsir
@@ -13,8 +14,14 @@ const TafsirAvailabilityContext = createContext<boolean>(false);
 
 export function TafsirAvailabilityProvider({ children }: { children: ReactNode }) {
   const [enabled, setEnabled] = useState(false);
+  const pathname = usePathname();
+  // The marketing homepage renders no verse cards — don't probe the backend
+  // from it. First navigation into the app remounts nothing, but the effect
+  // re-runs when pathname leaves "/" and the status is fetched then.
+  const isMarketing = pathname === "/";
 
   useEffect(() => {
+    if (isMarketing) return;
     let cancelled = false;
     fetchTafsirStatus()
       .then((status) => {
@@ -26,7 +33,7 @@ export function TafsirAvailabilityProvider({ children }: { children: ReactNode }
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isMarketing]);
 
   return (
     <TafsirAvailabilityContext.Provider value={enabled}>

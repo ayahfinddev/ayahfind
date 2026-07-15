@@ -14,7 +14,7 @@ export default function HadithPage() {
           Unified narration cards, isnad chains, and scholar grading - coming in Phase 3.
         </p>
         <Link
-          href="/"
+          href="/search"
           className="mt-6 rounded-xl border border-border-strong bg-surface px-4 py-2 text-sm font-medium text-text hover:bg-surface-secondary"
         >
           Try Quran search meanwhile

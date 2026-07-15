@@ -7,7 +7,10 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://ayahfind.com"
   ),
-  title: "AyahFind - AI Islamic Search",
+  title: {
+    default: "AyahFind - AI Islamic Search",
+    template: "%s",
+  },
   description: "Human-error-tolerant Quran and Hadith retrieval",
   applicationName: "AyahFind",
   appleWebApp: { capable: true, title: "AyahFind" },

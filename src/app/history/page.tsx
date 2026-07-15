@@ -23,7 +23,7 @@ export default function HistoryPage() {
               <ListRow
                 icon={<Clock className="h-4 w-4" />}
                 title={q}
-                href={`/?q=${encodeURIComponent(q)}`}
+                href={`/search?q=${encodeURIComponent(q)}`}
               />
             </li>
           ))}
