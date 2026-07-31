@@ -1,19 +1,26 @@
-import { BookMarked, BookOpen, Clock, Home, Info, ScrollText, Settings, type LucideIcon } from "lucide-react";
+import { BookOpen, Home, ScrollText, Search, Settings, type LucideIcon } from "lucide-react";
 
 export interface NavLink {
   href: string;
   icon: LucideIcon;
   label: string;
+  /** Matched against the pathname for active state when the destination and
+   * the "section" differ — Quran points at the *last-read* ayah, but every
+   * `/ayah/...` route belongs to that nav item. */
+  activeHref?: string;
+  /** `href` is a placeholder resolved at render time — see `useNavLinks`. */
+  dynamic?: "reader";
 }
 
+/** Exactly five: Home, Search, Quran, Hadith, Settings. Saved / History /
+ * Symbols / About were pulled out of the nav and live in the Home page's
+ * Quick Actions grid instead (see components/home/QuickActions.tsx). */
 export const NAV_LINKS: NavLink[] = [
-  { href: "/search", icon: Home, label: "Search" },
+  { href: "/home", icon: Home, label: "Home" },
+  { href: "/search", icon: Search, label: "Search" },
+  { href: "/ayah/1/1", icon: BookOpen, label: "Quran", activeHref: "/ayah", dynamic: "reader" },
   { href: "/hadith", icon: ScrollText, label: "Hadith" },
-  { href: "/bookmarks", icon: BookMarked, label: "Saved" },
-  { href: "/history", icon: Clock, label: "History" },
-  { href: "/symbols", icon: BookOpen, label: "Symbols" },
   { href: "/settings", icon: Settings, label: "Settings" },
-  { href: "/about", icon: Info, label: "About" },
 ];
 
 /** A link matches itself and any nested route beneath it (e.g. a future

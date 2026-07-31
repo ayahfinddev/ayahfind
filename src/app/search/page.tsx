@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { SearchExperience } from "@/components/home/SearchExperience";
+import { SearchLanding } from "@/components/search/SearchLanding";
 
 export const metadata: Metadata = {
   title: "Search the Qur'an — AyahFind",
@@ -17,10 +17,13 @@ export const metadata: Metadata = {
   },
 };
 
+/** Shared `/search?q=...` links (and the `/?q=` middleware redirect that
+ * feeds them) still land here and run the query on mount — useAyahSearch
+ * reads the param, exactly as the dashboard used to. */
 export default function SearchPage() {
   return (
     <Suspense fallback={null}>
-      <SearchExperience />
+      <SearchLanding />
     </Suspense>
   );
 }

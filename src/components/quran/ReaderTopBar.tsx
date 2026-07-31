@@ -72,7 +72,7 @@ export function ReaderTopBar({
 
       {/* Row 1 — title + controls */}
       <div className="flex items-center gap-2 py-2.5">
-        <Link href="/search" className="af-icon-btn h-9 w-9 shrink-0 text-text-secondary" aria-label="Back">
+        <Link href="/home" className="af-icon-btn h-9 w-9 shrink-0 text-text-secondary" aria-label="Back">
           <ArrowLeft className="h-4 w-4" />
         </Link>
 

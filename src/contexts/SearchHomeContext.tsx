@@ -46,12 +46,16 @@ export function useSearchHome() {
   return ctx;
 }
 
+/** Clicking the nav item for the page you're already on resets that page to
+ * its landing state instead of a no-op navigation. Applies to whichever page
+ * registered a reset — the dashboard (`/home`) and the search page
+ * (`/search`) both do. */
 export function useSearchNavClick() {
   const pathname = usePathname();
   const ctx = useContext(SearchHomeContext);
 
   return (href: string, e: MouseEvent<HTMLAnchorElement>) => {
-    if (href !== "/search" || pathname !== "/search" || !ctx) return;
+    if (href !== pathname || !ctx) return;
     e.preventDefault();
     ctx.goToSearchHome();
   };

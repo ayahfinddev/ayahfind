@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSearchNavClick } from "@/contexts/SearchHomeContext";
-import { NAV_LINKS, isNavLinkActive } from "@/lib/navLinks";
-import { cn } from "@/lib/utils";
+import { useNavLinks } from "@/hooks/useNavLinks";
+import { isNavLinkActive } from "@/lib/navLinks";
+import { BrandLogo } from "./BrandLogo";
 
 export function SideNav() {
   const pathname = usePathname();
   const onSearchNavClick = useSearchNavClick();
+  const navLinks = useNavLinks();
   if (pathname?.startsWith("/onboarding")) return null;
 
   return (
@@ -18,30 +20,23 @@ export function SideNav() {
     >
       {/* Logo */}
       <div className="px-4 py-5 lg:px-5">
-        <div className="hidden items-center gap-2.5 lg:flex">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-white text-sm font-bold">
-            A
-          </span>
-          <span className="text-[15px] font-semibold tracking-tight" style={{ color: "var(--sidebar-text)" }}>
-            AyahFind
-          </span>
-        </div>
-        <div className="flex items-center justify-center lg:hidden">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white text-sm font-bold">
-            A
-          </span>
-        </div>
+        <BrandLogo
+          className="hidden lg:flex"
+          wordmarkClassName="text-[color:var(--sidebar-text)]"
+        />
+        <BrandLogo markOnly className="justify-center lg:hidden" />
       </div>
 
       {/* Nav links */}
       <nav className="flex flex-1 flex-col gap-0.5 px-2 pb-4" aria-label="Main">
-        {NAV_LINKS.map(({ href, icon: Icon, label }) => {
-          const active = isNavLinkActive(href, pathname);
+        {navLinks.map(({ href, activeHref, icon: Icon, label }) => {
+          const active = isNavLinkActive(activeHref ?? href, pathname);
           return (
             <Link
-              key={href}
+              key={label}
               href={href}
               onClick={(e) => onSearchNavClick(href, e)}
+              aria-current={active ? "page" : undefined}
               className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-150 ease-out"
               style={{
                 backgroundColor: active ? "var(--sidebar-active)" : "transparent",

@@ -90,6 +90,10 @@
   --sidebar-active: #2f5a3f;
   --sidebar-text: #f2f0ea;
   --sidebar-text-muted: #a9bdae;
+
+  /* Centre opacity of the search page's ambient glow — overridden for the
+   * dark-ground themes below. */
+  --search-glow-alpha: 0.14;
 }
 
 /* ─── Themes ─────────────────────────────────────────────── */
@@ -417,6 +421,19 @@
   --shadow-xs: none;
   --shadow-sm: none;
   --shadow-md: none;
+}
+
+/* Ambient glow behind the /search hero (see components/search/SearchLanding).
+ * On a light parchment ground a strong green wash reads as a stain, so the
+ * default is deliberately faint; the dark-ground themes need roughly double
+ * to register at all. Listed rather than folded into each theme block so the
+ * one value that varies stays readable in one place. */
+[data-theme="dark"],
+[data-theme="midnight"],
+[data-theme="forest"],
+[data-theme="royal"],
+[data-theme="amoled"] {
+  --search-glow-alpha: 0.28;
 }
 
 /* ─── Animations ─────────────────────────────────────────── */
